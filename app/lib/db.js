@@ -494,6 +494,33 @@ function initTables() {
     // Operasyon detay alanları
     "ALTER TABLE operations ADD COLUMN required_skill_level TEXT DEFAULT '3_sinif'",
     "ALTER TABLE operations ADD COLUMN operation_category TEXT DEFAULT 'dikim'",
+    // ===== YENİ: Personel Beceri/Kapasite Ölçüm Kriterleri =====
+    // A. Üretim Kapasitesi
+    "ALTER TABLE personnel ADD COLUMN daily_avg_output INTEGER DEFAULT 0",
+    "ALTER TABLE personnel ADD COLUMN error_rate REAL DEFAULT 0",
+    "ALTER TABLE personnel ADD COLUMN efficiency_score REAL DEFAULT 0",
+    // B. Beceri Detayları
+    "ALTER TABLE personnel ADD COLUMN capable_operations TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN operation_skill_scores TEXT DEFAULT '{}'",
+    "ALTER TABLE personnel ADD COLUMN learning_speed TEXT DEFAULT 'normal'",
+    "ALTER TABLE personnel ADD COLUMN independence_level TEXT DEFAULT 'kismen'",
+    // C. Çalışma Disiplini ve Davranış
+    "ALTER TABLE personnel ADD COLUMN attendance TEXT DEFAULT 'az'",
+    "ALTER TABLE personnel ADD COLUMN punctuality TEXT DEFAULT 'genelde'",
+    "ALTER TABLE personnel ADD COLUMN initiative_level TEXT DEFAULT 'orta'",
+    "ALTER TABLE personnel ADD COLUMN teamwork_level TEXT DEFAULT 'iyi'",
+    "ALTER TABLE personnel ADD COLUMN problem_solving TEXT DEFAULT 'sorar'",
+    // D. Fiziksel ve Ergonomik
+    "ALTER TABLE personnel ADD COLUMN physical_endurance TEXT DEFAULT 'iyi'",
+    "ALTER TABLE personnel ADD COLUMN eye_health TEXT DEFAULT 'iyi'",
+    "ALTER TABLE personnel ADD COLUMN health_restrictions TEXT DEFAULT ''",
+    // E. Kariyer ve Gelişim
+    "ALTER TABLE personnel ADD COLUMN leadership_potential TEXT DEFAULT 'hayir'",
+    "ALTER TABLE personnel ADD COLUMN training_needs TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN general_evaluation TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN photo_url TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN national_id TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN phone TEXT DEFAULT ''",
   ];
   for (const sql of alterStatements) {
     try { db.exec(sql); } catch (e) { /* sütun zaten var */ }

@@ -2,11 +2,17 @@
 import { useState, useEffect } from 'react';
 
 // ============================================================
-// DÜZELTME SİSTEMİ — Tüm bölümlerde kullanılır
+// DÜZELTME SİSTEMİ
+// Koruma seviyesi:
+//   • models, operations, orders → SİLİNEMEZ — delil niteliğindedir
+//     (ürün teknik bilgi, ölçü, işlem sırası, sipariş)
+//   • Diğer bölümler (personel, makine, müşteri vb.) → silinebilir
 // 5 saat kuralı: İlk 5 saat düzeltmeler loglanmaz
 // 5 saatten sonra: eski/yeni değerler tarih-saat ile kaydedilir
-// Bu kayıtlar silinemez — delil niteliğindedir
 // ============================================================
+
+// Silme koruması olan tablolar (bu tablolardaki kayıtlar silinemez)
+export const PROTECTED_TABLES = ['models', 'operations', 'orders'];
 
 // ============================================================
 // 1. DÜZELTME MODAL — Kayıt düzenleme penceresi
@@ -165,7 +171,7 @@ export function AuditTrailPanel({ tableName, recordId }) {
             margin: '0 20px', borderRadius: '8px', padding: '12px', marginTop: '10px'
         }}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: '#e74c3c', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                🔒 Düzeltme Geçmişi <span style={{ fontSize: '10px', fontWeight: '400', color: 'var(--text-muted)' }}>(silinemez)</span>
+                🔒 Düzeltme Geçmişi {PROTECTED_TABLES.includes(tableName) && <span style={{ fontSize: '10px', fontWeight: '400', color: 'var(--text-muted)' }}>(silinemez — ürün/sipariş verisi)</span>}
             </div>
 
             {loading ? (
@@ -305,21 +311,109 @@ export const EDIT_FIELDS = {
     personnel: [
         { key: 'name', label: 'Ad Soyad' },
         { key: 'role', label: 'Pozisyon' },
+        { key: 'phone', label: 'Telefon' },
+        { key: 'national_id', label: 'TC Kimlik No' },
         { key: 'base_salary', label: 'Maaş (₺)', type: 'number' },
         { key: 'transport_allowance', label: 'Yol (₺)', type: 'number' },
         { key: 'ssk_cost', label: 'SSK (₺)', type: 'number' },
         { key: 'food_allowance', label: 'Yemek (₺)', type: 'number' },
         { key: 'compensation', label: 'Tazminat (₺)', type: 'number' },
-        { key: 'technical_mastery', label: 'Teknik Ustalık' },
-        { key: 'speed_level', label: 'Hız' },
-        { key: 'quality_level', label: 'Kalite' },
-        { key: 'discipline_level', label: 'Disiplin' },
-        { key: 'versatility_level', label: 'Çok Yönlülük' },
-        { key: 'machines', label: 'Makineler' },
-        { key: 'skills', label: 'Beceriler' },
+        {
+            key: 'technical_mastery', label: 'Teknik Ustalık', type: 'select', options: [
+                { value: 'usta', label: 'Usta — Her işlemi bağımsız yapar' },
+                { value: 'kalfa', label: 'Kalfa — Az yönlendirme yeter' },
+                { value: 'operator', label: 'Operatör — Yönlendirme gerekir' },
+                { value: 'cirak', label: 'Çırak — Sürekli gözetim' },
+            ]
+        },
+        {
+            key: 'speed_level', label: 'Hız', type: 'select', options: [
+                { value: 'cok_seri', label: 'Çok Seri — Standart üstü' },
+                { value: 'seri', label: 'Seri — Standart sürede' },
+                { value: 'normal', label: 'Normal — Biraz altında' },
+                { value: 'yavas', label: 'Yavaş — Standart altı' },
+            ]
+        },
+        {
+            key: 'quality_level', label: 'Kalite / El Temizliği', type: 'select', options: [
+                { value: 'premium', label: 'Premium — Hata %1 altı' },
+                { value: 'kaliteli', label: 'Kaliteli — Temiz işçilik' },
+                { value: 'normal', label: 'Normal — Ortalama düzey' },
+                { value: 'orta', label: 'Orta — İdare eder' },
+                { value: 'standart', label: 'Standart — Kabul edilebilir' },
+                { value: 'degisken', label: 'Değişken — Bazen iyi bazen düşük' },
+                { value: 'dusuk', label: 'Düşük — Sık kontrol gerekir' },
+            ]
+        },
+        {
+            key: 'discipline_level', label: 'İş Disiplini', type: 'select', options: [
+                { value: 'cok_guvenilir', label: 'Çok Güvenilir — Sorunsuz' },
+                { value: 'guvenilir', label: 'Güvenilir — Stabil' },
+                { value: 'degisken', label: 'Değişken — Bazen düşük' },
+                { value: 'takip', label: 'Takip Gerektirir' },
+            ]
+        },
+        {
+            key: 'versatility_level', label: 'Çok Yönlülük', type: 'select', options: [
+                { value: '5+', label: '5+ operasyon yapabilir' },
+                { value: '3-4', label: '3-4 operasyon' },
+                { value: '1-2', label: '1-2 operasyon' },
+                { value: 'tek', label: 'Tek operasyon' },
+            ]
+        },
+        { key: 'skills', label: 'Tekstil Becerileri & Kapasitesi', type: 'textarea' },
+        { key: 'capable_operations', label: 'Özel Notlar (güçlü/zayıf)', type: 'textarea' },
+        {
+            key: 'learning_speed', label: 'Öğrenme Hızı', type: 'select', options: [
+                { value: 'cok_hizli', label: 'Çok Hızlı — 1-2 günde kavrar' },
+                { value: 'hizli', label: 'Hızlı — 3-5 günde öğrenir' },
+                { value: 'normal', label: 'Normal — 1-2 haftada alışır' },
+                { value: 'yavas', label: 'Yavaş — Uzun süre ister' },
+            ]
+        },
+        {
+            key: 'independence_level', label: 'Bağımsız Çalışma', type: 'select', options: [
+                { value: 'tam', label: 'Tam Bağımsız' },
+                { value: 'kismen', label: 'Kısmen — Ara sıra sorar' },
+                { value: 'bagli', label: 'Bağımlı — Sürekli yönlendirme' },
+            ]
+        },
+        {
+            key: 'attendance', label: 'Aylık Devamsızlık', type: 'select', options: [
+                { value: 'yok', label: 'Yok' },
+                { value: 'ayda_yarim', label: 'Ayda yarım gün' },
+                { value: 'ayda_1', label: 'Ayda 1 gün' },
+                { value: 'ayda_2', label: 'Ayda 2 gün' },
+                { value: 'ayda_3_4', label: 'Ayda 3-4 gün' },
+                { value: 'ayda_5_ustu', label: 'Ayda 5+ gün' },
+            ]
+        },
+        {
+            key: 'punctuality', label: 'Sabah Geç Kalma', type: 'select', options: [
+                { value: 'herzaman', label: 'Asla geç kalmaz' },
+                { value: 'genelde', label: 'Nadiren — Ayda 1-2 kez' },
+                { value: 'bazen', label: 'Bazen — Haftada 1 kez' },
+                { value: 'sik', label: 'Sık — Haftada 2-3 kez' },
+                { value: 'surekli', label: 'Sürekli — Her gün geç' },
+            ]
+        },
+        {
+            key: 'leadership_potential', label: 'Liderlik Potansiyeli', type: 'select', options: [
+                { value: 'yuksek', label: 'Yüksek — Usta başı/şef olabilir' },
+                { value: 'potansiyel', label: 'Potansiyel — Geliştirilirse olur' },
+                { value: 'hayir', label: 'Hayır — Şu an uygun değil' },
+            ]
+        },
+        { key: 'training_needs', label: 'Eğitim İhtiyacı' },
+        { key: 'general_evaluation', label: 'Genel Değerlendirme', type: 'textarea' },
         { key: 'work_start', label: 'Mesai Başlangıç' },
         { key: 'work_end', label: 'Mesai Bitiş' },
-        { key: 'language', label: 'Dil' },
+        {
+            key: 'language', label: 'Dil', type: 'select', options: [
+                { value: 'tr', label: 'Türkçe' },
+                { value: 'ar', label: 'Arapça' },
+            ]
+        },
     ],
     orders: [
         { key: 'order_no', label: 'Sipariş No' },

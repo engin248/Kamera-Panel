@@ -19,7 +19,14 @@ export async function POST(request) {
         const body = await request.json();
         const { name, role, daily_wage, skill_level, machines, skills, language, work_start, work_end, start_date,
             base_salary, transport_allowance, ssk_cost, food_allowance, compensation,
-            technical_mastery, speed_level, quality_level, discipline_level, versatility_level, position, department } = body;
+            technical_mastery, speed_level, quality_level, discipline_level, versatility_level, position, department,
+            // Yeni beceri/kapasite kriterleri
+            daily_avg_output, error_rate, efficiency_score,
+            capable_operations, operation_skill_scores, learning_speed, independence_level,
+            attendance, punctuality, initiative_level, teamwork_level, problem_solving,
+            physical_endurance, eye_health, health_restrictions,
+            leadership_potential, training_needs, general_evaluation,
+            photo_url, national_id, phone } = body;
 
         if (!name) {
             return NextResponse.json({ error: 'Personel adı zorunlu' }, { status: 400 });
@@ -38,8 +45,15 @@ export async function POST(request) {
         const result = db.prepare(`
       INSERT INTO personnel (name, role, daily_wage, skill_level, machines, skills, language, work_start, work_end, start_date,
         base_salary, transport_allowance, ssk_cost, food_allowance, compensation,
-        technical_mastery, speed_level, quality_level, discipline_level, versatility_level, position, department)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        technical_mastery, speed_level, quality_level, discipline_level, versatility_level, position, department,
+        daily_avg_output, error_rate, efficiency_score,
+        capable_operations, operation_skill_scores, learning_speed, independence_level,
+        attendance, punctuality, initiative_level, teamwork_level, problem_solving,
+        physical_endurance, eye_health, health_restrictions,
+        leadership_potential, training_needs, general_evaluation,
+        photo_url, national_id, phone)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
             name, role || 'duz_makineci', calculatedDailyWage,
             skill_level || 'orta', machines || '', skills || '',
@@ -49,7 +63,16 @@ export async function POST(request) {
             food_allowance || 0, compensation || 0,
             technical_mastery || 'operator', speed_level || 'normal',
             quality_level || 'standart', discipline_level || 'guvenilir',
-            versatility_level || '1-2', position || role || 'duz_makineci', department || ''
+            versatility_level || '1-2', position || role || 'duz_makineci', department || '',
+            // Yeni alanlar
+            daily_avg_output || 0, error_rate || 0, efficiency_score || 0,
+            capable_operations || '', typeof operation_skill_scores === 'object' ? JSON.stringify(operation_skill_scores) : (operation_skill_scores || '{}'),
+            learning_speed || 'normal', independence_level || 'kismen',
+            attendance || 'az', punctuality || 'genelde',
+            initiative_level || 'orta', teamwork_level || 'iyi', problem_solving || 'sorar',
+            physical_endurance || 'iyi', eye_health || 'iyi', health_restrictions || '',
+            leadership_potential || 'hayir', training_needs || '', general_evaluation || '',
+            photo_url || '', national_id || '', phone || ''
         );
 
         const person = db.prepare('SELECT * FROM personnel WHERE id = ?').get(result.lastInsertRowid);

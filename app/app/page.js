@@ -2821,7 +2821,17 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
 function NewPersonnelModal({ onClose, onSave }) {
 
-  const [form, setForm] = useState({ name: '', role: 'duz_makineci', daily_wage: '', skill_level: 'orta', work_start: '08:00', work_end: '19:00', machines: '', language: 'tr', base_salary: '', transport_allowance: '', ssk_cost: '', food_allowance: '', compensation: '', technical_mastery: 'operator', speed_level: 'normal', quality_level: 'standart', discipline_level: 'guvenilir', versatility_level: '1-2', department: 'dikim' });
+  const [form, setForm] = useState({
+    name: '', role: 'duz_makineci', daily_wage: '', skill_level: 'orta', work_start: '08:00', work_end: '19:00', machines: '', language: 'tr', base_salary: '', transport_allowance: '', ssk_cost: '', food_allowance: '', compensation: '', technical_mastery: 'operator', speed_level: 'normal', quality_level: 'standart', discipline_level: 'guvenilir', versatility_level: '1-2', department: 'dikim',
+    // Yeni beceri/kapasite kriterleri
+    daily_avg_output: '', error_rate: '', efficiency_score: '',
+    capable_operations: '', learning_speed: 'normal', independence_level: 'kismen',
+    attendance: 'az', punctuality: 'genelde', initiative_level: 'orta', teamwork_level: 'iyi', problem_solving: 'sorar',
+    physical_endurance: 'iyi', eye_health: 'iyi', health_restrictions: '',
+    leadership_potential: 'hayir', training_needs: '', general_evaluation: '',
+    phone: '', national_id: '',
+    operation_skill_scores: '{}', leave_types: ''
+  });
 
   const totalMonthly = (parseFloat(form.base_salary) || 0) + (parseFloat(form.transport_allowance) || 0) + (parseFloat(form.ssk_cost) || 0) + (parseFloat(form.food_allowance) || 0) + (parseFloat(form.compensation) || 0);
 
@@ -2839,7 +2849,10 @@ function NewPersonnelModal({ onClose, onSave }) {
 
     try {
 
-      await onSave({ ...form, daily_wage: parseFloat(form.daily_wage) || 0, base_salary: parseFloat(form.base_salary) || 0, transport_allowance: parseFloat(form.transport_allowance) || 0, ssk_cost: parseFloat(form.ssk_cost) || 0, food_allowance: parseFloat(form.food_allowance) || 0, compensation: parseFloat(form.compensation) || 0 });
+      await onSave({
+        ...form, daily_wage: parseFloat(form.daily_wage) || 0, base_salary: parseFloat(form.base_salary) || 0, transport_allowance: parseFloat(form.transport_allowance) || 0, ssk_cost: parseFloat(form.ssk_cost) || 0, food_allowance: parseFloat(form.food_allowance) || 0, compensation: parseFloat(form.compensation) || 0,
+        daily_avg_output: parseInt(form.daily_avg_output) || 0, error_rate: parseFloat(form.error_rate) || 0, efficiency_score: parseFloat(form.efficiency_score) || 0
+      });
 
     } finally { setSaving(false); }
 
@@ -3075,20 +3088,16 @@ function NewPersonnelModal({ onClose, onSave }) {
 
             <div className="form-row">
 
-              <div className="form-group"><label className="form-label">3️⃣ Kalite / El TemizliĞi</label>
-
+              <div className="form-group"><label className="form-label">3️⃣ Kalite / El Temizliği</label>
                 <select className="form-select" value={form.quality_level} onChange={e => setForm({ ...form, quality_level: e.target.value })}>
-
                   <option value="premium">Premium — Hata %1 altı</option>
-
                   <option value="kaliteli">Kaliteli — Temiz işçilik</option>
-
+                  <option value="normal">Normal — Ortalama düzey</option>
+                  <option value="orta">Orta — İdare eder</option>
                   <option value="standart">Standart — Kabul edilebilir</option>
-
+                  <option value="degisken">Değişken — Bazen iyi bazen düşük</option>
                   <option value="dusuk">Düşük — Sık kontrol gerekir</option>
-
                 </select>
-
               </div>
 
               <div className="form-group"><label className="form-label">4️⃣ İş Disiplini</label>
@@ -3139,68 +3148,49 @@ function NewPersonnelModal({ onClose, onSave }) {
 
           </div>
 
-          <div className="form-row">
-
-            <div className="form-group"><label className="form-label">KullandıĞı Makineler</label>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-
-                {['Düz Dikiş', 'Çift İĞne', 'Zincir Dikiş', '3İp Overlok', '4İp Overlok', '5İp Overlok', '2İĞ Reçme', '3İĞ Reçme', 'Bıçaklı Reçme', 'Flatlock', 'İlik Mak.', 'DüĞme Mak.', 'Punteriz', 'Kemer Mak.', 'Zigzag', 'Gizli Dikiş', 'Fermuar Mak.', 'Kesim', 'Ütü', 'Nakış'].map(m => {
-
-                  const sel = (form.machines || '').split(',').map(s => s.trim()).filter(Boolean);
-
-                  const isChecked = sel.includes(m);
-
-                  return <label key={m} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '3px 7px', borderRadius: '6px', background: isChecked ? 'rgba(52,152,219,0.15)' : 'var(--bg-input)', border: `1px solid ${isChecked ? '#3498db' : 'var(--border-color)'}`, cursor: 'pointer' }}>
-
-                    <input type="checkbox" checked={isChecked} onChange={() => {
-
-                      const newSel = isChecked ? sel.filter(s => s !== m) : [...sel, m];
-
-                      setForm({ ...form, machines: newSel.join(', ') });
-
-                    }} style={{ accentColor: '#3498db' }} />{m}
-
-                  </label>;
-
-                })}
-
-              </div>
-
+          {/* ===== MAKİNE YETKİNLİK MATRİSİ ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(52,152,219,0.3)' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#2980b9', marginBottom: '8px' }}>🔧 Kullanabildiği Makineler & Yetkinlik Seviyesi</div>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '8px' }}>Her makine için yetkinlik seviyesi seçin. Kullanmıyorsa boş bırakın.</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+              {['Düz Dikiş', 'Çift İğne', 'Zincir Dikiş', '3İp Overlok', '4İp Overlok', '5İp Overlok', '2İğ Reçme', '3İğ Reçme', 'Bıçaklı Reçme', 'Flatlock', 'İlik Mak.', 'Düğme Mak.', 'Punteriz', 'Kemer Mak.', 'Zigzag', 'Gizli Dikiş', 'Fermuar Mak.', 'Kesim', 'Ütü', 'Nakış'].map(m => {
+                let machineSkills = {};
+                try { machineSkills = JSON.parse(form.operation_skill_scores || '{}'); } catch { }
+                const level = machineSkills[m] || '';
+                const colors = { 'cok_iyi': '#27ae60', 'iyi': '#2ecc71', 'orta': '#f39c12', 'normal': '#e67e22' };
+                return <div key={m} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', borderRadius: '6px', background: level ? `${colors[level]}15` : 'transparent', border: `1px solid ${level ? colors[level] : 'var(--border-color)'}` }}>
+                  <span style={{ fontSize: '11px', fontWeight: '600', minWidth: '90px', color: level ? colors[level] : 'var(--text-muted)' }}>{m}</span>
+                  <select style={{ flex: 1, fontSize: '10px', padding: '2px 4px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                    value={level} onChange={e => {
+                      const updated = { ...machineSkills };
+                      if (e.target.value) updated[m] = e.target.value; else delete updated[m];
+                      setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') });
+                    }}>
+                    <option value="">— Kullanmıyor</option>
+                    <option value="cok_iyi">⭐ Çok İyi</option>
+                    <option value="iyi">✅ İyi</option>
+                    <option value="orta">🔶 Orta</option>
+                    <option value="normal">⚪ Normal</option>
+                  </select>
+                </div>;
+              })}
             </div>
-
           </div>
 
-          <div className="form-row">
-
-            <div className="form-group"><label className="form-label">YapabildiĞi İşlemler</label>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-
-                {['Overlok', 'Reçme', 'Düz Dikiş', 'Çift İĞne', 'Baskı', 'Ütü', 'Kesim', 'Kalite Kontrol', 'Paketleme', 'İlik-DüĞme'].map(sk => {
-
-                  const sel = (form.skills || '').split(',').map(s => s.trim()).filter(Boolean);
-
-                  const isChecked = sel.includes(sk);
-
-                  return <label key={sk} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '4px 8px', borderRadius: '6px', background: isChecked ? 'rgba(46,204,113,0.15)' : 'var(--bg-input)', border: `1px solid ${isChecked ? '#2ecc71' : 'var(--border-color)'}`, cursor: 'pointer' }}>
-
-                    <input type="checkbox" checked={isChecked} onChange={() => {
-
-                      const newSel = isChecked ? sel.filter(s => s !== sk) : [...sel, sk];
-
-                      setForm({ ...form, skills: newSel.join(', ') });
-
-                    }} style={{ accentColor: '#2ecc71' }} />{sk}
-
-                  </label>;
-
-                })}
-
+          {/* ===== ROL VE BECERİLER ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(46,204,113,0.3)' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}>🎯 Rol ve Beceriler — Tekstil Kapasitesi</div>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '6px' }}>Bu kişinin tekstilde hangi becerileri var? Neyi iyi yapıyor? Hangi ürünlerde tecrübeli?</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">🧵 Tekstil Becerileri & Kapasitesi</label>
+                <textarea className="form-input" rows={3} placeholder="Örn: Gömlek dikiminde çok iyi, fermuar takma konusunda tecrübeli, yaka dikiminde usta seviyesinde. Elbise ve ceket dikebiliyor. Overlok ve düz makinede hızlı çalışır..." value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} style={{ resize: 'vertical' }} />
               </div>
-
             </div>
-
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">📝 Özel Notlar (güçlü/zayıf yönleri)</label>
+                <textarea className="form-input" rows={2} placeholder="Örn: İnce kumaşlarda dikkatli, kalın kumaşta zorlanır. Hızlı ama bazen dikişi kaçırır..." value={form.capable_operations} onChange={e => setForm({ ...form, capable_operations: e.target.value })} style={{ resize: 'vertical' }} />
+              </div>
+            </div>
           </div>
 
           <div className="form-row">
@@ -3215,6 +3205,165 @@ function NewPersonnelModal({ onClose, onSave }) {
 
             </div>
 
+          </div>
+
+          {/* ===== KİŞİSEL BİLGİLER ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#3498db', marginBottom: '8px' }}>📱 Kişisel Bilgiler</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">📞 Telefon</label><input className="form-input" type="tel" placeholder="05xx xxx xx xx" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">🆔 TC Kimlik No</label><input className="form-input" placeholder="xxxxxxxxxxx" maxLength={11} value={form.national_id} onChange={e => setForm({ ...form, national_id: e.target.value })} /></div>
+            </div>
+          </div>
+
+          {/* ===== ÜRETİM KAPASİTESİ ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(46,204,113,0.3)' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}>📊 Üretim Kapasitesi</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Günlük Ort. Adet</label><input className="form-input" type="number" placeholder="Standart işlemde günde kaç parça?" value={form.daily_avg_output} onChange={e => setForm({ ...form, daily_avg_output: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Hata Oranı (%)</label><input className="form-input" type="number" step="0.1" placeholder="Örn: 2.5" value={form.error_rate} onChange={e => setForm({ ...form, error_rate: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Verimlilik Skoru (%)</label><input className="form-input" type="number" step="0.1" placeholder="SAM bazlı %" value={form.efficiency_score} onChange={e => setForm({ ...form, efficiency_score: e.target.value })} /></div>
+            </div>
+          </div>
+
+          {/* ===== BECERİ DETAYLARI ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(155,89,182,0.3)' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#8e44ad', marginBottom: '8px' }}>🎯 Beceri Detayları</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Yapabildiği İşlemler (Detay)</label><textarea className="form-input" rows={2} placeholder="Omuz dikimi, fermuar takma, yaka dikimi, kol takma vb." value={form.capable_operations} onChange={e => setForm({ ...form, capable_operations: e.target.value })} /></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">📚 Öğrenme Hızı</label>
+                <select className="form-select" value={form.learning_speed} onChange={e => setForm({ ...form, learning_speed: e.target.value })}>
+                  <option value="cok_hizli">Çok Hızlı — 1-2 günde kavrar</option>
+                  <option value="hizli">Hızlı — 3-5 günde öğrenir</option>
+                  <option value="normal">Normal — 1-2 haftada alışır</option>
+                  <option value="yavas">Yavaş — Uzun süre ister</option>
+                </select>
+              </div>
+              <div className="form-group"><label className="form-label">🔓 Bağımsız Çalışma</label>
+                <select className="form-select" value={form.independence_level} onChange={e => setForm({ ...form, independence_level: e.target.value })}>
+                  <option value="tam">Tam Bağımsız — Gösterilmeden yapar</option>
+                  <option value="kismen">Kısmen — Ara sıra sorar</option>
+                  <option value="bagli">Bağımlı — Sürekli yönlendirme ister</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* ===== ÇALIŞMA DİSİPLİNİ VE DAVRANIŞ ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(241,196,15,0.3)' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#f39c12', marginBottom: '8px' }}>⭐ Çalışma Disiplini & Davranış</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">📅 Aylık Devamsızlık</label>
+                <select className="form-select" value={form.attendance} onChange={e => setForm({ ...form, attendance: e.target.value })}>
+                  <option value="yok">Yok — Hiç devamsızlık yapmaz</option>
+                  <option value="ayda_yarim">Ayda yarım gün (çok nadir)</option>
+                  <option value="ayda_1">Ayda 1 gün</option>
+                  <option value="ayda_2">Ayda 2 gün</option>
+                  <option value="ayda_3_4">Ayda 3-4 gün</option>
+                  <option value="ayda_5_ustu">Ayda 5+ gün (çok sık)</option>
+                </select>
+              </div>
+              <div className="form-group"><label className="form-label">⏰ Sabah Geç Kalma</label>
+                <select className="form-select" value={form.punctuality} onChange={e => setForm({ ...form, punctuality: e.target.value })}>
+                  <option value="herzaman">Asla geç kalmaz</option>
+                  <option value="genelde">Nadiren — Ayda 1-2 kez</option>
+                  <option value="bazen">Bazen — Haftada 1 kez</option>
+                  <option value="sik">Sık — Haftada 2-3 kez</option>
+                  <option value="surekli">Sürekli — Her gün geç</option>
+                </select>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">📋 İzin Kullanımı (Çalışma Günlerinde)</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                  {[
+                    { id: 'yillik_izin', label: '🏖️ Yıllık İzin', color: '#3498db' },
+                    { id: 'saglik_raporu', label: '🏥 Sağlık Raporu', color: '#e74c3c' },
+                    { id: 'ucretsiz_izin', label: '💤 Ücretsiz İzin', color: '#95a5a6' },
+                    { id: 'aile_izni', label: '👨‍👩‍👧 Aile İzni (evlilik/ölüm)', color: '#8e44ad' },
+                    { id: 'resmi_izin', label: '🏛️ Resmi Tatil', color: '#27ae60' },
+                    { id: 'mazeret_izni', label: '📝 Mazeret İzni', color: '#f39c12' },
+                  ].map(izin => {
+                    const izinler = (form.leave_types || '').split(',').map(s => s.trim()).filter(Boolean);
+                    const isChecked = izinler.includes(izin.id);
+                    return <label key={izin.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '4px 8px', borderRadius: '6px', background: isChecked ? `${izin.color}15` : 'var(--bg-input)', border: `1px solid ${isChecked ? izin.color : 'var(--border-color)'}`, cursor: 'pointer' }}>
+                      <input type="checkbox" checked={isChecked} onChange={() => {
+                        const newList = isChecked ? izinler.filter(s => s !== izin.id) : [...izinler, izin.id];
+                        setForm({ ...form, leave_types: newList.join(', ') });
+                      }} style={{ accentColor: izin.color }} />{izin.label}
+                    </label>;
+                  })}
+                </div>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">💡 İnisiyatif Alma</label>
+                <select className="form-select" value={form.initiative_level} onChange={e => setForm({ ...form, initiative_level: e.target.value })}>
+                  <option value="yuksek">Yüksek — Sorun görünce hemen müdahale</option>
+                  <option value="orta">Orta — Söylenince yapar</option>
+                  <option value="dusuk">Düşük — Bekler, pasif kalır</option>
+                </select>
+              </div>
+              <div className="form-group"><label className="form-label">🤝 Takım Çalışması</label>
+                <select className="form-select" value={form.teamwork_level} onChange={e => setForm({ ...form, teamwork_level: e.target.value })}>
+                  <option value="cok_iyi">Çok İyi — Yardımcı, uyumlu</option>
+                  <option value="iyi">İyi — Normal uyum</option>
+                  <option value="orta">Orta — Bazen çatışma</option>
+                  <option value="zayif">Zayıf — Ekiple uyum sorunu</option>
+                </select>
+              </div>
+              <div className="form-group"><label className="form-label">🧩 Problem Çözme</label>
+                <select className="form-select" value={form.problem_solving} onChange={e => setForm({ ...form, problem_solving: e.target.value })}>
+                  <option value="cozer">Çözer — Kendi başına çözüm bulur</option>
+                  <option value="sorar">Sorar — Onay alarak çözer</option>
+                  <option value="bekler">Bekler — Biri gelip çözene kadar durur</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* ===== FİZİKSEL VE ERGONOMİK ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(231,76,60,0.2)' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#e74c3c', marginBottom: '8px' }}>🏋️ Fiziksel & Ergonomik</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">💪 Fiziksel Dayanıklılık</label>
+                <select className="form-select" value={form.physical_endurance} onChange={e => setForm({ ...form, physical_endurance: e.target.value })}>
+                  <option value="iyi">İyi — Uzun süreli çalışmaya uygun</option>
+                  <option value="orta">Orta — Mola gerektirir</option>
+                  <option value="dikkat">Dikkat — Özel koşullar gerekli</option>
+                </select>
+              </div>
+              <div className="form-group"><label className="form-label">👁️ Göz Sağlığı</label>
+                <select className="form-select" value={form.eye_health} onChange={e => setForm({ ...form, eye_health: e.target.value })}>
+                  <option value="iyi">İyi — İnce detay işleri yapabilir</option>
+                  <option value="orta">Orta — Normal işler OK</option>
+                  <option value="dikkat">Dikkat — İnce iş vermekten kaçın</option>
+                </select>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">🏥 Sağlık Kısıtlaması</label><input className="form-input" placeholder="Varsa özel koşullar (isteğe bağlı)" value={form.health_restrictions} onChange={e => setForm({ ...form, health_restrictions: e.target.value })} /></div>
+            </div>
+          </div>
+
+          {/* ===== KARİYER VE GELİŞİM ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(52,152,219,0.3)' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#2980b9', marginBottom: '8px' }}>🚀 Kariyer & Gelişim</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">👑 Liderlik Potansiyeli</label>
+                <select className="form-select" value={form.leadership_potential} onChange={e => setForm({ ...form, leadership_potential: e.target.value })}>
+                  <option value="yuksek">Yüksek — Usta başı/şef olabilir</option>
+                  <option value="potansiyel">Potansiyel — Geliştirilirse olur</option>
+                  <option value="hayir">Hayır — Şu an uygun değil</option>
+                </select>
+              </div>
+              <div className="form-group"><label className="form-label">📚 Eğitim İhtiyacı</label><input className="form-input" placeholder="Hangi konularda eğitim gerekli?" value={form.training_needs} onChange={e => setForm({ ...form, training_needs: e.target.value })} /></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">📝 Genel Değerlendirme</label><textarea className="form-input" rows={2} placeholder="Yöneticinin kısa değerlendirmesi..." value={form.general_evaluation} onChange={e => setForm({ ...form, general_evaluation: e.target.value })} /></div>
+            </div>
           </div>
 
           <div className="modal-footer">
