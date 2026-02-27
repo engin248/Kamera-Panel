@@ -225,7 +225,7 @@ function SpeechToText() {
 
         <div>
 
-          <div style={{ fontWeight: '700', fontSize: '15px' }}>{isListening ? '📋” Dinleniyor...' : '📋 Kayda Başla'}</div>
+          <div style={{ fontWeight: '700', fontSize: '15px' }}>{isListening ? '📋 Dinleniyor...' : '📋 Kayda Başla'}</div>
 
           <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{isListening ? 'Konuşmaya devam edin, durdurmak için butona basın' : 'Butona basarak konuşmaya başlayın'}</div>
 
@@ -237,9 +237,9 @@ function SpeechToText() {
 
       <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
 
-        <button className="btn btn-secondary btn-sm" onClick={() => { navigator.clipboard.writeText(transcript.replace('...', '')); }} disabled={!transcript}>📏‹ Kopyala</button>
+        <button className="btn btn-secondary btn-sm" onClick={() => { navigator.clipboard.writeText(transcript.replace('...', '')); }} disabled={!transcript}>📋 Kopyala</button>
 
-        <button className="btn btn-secondary btn-sm" onClick={() => setTranscript('')} disabled={!transcript}>📋—‘️ Temizle</button>
+        <button className="btn btn-secondary btn-sm" onClick={() => setTranscript('')} disabled={!transcript}>🗑️ Temizle</button>
 
       </div>
 
@@ -1177,7 +1177,7 @@ function NewModelModal({ onClose, onSave }) {
 
 
 
-          {sectionTitle('📏…', 'Tarihler & Ölçü')}
+          {sectionTitle('📅', 'Tarihler & Ölçü')}
 
           <div className="form-row">
 
@@ -1834,7 +1834,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
     { id: 'medya', label: '📋 Medya Yükle' },
 
-    { id: 'yapilis', label: '📋™️ Sesle Kayıt' },
+    { id: 'yapilis', label: '🎙️ Sesle Kayıt' },
 
     { id: 'makine', label: '⚙️ Makine' },
 
@@ -2116,7 +2116,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
                       </div>
 
-                      <button type="button" onClick={() => removeFile('videos')} style={{ padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid var(--danger)', background: 'rgba(239,68,68,0.06)', color: 'var(--danger)', fontFamily: 'inherit' }}>📋—‘️ Kaldır</button>
+                      <button type="button" onClick={() => removeFile('videos')} style={{ padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid var(--danger)', background: 'rgba(239,68,68,0.06)', color: 'var(--danger)', fontFamily: 'inherit' }}>🗑️ Kaldır</button>
 
                     </div>
 
@@ -2339,7 +2339,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
                       </div>
 
-                      <button type="button" onClick={() => removeFile('audios')} style={{ padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid var(--danger)', background: 'rgba(239,68,68,0.06)', color: 'var(--danger)', fontFamily: 'inherit' }}>📋—‘️ Kaldır</button>
+                      <button type="button" onClick={() => removeFile('audios')} style={{ padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid var(--danger)', background: 'rgba(239,68,68,0.06)', color: 'var(--danger)', fontFamily: 'inherit' }}>🗑️ Kaldır</button>
 
                     </div>
 
@@ -2455,7 +2455,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
               <div style={{ marginTop: '20px', padding: '14px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.7' }}>
 
-                <div style={{ fontWeight: '700', marginBottom: '6px' }}>📋’ İpuçları:</div>
+                <div style={{ fontWeight: '700', marginBottom: '6px' }}>📋 İpuçları:</div>
 
                 <ul style={{ margin: 0, paddingLeft: '18px' }}>
 
@@ -2483,7 +2483,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
               <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(168,85,247,0.08))', borderRadius: 'var(--radius-md)', marginBottom: '20px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.7', border: '1px solid rgba(99,102,241,0.2)' }}>
 
-                <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '6px', color: 'var(--accent)' }}>📋™️ Sesle İşlem Kaydı Sistemi</div>
+                <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '6px', color: 'var(--accent)' }}>🎙️ Sesle İşlem Kaydı Sistemi</div>
 
                 <strong>Nasıl Çalışır:</strong> Prototip üretimi sırasında işlemi yaparken sesle anlatın → Sistem sesi <strong>otomatik yazıya çevirir</strong> + <strong>ses dosyası olarak kaydeder</strong> → Kontrol edip onaylayın → İşlem talimatı olarak kaydedilir. Hem yazılı hem sesli doküman oluşturulmuş olur.
 
@@ -2501,7 +2501,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
                     <div style={{ width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', background: isRecording ? 'rgba(239,68,68,0.15)' : 'rgba(99,102,241,0.12)', animation: isRecording ? 'pulse 1.5s infinite' : 'none' }}>
 
-                      {isRecording ? '📋”' : '📋™️'}
+                      {isRecording ? '🔴' : '🎙️'}
 
                     </div>
 
@@ -2511,7 +2511,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
                         {transcriptStatus === 'idle' && 'Sesle Kayıt Hazır'}
 
-                        {transcriptStatus === 'recording' && '📋” Kayıt Devam Ediyor...'}
+                        {transcriptStatus === 'recording' && '📋 Kayıt Devam Ediyor...'}
 
                         {transcriptStatus === 'review' && '📏 Transkripti Kontrol Edin'}
 
@@ -2541,7 +2541,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
                         style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(99,102,241,0.3)', transition: 'all 0.2s' }}>
 
-                        📋™️ Kayda Başla
+                        🎙️ Kayda Başla
 
                       </button>
 
@@ -2571,7 +2571,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
                     <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>
 
-                      {isRecording ? '📋”Š Canlı Transkripsiyon' : '📏 Transkript Sonucu'}
+                      {isRecording ? '🔊 Canlı Transkripsiyon' : '📏 Transkript Sonucu'}
 
                     </div>
 
@@ -2615,7 +2615,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
                         style={{ padding: '10px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '2px solid var(--danger)', background: 'rgba(239,68,68,0.08)', color: 'var(--danger)', fontFamily: 'inherit' }}>
 
-                        📋—‘️ İptal & Yeniden Kaydet
+                        🗑️ İptal & Yeniden Kaydet
 
                       </button>
 
@@ -2623,7 +2623,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
                         style={{ padding: '10px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '2px solid var(--accent)', background: 'rgba(99,102,241,0.08)', color: 'var(--accent)', fontFamily: 'inherit' }}>
 
-                        📋™️ Devam Kaydet (Ekle)
+                        🎙️ Devam Kaydet (Ekle)
 
                       </button>
 
@@ -2659,7 +2659,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
                     </div>
 
-                    <button type="button" onClick={resetTranscript} style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-secondary)', fontFamily: 'inherit' }}>📋™️ Tekrar Kayıt</button>
+                    <button type="button" onClick={resetTranscript} style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-secondary)', fontFamily: 'inherit' }}>🎙️ Tekrar Kayıt</button>
 
                   </div>
 
@@ -2675,7 +2675,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                  📏‹ İşlemin Nasıl YapılacaĞı (Detaylı Anlatım)
+                  📋 İşlemin Nasıl YapılacaĞı (Detaylı Anlatım)
 
                   {form.how_to_do && <span className="badge badge-success" style={{ fontSize: '10px' }}>✅ {form.how_to_do.split('\n').filter(l => l.trim()).length} adım</span>}
 
@@ -2727,7 +2727,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
               <div style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', fontSize: '11px', color: 'var(--text-muted)' }}>
 
-                📋’ İplik ve iĞne bilgileri, farklı operatörlerin aynı kalitede üretim yapmasını saĞlar.
+                📋 İplik ve iĞne bilgileri, farklı operatörlerin aynı kalitede üretim yapmasını saĞlar.
 
               </div>
 
@@ -3129,7 +3129,7 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
 
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
 
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📋’ Aylık Ücret Bileşenleri</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📋 Aylık Ücret Bileşenleri</div>
 
             <div className="form-row">
               <div className="form-group"><label className="form-label">Maaş (₺)</label><EditableInput type="number" step="0.01" placeholder="0" value={form.base_salary} onChange={v => setForm({ ...form, base_salary: v })} /></div>
@@ -3155,7 +3155,7 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
 
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
 
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#e67e22', marginBottom: '8px' }}>📏Š Operatör Beceri Matrisi</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#e67e22', marginBottom: '8px' }}>📊 Operatör Beceri Matrisi</div>
 
             <div className="form-row">
 
@@ -3802,7 +3802,7 @@ function DashboardPage({ models, personnel }) {
 
       <div className="topbar">
 
-        <h1 className="topbar-title">📏Š Ana Panel</h1>
+        <h1 className="topbar-title">📊 Ana Panel</h1>
 
         <div className="topbar-actions">
 
@@ -3820,11 +3820,11 @@ function DashboardPage({ models, personnel }) {
 
         <div className="stats-grid">
 
-          <div className="stat-card"><div className="stat-icon">📋‘—</div><div className="stat-value">{models.length}</div><div className="stat-label">Toplam Model</div></div>
+          <div className="stat-card"><div className="stat-icon">🗑️</div><div className="stat-value">{models.length}</div><div className="stat-label">Toplam Model</div></div>
 
           <div className="stat-card"><div className="stat-icon">⚙️</div><div className="stat-value">{totalOperations}</div><div className="stat-label">Toplam İşlem</div></div>
 
-          <div className="stat-card"><div className="stat-icon">📋‘</div><div className="stat-value">{personnel.length}</div><div className="stat-label">Personel</div></div>
+          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{personnel.length}</div><div className="stat-label">Personel</div></div>
 
           <div className="stat-card"><div className="stat-icon">📦</div><div className="stat-value">{totalOrders.toLocaleString('tr-TR')}</div><div className="stat-label">Toplam Sipariş</div></div>
 
@@ -3840,7 +3840,7 @@ function DashboardPage({ models, personnel }) {
 
             <div className="card-header" style={{ background: 'rgba(243,156,18,0.05)' }}>
 
-              <h3 className="card-title">📋”” Onay Bekleyen İlk Ürünler ({pendingApprovals.length})</h3>
+              <h3 className="card-title">✅✅ Onay Bekleyen İlk Ürünler ({pendingApprovals.length})</h3>
 
             </div>
 
@@ -3922,7 +3922,7 @@ function DashboardPage({ models, personnel }) {
 
         <div className="card" style={{ marginBottom: '16px' }}>
 
-          <div className="card-header"><h3 className="card-title">📏† Bugünkü Üretim</h3></div>
+          <div className="card-header"><h3 className="card-title">🏭 Bugünkü Üretim</h3></div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', padding: '4px 0' }}>
 
@@ -3940,7 +3940,7 @@ function DashboardPage({ models, personnel }) {
 
         {models.length === 0 ? (
 
-          <div className="card"><div className="empty-state"><div className="empty-state-icon">📋‰</div><div className="empty-state-title">Sisteme Hoş Geldiniz!</div><div className="empty-state-text">Başlamak için sol menüden "Modeller" sayfasına gidin ve ilk modelinizi ekleyin.</div></div></div>
+          <div className="card"><div className="empty-state"><div className="empty-state-icon">📭</div><div className="empty-state-title">Sisteme Hoş Geldiniz!</div><div className="empty-state-text">Başlamak için sol menüden "Modeller" sayfasına gidin ve ilk modelinizi ekleyin.</div></div></div>
 
         ) : (
 
@@ -3964,7 +3964,7 @@ function DashboardPage({ models, personnel }) {
 
                     <td>{(model.total_order || 0).toLocaleString('tr-TR')} adet</td>
 
-                    <td><span className={`badge ${model.status === 'prototip' ? 'badge-info' : model.status === 'uretimde' ? 'badge-success' : 'badge-warning'}`}>{model.status === 'prototip' ? '📋” Prototip' : model.status === 'uretimde' ? '📋ş Üretimde' : model.status}</span></td>
+                    <td><span className={`badge ${model.status === 'prototip' ? 'badge-info' : model.status === 'uretimde' ? 'badge-success' : 'badge-warning'}`}>{model.status === 'prototip' ? '📋 Prototip' : model.status === 'uretimde' ? '📋ş Üretimde' : model.status}</span></td>
 
                   </tr>
 
@@ -4243,27 +4243,27 @@ function ModelsPage({ models, loadModels, addToast }) {
 
   const washIcons = [
 
-    { id: 'wash_normal', icon: '📋ŒŠ', label: 'Normal Yıkama' },
+    { id: 'wash_normal', icon: '🧼', label: 'Normal Yıkama' },
 
-    { id: 'wash_gentle', icon: '📋’', label: 'Hassas Yıkama' },
+    { id: 'wash_gentle', icon: '📋', label: 'Hassas Yıkama' },
 
     { id: 'wash_hand', icon: '🤝', label: 'Elde Yıkama' },
 
-    { id: 'wash_no', icon: '📋š', label: 'Yıkamayın' },
+    { id: 'wash_no', icon: '⚠️', label: 'Yıkamayın' },
 
     { id: 'bleach_no', icon: '⛔', label: 'AĞartma Yok' },
 
-    { id: 'iron_low', icon: '📋”…', label: 'Düşük Isı Ütü' },
+    { id: 'iron_low', icon: '🌡️', label: 'Düşük Isı Ütü' },
 
-    { id: 'iron_med', icon: '📋”†', label: 'Orta Isı Ütü' },
+    { id: 'iron_med', icon: '♨️', label: 'Orta Isı Ütü' },
 
-    { id: 'iron_no', icon: '📋š📋”', label: 'Ütüleme' },
+    { id: 'iron_no', icon: '🚫', label: 'Ütüleme' },
 
     { id: 'dry_flat', icon: '➗', label: 'Yatay Kurutma' },
 
     { id: 'dry_hang', icon: '📏', label: 'Asarak Kurutma' },
 
-    { id: 'dry_no', icon: '📋š📋’', label: 'Kurutma Yok' },
+    { id: 'dry_no', icon: '🚫', label: 'Kurutma Yok' },
 
     { id: 'dryclean', icon: '📋', label: 'Kuru Temizleme' },
 
@@ -4303,7 +4303,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
       <div className="topbar">
 
-        <h1 className="topbar-title">📋‘— Modeller</h1>
+        <h1 className="topbar-title">📋 Modeller</h1>
 
         <div className="topbar-actions"><button className="btn btn-primary" onClick={() => setShowNewModal(true)}>➕ Yeni Model</button></div>
 
@@ -4313,7 +4313,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
         {models.length === 0 ? (
 
-          <div className="card"><div className="empty-state"><div className="empty-state-icon">📋‘—</div><div className="empty-state-title">Henüz Model Yok</div><div className="empty-state-text">İlk modelinizi ekleyerek başlayın.</div><button className="btn btn-primary btn-lg" onClick={() => setShowNewModal(true)}>➕ İlk Modeli Ekle</button></div></div>
+          <div className="card"><div className="empty-state"><div className="empty-state-icon">🗑️</div><div className="empty-state-title">Henüz Model Yok</div><div className="empty-state-text">İlk modelinizi ekleyerek başlayın.</div><button className="btn btn-primary btn-lg" onClick={() => setShowNewModal(true)}>➕ İlk Modeli Ekle</button></div></div>
 
         ) : (
 
@@ -4329,7 +4329,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                     <h3 className="card-title" style={{ fontSize: '18px' }}>
 
-                      {expandedModel === model.id ? '📋”' : '▶️'} {model.name}
+                      {expandedModel === model.id ? '🔴' : '▶️'} {model.name}
 
                     </h3>
 
@@ -4512,7 +4512,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ marginBottom: '12px', padding: '12px 16px', background: 'rgba(220,53,69,0.1)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--danger)' }}>
 
-                            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--danger)', textTransform: 'uppercase', marginBottom: '4px' }}>📋š Kritik Noktalar</div>
+                            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--danger)', textTransform: 'uppercase', marginBottom: '4px' }}>⚠️ Kritik Noktalar</div>
 
                             <div style={{ fontSize: '13px', whiteSpace: 'pre-wrap' }}>{model.critical_points}</div>
 
@@ -4524,7 +4524,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ marginBottom: '12px', padding: '12px 16px', background: 'rgba(13,110,253,0.1)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--accent)' }}>
 
-                            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: '4px' }}>📋‘ Müşteri Özel İstekleri</div>
+                            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', marginBottom: '4px' }}>📋 Müşteri Özel İstekleri</div>
 
                             <div style={{ fontSize: '13px', whiteSpace: 'pre-wrap' }}>{model.customer_requests}</div>
 
@@ -4927,11 +4927,11 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                             { label: 'Astar', value: model.has_lining ? `Var (${model.lining_pieces || 0} parça)` : 'Yok', icon: '🪡' },
 
-                            { label: 'Tela', value: model.has_interlining ? 'Var' : 'Yok', icon: '📏‹' },
+                            { label: 'Tela', value: model.has_interlining ? 'Var' : 'Yok', icon: '📋' },
 
                             { label: 'Asorti', value: model.asorti, icon: '📦' },
 
-                            { label: 'Durum', value: model.status, icon: '📏Š' },
+                            { label: 'Durum', value: model.status, icon: '📊' },
 
                           ].map((item, i) => (
 
@@ -4963,7 +4963,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ padding: '12px 16px', background: 'rgba(243,156,18,0.1)', borderRadius: '8px', border: '1px solid rgba(243,156,18,0.2)', marginBottom: '12px' }}>
 
-                            <div style={{ fontSize: '14px', fontWeight: '700', color: '#e67e22', marginBottom: '4px' }}>📋” Kritik Noktalar</div>
+                            <div style={{ fontSize: '14px', fontWeight: '700', color: '#e67e22', marginBottom: '4px' }}>📋 Kritik Noktalar</div>
 
                             <div style={{ fontSize: '13px' }}>{model.critical_points}</div>
 
@@ -5127,7 +5127,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                                       {op.video_path && <span title="Video mevcut" style={{ fontSize: '12px' }}>📋</span>}
 
-                                      {op.audio_path && <span title="Ses kaydı mevcut" style={{ fontSize: '12px' }}>📋”Š</span>}
+                                      {op.audio_path && <span title="Ses kaydı mevcut" style={{ fontSize: '12px' }}>🔊</span>}
 
                                       {op.how_to_do && <span title="Yazılı talimat mevcut" style={{ fontSize: '12px' }}>📏</span>}
 
@@ -5177,7 +5177,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                                           <div style={{ marginBottom: '14px' }}>
 
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>📋”Š Sesli Anlatım</div>
+                                            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>🔊 Sesli Anlatım</div>
 
                                             <audio controls style={{ width: '100%' }}>
 
@@ -5699,13 +5699,13 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
     <>
 
-      <div className="topbar"><h1 className="topbar-title">📋‘ Personel</h1><div className="topbar-actions"><button className="btn btn-primary" onClick={() => { setEditPerson(null); setShowModal(true); }}>➕ Yeni Personel</button></div></div>
+      <div className="topbar"><h1 className="topbar-title">📋 Personel</h1><div className="topbar-actions"><button className="btn btn-primary" onClick={() => { setEditPerson(null); setShowModal(true); }}>➕ Yeni Personel</button></div></div>
 
       <div className="page-content">
 
         {personnel.length === 0 ? (
 
-          <div className="card"><div className="empty-state"><div className="empty-state-icon">📋‘</div><div className="empty-state-title">Henüz Personel Yok</div><div className="empty-state-text">Personel ekleyerek başlayın.</div><button className="btn btn-primary" onClick={() => setShowModal(true)}>➕ İlk Personeli Ekle</button></div></div>
+          <div className="card"><div className="empty-state"><div className="empty-state-icon">📋</div><div className="empty-state-title">Henüz Personel Yok</div><div className="empty-state-text">Personel ekleyerek başlayın.</div><button className="btn btn-primary" onClick={() => setShowModal(true)}>➕ İlk Personeli Ekle</button></div></div>
 
         ) : (
 
@@ -5945,7 +5945,7 @@ function ProductionPage({ models, personnel, addToast }) {
 
   const [form, setForm] = useState({ total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator', machine_down_min: '0', material_wait_min: '0' });
 
-  const defectSources = [{ value: 'operator', label: '📋‘ Operatör Hatası' }, { value: 'machine', label: '📋 Makine Hatası' }, { value: 'material', label: '🧵 Malzeme Hatası' }, { value: 'design', label: '📏 Tasarım Hatası' }];
+  const defectSources = [{ value: 'operator', label: '📋 Operatör Hatası' }, { value: 'machine', label: '📋 Makine Hatası' }, { value: 'material', label: '🧵 Malzeme Hatası' }, { value: 'design', label: '📏 Tasarım Hatası' }];
 
 
 
@@ -6031,13 +6031,13 @@ function ProductionPage({ models, personnel, addToast }) {
 
     <>
 
-      <div className="topbar"><h1 className="topbar-title">📋—️ Üretim Takip</h1><div className="topbar-actions"><span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div></div>
+      <div className="topbar"><h1 className="topbar-title">🏭️ Üretim Takip</h1><div className="topbar-actions"><span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div></div>
 
       <div className="page-content">
 
         <div className="card">
 
-          <div className="card-header"><h3 className="card-title">{activeSession ? '⏱️ Aktif Üretim' : '📋—️ Yeni Üretim Başlat'}</h3></div>
+          <div className="card-header"><h3 className="card-title">{activeSession ? '⏱️ Aktif Üretim' : '🏭️ Yeni Üretim Başlat'}</h3></div>
 
           {!activeSession ? (
 
@@ -6091,7 +6091,7 @@ function ProductionPage({ models, personnel, addToast }) {
 
               {selectedOp && (<div style={{ padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}><strong>Seçilen İşlem:</strong> {selectedOp.name}  Makine: {selectedOp.machine_type || '—'}  Zorluk: {selectedOp.difficulty}/10{selectedOp.standard_time_min && selectedOp.standard_time_max && <>  Std. Süre: {selectedOp.standard_time_min}–{selectedOp.standard_time_max} sn</>}{selectedOp.unit_price > 0 && <>  Birim: {selectedOp.unit_price.toFixed(2)} ₺</>}</div>)}
 
-              <button className="btn btn-primary btn-lg" onClick={handleStart} disabled={!selectedModel || !selectedOperation || !selectedPerson} style={{ width: '100%', padding: '16px', fontSize: '18px' }}>📋—️ İŞLEMİ BAŞLAT</button>
+              <button className="btn btn-primary btn-lg" onClick={handleStart} disabled={!selectedModel || !selectedOperation || !selectedPerson} style={{ width: '100%', padding: '16px', fontSize: '18px' }}>🏭️ İŞLEMİ BAŞLAT</button>
 
             </div>
 
@@ -6151,7 +6151,7 @@ function ProductionPage({ models, personnel, addToast }) {
 
         <div className="card" style={{ marginTop: '16px' }}>
 
-          <div className="card-header"><h3 className="card-title">📏‹ Bugünün Üretim Kayıtları</h3></div>
+          <div className="card-header"><h3 className="card-title">📋 Bugünün Üretim Kayıtları</h3></div>
 
           {logs.length === 0 ? (
 
@@ -6423,7 +6423,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
     </style></head><body>
 
-      <h1>📏‹ Model Kartı</h1>
+      <h1>📋 Model Kartı</h1>
 
       <div class="meta">
 
@@ -6461,7 +6461,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
     <>
 
-      <div className="topbar"><h1 className="topbar-title">📏Š Raporlar & Performans</h1>
+      <div className="topbar"><h1 className="topbar-title">📊 Raporlar & Performans</h1>
 
         <div className="topbar-actions" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
 
@@ -6469,23 +6469,23 @@ function ReportsPage({ models, personnel, addToast }) {
 
           <select className="form-select" value={period} onChange={e => setPeriod(e.target.value)} style={{ minWidth: '160px' }}>
 
-            <option value="today">📏… Bugün</option>
+            <option value="today">📅 Bugün</option>
 
-            <option value="yesterday">📏… Dün</option>
+            <option value="yesterday">📅 Dün</option>
 
-            <option value="week">📏… Bu Hafta (7 gün)</option>
+            <option value="week">📅 Bu Hafta (7 gün)</option>
 
-            <option value="month">📏… Bu Ay</option>
+            <option value="month">📅 Bu Ay</option>
 
-            <option value="2month">📏… Son 2 Ay</option>
+            <option value="2month">📅 Son 2 Ay</option>
 
-            <option value="3month">📏… Son 3 Ay</option>
+            <option value="3month">📅 Son 3 Ay</option>
 
-            <option value="6month">📏… Son 6 Ay</option>
+            <option value="6month">📅 Son 6 Ay</option>
 
-            <option value="custom">📋” Özel Tarih Aralığı</option>
+            <option value="custom">📋 Özel Tarih Aralığı</option>
 
-            <option value="all">📏… Tüm Zamanlar</option>
+            <option value="all">📅 Tüm Zamanlar</option>
 
           </select>
 
@@ -6499,7 +6499,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
               <input type="date" className="form-input" value={customTo} onChange={e => setCustomTo(e.target.value)} style={{ width: '140px' }} />
 
-              <button className="btn btn-primary" onClick={loadReportData} style={{ padding: '6px 12px' }}>📋” Ara</button>
+              <button className="btn btn-primary" onClick={loadReportData} style={{ padding: '6px 12px' }}>📋 Ara</button>
 
             </>
 
@@ -6515,7 +6515,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
           <div className="stat-card"><div className="stat-icon">📦</div><div className="stat-value">{totalProduced.toLocaleString('tr-TR')}</div><div className="stat-label">Toplam Üretim</div></div>
 
-          <div className="stat-card"><div className="stat-icon">📋’</div><div className="stat-value">{totalValue.toFixed(0)} ₺</div><div className="stat-label">Toplam Üretim DeĞeri</div></div>
+          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{totalValue.toFixed(0)} ₺</div><div className="stat-label">Toplam Üretim DeĞeri</div></div>
 
           <div className="stat-card"><div className="stat-icon">❌</div><div className="stat-value">{totalDefective}</div><div className="stat-label">Toplam Hata</div></div>
 
@@ -6525,7 +6525,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
         <div className="card" style={{ marginTop: '16px' }}>
 
-          <div className="card-header"><h3 className="card-title">📏Š Personel Performans Tablosu</h3></div>
+          <div className="card-header"><h3 className="card-title">📊 Personel Performans Tablosu</h3></div>
 
           {summaryList.length === 0 ? (
 
@@ -6612,7 +6612,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
               <div className="card">
 
-                <div className="card-header"><h3 className="card-title">📋” Fire — Nedene Göre</h3></div>
+                <div className="card-header"><h3 className="card-title">📋 Fire — Nedene Göre</h3></div>
 
                 <div style={{ padding: '14px' }}>
 
@@ -6634,7 +6634,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
               <div className="card">
 
-                <div className="card-header"><h3 className="card-title">📋‘ Fire — Kişiye Göre</h3></div>
+                <div className="card-header"><h3 className="card-title">📋 Fire — Kişiye Göre</h3></div>
 
                 <div style={{ padding: '14px' }}>
 
@@ -6666,7 +6666,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
         <div className="card" style={{ marginTop: '16px' }}>
 
-          <div className="card-header"><h3 className="card-title">📏‹ Model Kartı Yazdır</h3></div>
+          <div className="card-header"><h3 className="card-title">📋 Model Kartı Yazdır</h3></div>
 
           <div style={{ padding: '14px' }}>
 
@@ -6843,9 +6843,9 @@ function MachinesPage({ addToast }) {
 
           <div className="stat-card"><div className="stat-icon">✅</div><div className="stat-value">{machines.filter(m => m.status === 'active').length}</div><div className="stat-label">Aktif</div></div>
 
-          <div className="stat-card"><div className="stat-icon">📏Š</div><div className="stat-value">{Object.keys(catSummary).length}</div><div className="stat-label">Kategori</div></div>
+          <div className="stat-card"><div className="stat-icon">📊</div><div className="stat-value">{Object.keys(catSummary).length}</div><div className="stat-label">Kategori</div></div>
 
-          <div className="stat-card"><div className="stat-icon">📋”</div><div className="stat-value">{new Set(machines.map(m => m.brand).filter(Boolean)).size}</div><div className="stat-label">Marka</div></div>
+          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{new Set(machines.map(m => m.brand).filter(Boolean)).size}</div><div className="stat-label">Marka</div></div>
 
         </div>
 
@@ -7198,13 +7198,13 @@ function QualityPage({ models, personnel, addToast }) {
 
         <div className="stats-grid">
 
-          <div className="stat-card"><div className="stat-icon">📏‹</div><div className="stat-value">{checks.length}</div><div className="stat-label">Toplam Kontrol</div></div>
+          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{checks.length}</div><div className="stat-label">Toplam Kontrol</div></div>
 
           <div className="stat-card"><div className="stat-icon">✅</div><div className="stat-value">{okCount}</div><div className="stat-label">Geçen</div></div>
 
           <div className="stat-card"><div className="stat-icon">❌</div><div className="stat-value">{redCount}</div><div className="stat-label">Red</div></div>
 
-          <div className="stat-card"><div className="stat-icon">📏Š</div><div className="stat-value">%{checks.length > 0 ? Math.round(okCount / checks.length * 100) : 100}</div><div className="stat-label">Geçme Oranı</div></div>
+          <div className="stat-card"><div className="stat-icon">📊</div><div className="stat-value">%{checks.length > 0 ? Math.round(okCount / checks.length * 100) : 100}</div><div className="stat-label">Geçme Oranı</div></div>
 
         </div>
 
@@ -7360,7 +7360,7 @@ function PrimPage({ models, personnel, addToast }) {
 
       <div className="topbar">
 
-        <h1 className="topbar-title">📋’ Prim & Ücret Hesaplama</h1>
+        <h1 className="topbar-title">📋 Prim & Ücret Hesaplama</h1>
 
         <div className="topbar-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
 
@@ -7392,7 +7392,7 @@ function PrimPage({ models, personnel, addToast }) {
 
         {Object.keys(summary).length === 0 ? (
 
-          <div className="card"><div className="empty-state"><div className="empty-state-icon">📋’</div><div className="empty-state-title">Henüz Üretim Verisi Yok</div><div className="empty-state-text">Operatörler üretim kaydı girdikten sonra prim hesaplamaları burada görünecek.</div></div></div>
+          <div className="card"><div className="empty-state"><div className="empty-state-icon">📋</div><div className="empty-state-title">Henüz Üretim Verisi Yok</div><div className="empty-state-text">Operatörler üretim kaydı girdikten sonra prim hesaplamaları burada görünecek.</div></div></div>
 
         ) : (
 
@@ -7432,7 +7432,7 @@ function PrimPage({ models, personnel, addToast }) {
 
                     <div>
 
-                      <h3 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 4px' }}>📋‘ {p.name}</h3>
+                      <h3 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 4px' }}>📋 {p.name}</h3>
 
                       <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{daysCount} gün çalışma  {p.total_net_min.toFixed(0)} dk net</span>
 
@@ -7440,7 +7440,7 @@ function PrimPage({ models, personnel, addToast }) {
 
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
 
-                          📋’ Aylık: {totalMonthly.toLocaleString('tr-TR')}₺ (Maaş:{person.base_salary || 0} + Yol:{person.transport_allowance || 0} + SSK:{person.ssk_cost || 0} + Yemek:{person.food_allowance || 0} + Tazminat:{person.compensation || 0}) → Günlük: {p.daily_wage.toFixed(0)}₺
+                          📋 Aylık: {totalMonthly.toLocaleString('tr-TR')}₺ (Maaş:{person.base_salary || 0} + Yol:{person.transport_allowance || 0} + SSK:{person.ssk_cost || 0} + Yemek:{person.food_allowance || 0} + Tazminat:{person.compensation || 0}) → Günlük: {p.daily_wage.toFixed(0)}₺
 
                         </div>
 
@@ -7450,7 +7450,7 @@ function PrimPage({ models, personnel, addToast }) {
 
                     <span className={`badge ${hasPrim ? 'badge-success' : diff === 0 ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: '12px', padding: '6px 14px' }}>
 
-                      {hasPrim ? '📋Œş PRİM HAK EDİYOR' : diff === 0 ? '⚗️ BAŞABAŞ' : '⚠️ DÜŞÜK PERFORMANS'}
+                      {hasPrim ? '🏆 PRİM HAK EDİYOR' : diff === 0 ? '⚗️ BAŞABAŞ' : '⚠️ DÜŞÜK PERFORMANS'}
 
                     </span>
 
@@ -7488,7 +7488,7 @@ function PrimPage({ models, personnel, addToast }) {
 
                     <div style={{ background: hasPrim ? 'rgba(46,204,113,0.1)' : 'var(--bg-input)', borderRadius: '10px', padding: '12px', textAlign: 'center', border: hasPrim ? '2px solid rgba(46,204,113,0.3)' : 'none' }}>
 
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋’ Prim (%{primRate})</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 Prim (%{primRate})</div>
 
                       <div style={{ fontSize: '20px', fontWeight: '800', color: hasPrim ? '#2ecc71' : 'var(--text-muted)' }}>{hasPrim ? `+${primAmount.toFixed(0)} ₺` : '—'}</div>
 
@@ -7544,9 +7544,9 @@ function PrimPage({ models, personnel, addToast }) {
 
                       { month: 1, label: '1. Ay: Uyarı', icon: '⚠️', desc: 'Performans düşüklüĞü bildirilir' },
 
-                      { month: 2, label: '2. Ay: DeĞerlendirme', icon: '📏‹', desc: 'Detaylı analiz ve görüşme yapılır' },
+                      { month: 2, label: '2. Ay: DeĞerlendirme', icon: '📋', desc: 'Detaylı analiz ve görüşme yapılır' },
 
-                      { month: 3, label: '3. Ay: Karar', icon: '📋”', desc: 'Görev deĞişikliĞi veya çıkış kararı' }
+                      { month: 3, label: '3. Ay: Karar', icon: '📋', desc: 'Görev deĞişikliĞi veya çıkış kararı' }
 
                     ];
 
@@ -7554,7 +7554,7 @@ function PrimPage({ models, personnel, addToast }) {
 
                       <div style={{ marginTop: '12px', padding: '12px 14px', background: 'rgba(231,76,60,0.05)', borderRadius: '8px', border: '1px solid rgba(231,76,60,0.15)' }}>
 
-                        <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--danger)', marginBottom: '8px' }}>📏Š Adaptasyon Takip Süreci</div>
+                        <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--danger)', marginBottom: '8px' }}>📊 Adaptasyon Takip Süreci</div>
 
                         <div style={{ display: 'flex', gap: '8px' }}>
 
@@ -8531,7 +8531,7 @@ function FasonPage({ models, addToast }) {
 
           <div className="stat-card"><div className="stat-icon">📦</div><div className="stat-value">{orders.reduce((s, o) => s + (o.quantity || 0), 0).toLocaleString('tr-TR')}</div><div className="stat-label">Toplam Adet</div></div>
 
-          <div className="stat-card"><div className="stat-icon">📋’</div><div className="stat-value">{orders.reduce((s, o) => s + (o.total_price || 0), 0).toFixed(0)} ₺</div><div className="stat-label">Toplam Tutar</div></div>
+          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{orders.reduce((s, o) => s + (o.total_price || 0), 0).toFixed(0)} ₺</div><div className="stat-label">Toplam Tutar</div></div>
 
         </div>
 
@@ -8923,7 +8923,7 @@ function SettingsPage({ addToast }) {
 
           <div className="card">
 
-            <div className="card-header"><h3 className="card-title">📋Œ Dil Ayarları</h3></div>
+            <div className="card-header"><h3 className="card-title">🌐 Dil Ayarları</h3></div>
 
             <div style={{ padding: '16px' }}>
 
@@ -8935,7 +8935,7 @@ function SettingsPage({ addToast }) {
 
                   style={{ flex: 1, padding: '16px', borderRadius: '12px', border: currentLang === 'tr' ? '3px solid var(--accent)' : '2px solid var(--border-color)', background: currentLang === 'tr' ? 'rgba(99,102,241,0.1)' : 'var(--bg-input)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>
 
-                  📋‡📋‡ Türkçe
+                  🇹🇷 Türkçe
 
                 </button>
 
@@ -8943,7 +8943,7 @@ function SettingsPage({ addToast }) {
 
                   style={{ flex: 1, padding: '16px', borderRadius: '12px', border: currentLang === 'ar' ? '3px solid var(--accent)' : '2px solid var(--border-color)', background: currentLang === 'ar' ? 'rgba(99,102,241,0.1)' : 'var(--bg-input)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>
 
-                  📋‡📋‡ العربية
+                  🇸🇦 العربية
 
                 </button>
 
@@ -8959,7 +8959,7 @@ function SettingsPage({ addToast }) {
 
           <div className="card">
 
-            <div className="card-header"><h3 className="card-title">📋• Günlük Çalışma & Mola Çizelgesi</h3></div>
+            <div className="card-header"><h3 className="card-title">📋 Günlük Çalışma & Mola Çizelgesi</h3></div>
 
             <div style={{ padding: '16px' }}>
 
@@ -8969,7 +8969,7 @@ function SettingsPage({ addToast }) {
 
                 <span style={{ padding: '4px 10px', borderRadius: '6px', background: 'rgba(241,196,15,0.1)', color: '#f1c40f', fontWeight: '600' }}>📋ş Mola: {totalBreakMin} dk</span>
 
-                <span style={{ padding: '4px 10px', borderRadius: '6px', background: 'rgba(52,152,219,0.1)', color: '#3498db', fontWeight: '600' }}>📏Š Net Çalışma: {Math.floor(totalWorkMin / 60)}s {totalWorkMin % 60}dk / gün</span>
+                <span style={{ padding: '4px 10px', borderRadius: '6px', background: 'rgba(52,152,219,0.1)', color: '#3498db', fontWeight: '600' }}>📊 Net Çalışma: {Math.floor(totalWorkMin / 60)}s {totalWorkMin % 60}dk / gün</span>
 
               </div>
 
@@ -9049,7 +9049,7 @@ function SettingsPage({ addToast }) {
 
           <div className="card">
 
-            <div className="card-header"><h3 className="card-title">📏… {currentYear} Aylık Çalışma Günleri</h3></div>
+            <div className="card-header"><h3 className="card-title">📅 {currentYear} Aylık Çalışma Günleri</h3></div>
 
             <div style={{ padding: '16px' }}>
 
@@ -9115,7 +9115,7 @@ function SettingsPage({ addToast }) {
 
                 <button onClick={() => { navigator.clipboard.writeText(window.location.origin + '/operator'); addToast('success', 'URL kopyalandı!'); }}
 
-                  style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit' }}>📏‹ Kopyala</button>
+                  style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', cursor: 'pointer', fontSize: '12px', fontFamily: 'inherit' }}>📋 Kopyala</button>
 
               </div>
 
@@ -9440,7 +9440,7 @@ function CostsPage({ models, personnel, addToast }) {
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer' }}>
 
-                  <input type="checkbox" checked={expenseForm.is_recurring} onChange={e => setExpenseForm({ ...expenseForm, is_recurring: e.target.checked })} /> 📋” Her ay tekrarlanan
+                  <input type="checkbox" checked={expenseForm.is_recurring} onChange={e => setExpenseForm({ ...expenseForm, is_recurring: e.target.checked })} /> 📋 Her ay tekrarlanan
 
                 </label>
 
@@ -9464,7 +9464,7 @@ function CostsPage({ models, personnel, addToast }) {
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
 
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋‘ İşçilik</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 İşçilik</div>
 
             <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--danger)' }}>{totalLabor.toLocaleString('tr-TR')} ₺</div>
 
@@ -9488,7 +9488,7 @@ function CostsPage({ models, personnel, addToast }) {
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
 
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋’ Üretim DeĞeri</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 Üretim DeĞeri</div>
 
             <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--success)' }}>{totalProduction.toLocaleString('tr-TR')} ₺</div>
 
@@ -9566,7 +9566,7 @@ function CostsPage({ models, personnel, addToast }) {
 
                   const catInfo = expenseCategories.find(c => c.value === e.category);
 
-                  return (<tr key={e.id}><td>{catInfo?.icon} {catInfo?.label || e.category}</td><td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{e.description || '—'}</td><td style={{ fontWeight: '700' }}>{e.amount.toLocaleString('tr-TR')} ₺</td><td>{e.is_recurring ? <span className="badge badge-info">📋” Aylık</span> : '—'}</td><td><button onClick={() => deleteExpense(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="Sil">📋—‘️</button></td></tr>);
+                  return (<tr key={e.id}><td>{catInfo?.icon} {catInfo?.label || e.category}</td><td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{e.description || '—'}</td><td style={{ fontWeight: '700' }}>{e.amount.toLocaleString('tr-TR')} ₺</td><td>{e.is_recurring ? <span className="badge badge-info">📋 Aylık</span> : '—'}</td><td><button onClick={() => deleteExpense(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="Sil">🗑️</button></td></tr>);
 
                 })}
 
