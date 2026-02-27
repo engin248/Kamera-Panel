@@ -30,6 +30,6 @@ P9: İşlemler + Kumaş Deneyimi (2+8) | P10: Gelişim (5) | P11: Performans (3)
 |-----|-------|---------|
 | Kod Yazıcı | Claude (Antigravity) | Yazma ✅ |
 | Analizci | Gemini | Sadece okuma 🔒 |
-| Dokümancı | GPT | Doküman yazma ✅ |
-| Kod Denetçi | DeepSeek/Codestral | Sadece okuma 🔒 |
+| Dokümancı / İnsan Analisti | GPT | Doküman yazma ✅ |
+| Araştırmacı | Perplexity | Sadece okuma 🔒 |
 | Koordinatör | Kullanıcı (Siz) | Tam yetki 👑 |

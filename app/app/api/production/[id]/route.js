@@ -68,13 +68,18 @@ export async function PUT(request, { params }) {
     }
 }
 
-// DELETE — Üretim kaydını sil
+// DELETE — Üretim kaydı soft-delete
 export async function DELETE(request, { params }) {
     try {
         const db = getDb();
         const { id } = await params;
-        db.prepare('DELETE FROM production_logs WHERE id = ?').run(id);
-        return NextResponse.json({ success: true });
+        const log = db.prepare('SELECT * FROM production_logs WHERE id = ? AND deleted_at IS NULL').get(id);
+        if (!log) return NextResponse.json({ error: 'Kayıt bulunamadı' }, { status: 404 });
+
+        db.prepare("UPDATE production_logs SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
+        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'production_logs', id, `Üretim #${id} soft-delete`); } catch (e) { }
+
+        return NextResponse.json({ success: true, message: 'Üretim kaydı silindi (geri alınabilir)' });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

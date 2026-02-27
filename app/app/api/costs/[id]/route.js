@@ -47,13 +47,18 @@ export async function PUT(request, { params }) {
     }
 }
 
-// DELETE — Maliyet kaydını sil
+// DELETE — Maliyet kaydı soft-delete
 export async function DELETE(request, { params }) {
     try {
         const db = getDb();
         const { id } = await params;
-        db.prepare('DELETE FROM cost_entries WHERE id = ?').run(id);
-        return NextResponse.json({ success: true });
+        const cost = db.prepare('SELECT * FROM cost_entries WHERE id = ? AND deleted_at IS NULL').get(id);
+        if (!cost) return NextResponse.json({ error: 'Maliyet kaydı bulunamadı' }, { status: 404 });
+
+        db.prepare("UPDATE cost_entries SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
+        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'cost_entries', id, `Maliyet #${id} soft-delete`); } catch (e) { }
+
+        return NextResponse.json({ success: true, message: 'Maliyet kaydı silindi (geri alınabilir)' });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

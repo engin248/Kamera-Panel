@@ -2817,11 +2817,79 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
 
 
+// ========== DÜZENLENEBILIR BILEŞENLER (Personel formu için) ==========
+
+// ===== Düzenlenebilir Select Bileşeni =====
+const EditableSelect = ({ fieldKey, value, onChange, defaultOptions, label }) => {
+  const STORAGE_KEY = `SELECT_OPTIONS_${fieldKey}`;
+  let options;
+  try { const saved = localStorage.getItem(STORAGE_KEY); options = saved ? JSON.parse(saved) : [...defaultOptions]; } catch { options = [...defaultOptions]; }
+  const saveOpts = (opts) => { localStorage.setItem(STORAGE_KEY, JSON.stringify(opts)); };
+  const handleRename = (idx) => {
+    const old = options[idx][1];
+    const newLabel = prompt(`"${old}" adını ne olarak değiştirmek istiyorsunuz?`, old);
+    if (!newLabel || !newLabel.trim() || newLabel.trim() === old) return;
+    const updated = [...options];
+    const newKey = newLabel.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_çşıöüğ]/g, '');
+    const oldKey = updated[idx][0];
+    updated[idx] = [newKey, newLabel.trim()];
+    saveOpts(updated);
+    if (value === oldKey) onChange(newKey); else onChange(value);
+  };
+  const handleDelete = (idx) => {
+    if (!confirm(`"${options[idx][1]}" seçeneğini silmek istediğinize emin misiniz?`)) return;
+    const updated = [...options];
+    const removedKey = updated[idx][0];
+    updated.splice(idx, 1);
+    saveOpts(updated);
+    if (value === removedKey && updated.length > 0) onChange(updated[0][0]);
+    else onChange(value);
+  };
+  const handleAdd = () => {
+    const name = prompt(`${label} bölümüne yeni seçenek ekleyin:`);
+    if (!name || !name.trim()) return;
+    const key = name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_çşıöüğ]/g, '');
+    if (options.some(([k]) => k === key)) { alert('Bu seçenek zaten mevcut!'); return; }
+    const updated = [...options, [key, name.trim()]];
+    saveOpts(updated);
+    onChange(value);
+  };
+  return <div>
+    <div style={{ display: 'flex', gap: '2px', alignItems: 'center', marginBottom: '4px' }}>
+      <select className="form-select" value={value} onChange={e => onChange(e.target.value)} style={{ flex: 1 }}>
+        {options.map(([val, lbl]) => <option key={val} value={val}>{lbl}</option>)}
+      </select>
+      <button type="button" title="Seçenekleri Düzenle" onClick={(e) => {
+        e.preventDefault();
+        const idx = options.findIndex(([k]) => k === value);
+        if (idx >= 0) handleRename(idx);
+      }} style={{ fontSize: '11px', padding: '4px 5px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px', minWidth: '26px' }}>✏️</button>
+      <button type="button" title="Seçili Seçeneği Sil" onClick={(e) => {
+        e.preventDefault();
+        const idx = options.findIndex(([k]) => k === value);
+        if (idx >= 0) handleDelete(idx);
+      }} style={{ fontSize: '11px', padding: '4px 5px', border: '1px solid var(--border-color)', background: 'rgba(231,76,60,0.06)', color: '#e74c3c', cursor: 'pointer', borderRadius: '4px', minWidth: '26px' }}>❌</button>
+      <button type="button" title="Yeni Seçenek Ekle" onClick={(e) => { e.preventDefault(); handleAdd(); }} style={{ fontSize: '11px', padding: '4px 5px', border: '1px dashed rgba(52,152,219,0.4)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px', minWidth: '26px' }}>➕</button>
+    </div>
+  </div>;
+};
+
+// ===== Düzenlenebilir Input Bileşeni =====
+const EditableInput = ({ value, onChange, type = 'text', placeholder, maxLength, min, max, step, style }) => {
+  const hasValue = value && value.toString().trim() !== '';
+  return <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
+    <input className="form-input" type={type} placeholder={placeholder} maxLength={maxLength} min={min} max={max} step={step} value={value || ''} onChange={e => onChange(e.target.value)} style={{ flex: 1, ...(style || {}) }} />
+    <button type="button" title="Temizle" onClick={(e) => { e.preventDefault(); onChange(''); }} style={{ fontSize: '11px', padding: '4px 5px', border: '1px solid var(--border-color)', background: hasValue ? 'rgba(231,76,60,0.06)' : 'rgba(150,150,150,0.06)', color: hasValue ? '#e74c3c' : '#bbb', cursor: hasValue ? 'pointer' : 'default', borderRadius: '4px', minWidth: '26px', opacity: hasValue ? 1 : 0.5 }}>❌</button>
+  </div>;
+};
+
+
 // ========== MODAL: YENİ PERSONEL ==========
 
 function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
 
   const DRAFT_KEY = 'personnel_draft';
+
   const defaultForm = {
     name: '', role: 'duz_makineci', daily_wage: '', skill_level: 'orta', work_start: '08:00', work_end: '19:00', machines: '', language: 'tr', base_salary: '', transport_allowance: '', ssk_cost: '', food_allowance: '', compensation: '', technical_mastery: 'operator', speed_level: 'normal', quality_level: 'standart', discipline_level: 'guvenilir', versatility_level: '1-2', department: 'dikim',
     daily_avg_output: '', error_rate: '', efficiency_score: '',
@@ -2919,45 +2987,82 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
         <form onSubmit={handleSubmit}>
 
           <div style={{ marginBottom: '14px' }}>
-            <div className="form-group"><label className="form-label">Ad Soyad *</label><input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
+            <div className="form-group"><label className="form-label">Ad Soyad *</label><EditableInput value={form.name} onChange={v => setForm({ ...form, name: v })} placeholder="Ad Soyad" /></div>
           </div>
 
           <div className="form-group" style={{ marginBottom: '14px' }}><label className="form-label">Pozisyon / Görev (birden fazla seçilebilir)</label>
             {(() => {
+              const ROLE_STORAGE_KEY = 'ROLE_CATEGORIES_CUSTOM';
+              const defaultCategories = [
+                { label: '✂️ Kesim Bölümü', roles: [['makastar', 'Makastar'], ['makastar_yardimcisi', 'Makastar Yardımcısı'], ['kesimci', 'Kesimci'], ['kesimci_yardimcisi', 'Kesimci Yardımcısı'], ['kesim_ustasi', 'Kesim Ustası']] },
+                { label: '🧵 Dikim', roles: [['duz_makineci', 'Düz Makineci'], ['overlokcu', 'Overlokçu'], ['recmeci', 'Reçmeci'], ['cift_igneci', 'Çift İğneci']] },
+                { label: '♨️ Ütü & Son İşlem', roles: [['ara_utucu', 'Ara Ütücü'], ['son_utucu', 'Son Ütücü'], ['paketci', 'Paketçi'], ['kolileme_operatoru', 'Kolileme'], ['baski_operatoru', 'Baskıcı']] },
+                { label: '📋 Kalite', roles: [['inline_kalite', 'Ara Kalite Kontrol'], ['son_kontrolcu', 'Son Kontrol']] },
+                { label: '📋 Yönetim & Destek', roles: [['ustabasi', 'Usta Başı'], ['numuneci', 'Numuneci'], ['makinaci', 'Makinacı'], ['modelist', 'Modelist'], ['teknisyen', 'Teknisyen']] }
+              ];
+              let categories;
+              try { const saved = localStorage.getItem(ROLE_STORAGE_KEY); categories = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultCategories)); } catch { categories = JSON.parse(JSON.stringify(defaultCategories)); }
+              const saveCategories = (cats) => { localStorage.setItem(ROLE_STORAGE_KEY, JSON.stringify(cats)); };
               const selectedRoles = (form.role || '').split(',').map(r => r.trim()).filter(Boolean);
               const toggleRole = (val) => {
                 const current = selectedRoles.includes(val) ? selectedRoles.filter(r => r !== val) : [...selectedRoles, val];
                 setForm({ ...form, role: current.join(',') });
               };
-              const addCustomRole = () => {
-                const custom = prompt('Yeni pozisyon/makine adı girin:');
-                if (custom && custom.trim()) {
-                  const key = custom.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-                  if (!selectedRoles.includes(key)) {
-                    setForm({ ...form, role: [...selectedRoles, key].join(',') });
-                  }
+              const handleDeleteRole = (catIdx, roleIdx) => {
+                const roleName = categories[catIdx].roles[roleIdx][1];
+                if (!confirm(`"${roleName}" şıkkını silmek istediğinize emin misiniz?`)) return;
+                const updated = JSON.parse(JSON.stringify(categories));
+                const removedKey = updated[catIdx].roles[roleIdx][0];
+                updated[catIdx].roles.splice(roleIdx, 1);
+                saveCategories(updated);
+                if (selectedRoles.includes(removedKey)) {
+                  setForm({ ...form, role: selectedRoles.filter(r => r !== removedKey).join(',') });
+                } else {
+                  setForm({ ...form }); // re-render
                 }
               };
-              const categories = [
-                { label: '✂️ Kesim Bölümü', roles: [['makastar', 'Makastar'], ['makastar_yardimcisi', 'Makastar Yardımcısı'], ['kesimci', 'Kesimci'], ['kesimci_yardimcisi', 'Kesimci Yardımcısı'], ['kesim_ustasi', 'Kesim Ustası']] },
-                { label: '🧵 Dikim', roles: [['duz_makineci', 'Düz Makineci'], ['overlokcu', 'Overlokçu'], ['recmeci', 'Reçmeci'], ['cift_igneci', 'Çift İğneci']] },
-                { label: '♨️ Ütü & Son İşlem', roles: [['ara_utucu', 'Ara Ütücü'], ['son_utucu', 'Son Ütücü'], ['paketci', 'Paketçi'], ['kolileme_operatoru', 'Kolileme'], ['baski_operatoru', 'Baskıcı']] },
-                { label: '📋’ Kalite', roles: [['inline_kalite', 'Ara Kalite Kontrol'], ['son_kontrolcu', 'Son Kontrol']] },
-                { label: '📋” Yönetim & Destek', roles: [['ustabasi', 'Usta Başı'], ['numuneci', 'Numuneci'], ['makinaci', 'Makinacı'], ['modelist', 'Modelist'], ['teknisyen', 'Teknisyen']] }
-              ];
+              const handleRenameRole = (catIdx, roleIdx) => {
+                const oldLabel = categories[catIdx].roles[roleIdx][1];
+                const newLabel = prompt(`"${oldLabel}" adını ne olarak değiştirmek istiyorsunuz?`, oldLabel);
+                if (!newLabel || !newLabel.trim() || newLabel.trim() === oldLabel) return;
+                const updated = JSON.parse(JSON.stringify(categories));
+                const newKey = newLabel.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_çşıöüğ]/g, '');
+                const oldKey = updated[catIdx].roles[roleIdx][0];
+                updated[catIdx].roles[roleIdx] = [newKey, newLabel.trim()];
+                saveCategories(updated);
+                if (selectedRoles.includes(oldKey)) {
+                  setForm({ ...form, role: selectedRoles.map(r => r === oldKey ? newKey : r).join(',') });
+                } else {
+                  setForm({ ...form });
+                }
+              };
+              const handleAddRole = (catIdx, catLabel) => {
+                const custom = prompt(catLabel + ' bölümüne yeni şık ekle:');
+                if (!custom || !custom.trim()) return;
+                const key = custom.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_çşıöüğ]/g, '');
+                const updated = JSON.parse(JSON.stringify(categories));
+                if (updated[catIdx].roles.some(([k]) => k === key)) { alert('Bu şık zaten mevcut!'); return; }
+                updated[catIdx].roles.push([key, custom.trim()]);
+                saveCategories(updated);
+                setForm({ ...form });
+              };
               return <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {selectedRoles.length > 0 && <div style={{ fontSize: '14px', color: 'var(--accent)', fontWeight: '700' }}>{selectedRoles.length} pozisyon seçili</div>}
-                {categories.map(cat => (
+                {categories.map((cat, catIdx) => (
                   <div key={cat.label} style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                     <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '8px' }}>{cat.label}</div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                      {cat.roles.map(([val, label]) => {
+                      {cat.roles.map(([val, label], roleIdx) => {
                         const checked = selectedRoles.includes(val);
-                        return <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', padding: '6px 12px', borderRadius: '6px', background: checked ? 'rgba(46,204,113,0.15)' : 'transparent', border: `1px solid ${checked ? '#27ae60' : 'var(--border-color)'}`, cursor: 'pointer', fontWeight: checked ? '700' : '400', color: checked ? '#27ae60' : 'var(--text-primary)' }}>
-                          <input type="checkbox" checked={checked} onChange={() => toggleRole(val)} style={{ display: 'none' }} />{checked ? '✅' : ''} {label}
-                        </label>;
+                        return <div key={val} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', padding: '6px 12px', borderRadius: '6px 0 0 6px', background: checked ? 'rgba(46,204,113,0.15)' : 'transparent', border: `1px solid ${checked ? '#27ae60' : 'var(--border-color)'}`, cursor: 'pointer', fontWeight: checked ? '700' : '400', color: checked ? '#27ae60' : 'var(--text-primary)' }}>
+                            <input type="checkbox" checked={checked} onChange={() => toggleRole(val)} style={{ display: 'none' }} />{checked ? '✅' : ''} {label}
+                          </label>
+                          <button type="button" title="Adını Düzenle" onClick={() => handleRenameRole(catIdx, roleIdx)} style={{ fontSize: '11px', padding: '6px 4px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '0' }}>✏️</button>
+                          <button type="button" title="Sil" onClick={() => handleDeleteRole(catIdx, roleIdx)} style={{ fontSize: '11px', padding: '6px 4px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(231,76,60,0.06)', color: '#e74c3c', cursor: 'pointer', borderRadius: '0 6px 6px 0' }}>❌</button>
+                        </div>;
                       })}
-                      <button type="button" onClick={() => { const custom = prompt(cat.label + ' bölümüne ekle:'); if (custom && custom.trim()) { const key = custom.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_\u00e7\u015f\u0131\u00f6\u00fc\u011f]/g, ''); if (!selectedRoles.includes(key)) setForm({ ...form, role: [...selectedRoles, key].join(',') }); } }} style={{ fontSize: '14px', padding: '6px 12px', borderRadius: '6px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', cursor: 'pointer', fontWeight: '600' }}>➕ Ekle</button>
+                      <button type="button" onClick={() => handleAddRole(catIdx, cat.label)} style={{ fontSize: '14px', padding: '6px 12px', borderRadius: '6px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', cursor: 'pointer', fontWeight: '600' }}>➕ Ekle</button>
                     </div>
                   </div>
                 ))}
@@ -2969,52 +3074,53 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(52,152,219,0.2)' }}>
             <div style={{ fontSize: '14px', fontWeight: '700', color: '#3498db', marginBottom: '8px' }}>🪪 Kimlik & Kişisel Bilgiler</div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">TC Kimlik No</label><input className="form-input" maxLength={11} placeholder="11 hane" value={form.national_id} onChange={e => setForm({ ...form, national_id: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">Telefon</label><input className="form-input" type="tel" placeholder="05XX XXX XX XX" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">TC Kimlik No</label><EditableInput value={form.national_id} onChange={v => setForm({ ...form, national_id: v })} maxLength={11} placeholder="11 hane" /></div>
+              <div className="form-group"><label className="form-label">Telefon</label><EditableInput type="tel" value={form.phone} onChange={v => setForm({ ...form, phone: v })} placeholder="05XX XXX XX XX" /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">Doğum Tarihi</label><input className="form-input" type="date" value={form.birth_date} onChange={e => setForm({ ...form, birth_date: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Doğum Tarihi</label><EditableInput type="date" value={form.birth_date} onChange={v => setForm({ ...form, birth_date: v })} /></div>
               <div className="form-group"><label className="form-label">Cinsiyet</label>
-                <select className="form-select" value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}><option value="erkek">Erkek</option><option value="kadin">Kadın</option></select></div>
+                <EditableSelect fieldKey="gender" label="Cinsiyet" value={form.gender} onChange={v => setForm({ ...form, gender: v })} defaultOptions={[['erkek', 'Erkek'], ['kadin', 'Kadın']]} /></div>
             </div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">Eğitim Durumu</label>
-                <select className="form-select" value={form.education} onChange={e => setForm({ ...form, education: e.target.value })}><option value="yok">Eğitim almamış</option><option value="ilkokul">İlkokul</option><option value="ortaokul">Ortaokul</option><option value="lise">Lise</option><option value="universite">Üniversite</option></select></div>
+                <EditableSelect fieldKey="education" label="Eğitim" value={form.education} onChange={v => setForm({ ...form, education: v })} defaultOptions={[['yok', 'Eğitim almamış'], ['ilkokul', 'İlkokul'], ['ortaokul', 'Ortaokul'], ['lise', 'Lise'], ['universite', 'Üniversite']]} /></div>
               <div className="form-group"><label className="form-label">Kan Grubu *</label>
-                <select className="form-select" value={form.blood_type} onChange={e => setForm({ ...form, blood_type: e.target.value })}><option value="">— Seçiniz —</option><option value="A+">A Rh+</option><option value="A-">A Rh-</option><option value="B+">B Rh+</option><option value="B-">B Rh-</option><option value="AB+">AB Rh+</option><option value="AB-">AB Rh-</option><option value="0+">0 Rh+</option><option value="0-">0 Rh-</option></select></div>
+                <EditableSelect fieldKey="blood_type" label="Kan Grubu" value={form.blood_type} onChange={v => setForm({ ...form, blood_type: v })} defaultOptions={[['', '— Seçiniz —'], ['A+', 'A Rh+'], ['A-', 'A Rh-'], ['B+', 'B Rh+'], ['B-', 'B Rh-'], ['AB+', 'AB Rh+'], ['AB-', 'AB Rh-'], ['0+', '0 Rh+'], ['0-', '0 Rh-']]} /></div>
             </div>
             <div className="form-row">
               {form.gender !== 'kadin' && <div className="form-group"><label className="form-label">Askerlik Durumu</label>
-                <select className="form-select" value={form.military_status} onChange={e => setForm({ ...form, military_status: e.target.value })}><option value="">— Seçiniz —</option><option value="yapildi">Yapıldı</option><option value="tecilli">Tecilli</option><option value="muaf">Muaf</option></select></div>}
+                <EditableSelect fieldKey="military_status" label="Askerlik" value={form.military_status} onChange={v => setForm({ ...form, military_status: v })} defaultOptions={[['', '— Seçiniz —'], ['yapildi', 'Yapıldı'], ['tecilli', 'Tecilli'], ['muaf', 'Muaf']]} /></div>}
               <div className="form-group"><label className="form-label">Yaşam Durumu</label>
-                <select className="form-select" value={form.living_status} onChange={e => setForm({ ...form, living_status: e.target.value })}><option value="ailesiyle">Ailesiyle yaşıyor</option><option value="esi_cocuklariyla">Eşi ve çocuklarıyla</option><option value="cocuguyla">Çocuğuyla yaşıyor</option><option value="yalniz">Yalnız yaşıyor</option><option value="arkadasla">Arkadaşla yaşıyor</option><option value="yurtta">Yurtta yaşıyor</option></select></div>
+                <EditableSelect fieldKey="living_status" label="Yaşam" value={form.living_status} onChange={v => setForm({ ...form, living_status: v })} defaultOptions={[['ailesiyle', 'Ailesiyle yaşıyor'], ['esi_cocuklariyla', 'Eşi ve çocuklarıyla'], ['cocuguyla', 'Çocuğuyla yaşıyor'], ['yalniz', 'Yalnız yaşıyor'], ['arkadasla', 'Arkadaşla yaşıyor'], ['yurtta', 'Yurtta yaşıyor']]} /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">Çocuk Sayısı</label><input className="form-input" type="number" min="0" max="15" value={form.children_count} onChange={e => setForm({ ...form, children_count: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Çocuk Sayısı</label><EditableInput type="number" min={0} max={15} value={form.children_count} onChange={v => setForm({ ...form, children_count: v })} /></div>
               <div className="form-group"><label className="form-label">Ulaşım Şekli</label>
-                <select className="form-select" value={form.transport_type} onChange={e => setForm({ ...form, transport_type: e.target.value })}><option value="">— Seçiniz —</option><option value="yuruyerek">Yürüyerek</option><option value="toplu_tasima">Toplu taşıma</option><option value="servis">Servis</option><option value="kendi_araci">Kendi aracı</option></select></div>
+                <EditableSelect fieldKey="transport_type" label="Ulaşım" value={form.transport_type} onChange={v => setForm({ ...form, transport_type: v })} defaultOptions={[['', '— Seçiniz —'], ['yuruyerek', 'Yürüyerek'], ['toplu_tasima', 'Toplu taşıma'], ['servis', 'Servis'], ['kendi_araci', 'Kendi aracı']]} /></div>
             </div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">Türkçe Anlama</label>
-                <select className="form-select" value={form.turkish_level} onChange={e => setForm({ ...form, turkish_level: e.target.value })}><option value="ana_dil">Ana dil</option><option value="iyi">İyi anlıyor</option><option value="temel">Temel düzey</option><option value="cok_az">Çok az</option></select></div>
+                <EditableSelect fieldKey="turkish_level" label="Türkçe" value={form.turkish_level} onChange={v => setForm({ ...form, turkish_level: v })} defaultOptions={[['ana_dil', 'Ana dil'], ['iyi', 'İyi anlıyor'], ['temel', 'Temel düzey'], ['cok_az', 'Çok az']]} /></div>
               <div className="form-group"><label className="form-label">Engel Durumu</label>
-                <select className="form-select" value={form.disability_status} onChange={e => setForm({ ...form, disability_status: e.target.value })}><option value="yok">Yok</option><option value="hafif">Hafif</option><option value="var">Var</option></select></div>
+                <EditableSelect fieldKey="disability_status" label="Engel" value={form.disability_status} onChange={v => setForm({ ...form, disability_status: v })} defaultOptions={[['yok', 'Yok'], ['hafif', 'Hafif'], ['var', 'Var']]} /></div>
             </div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">🚬 Sigara İçiyor mu?</label>
-                <select className="form-select" value={form.smokes} onChange={e => setForm({ ...form, smokes: e.target.value })}><option value="hayir">Hayır</option><option value="evet">Evet</option></select></div>
+                <EditableSelect fieldKey="smokes" label="Sigara" value={form.smokes} onChange={v => setForm({ ...form, smokes: v })} defaultOptions={[['hayir', 'Hayır'], ['evet', 'Evet']]} /></div>
               <div className="form-group"><label className="form-label">🕌 Namaz Molası İhtiyacı</label>
-                <select className="form-select" value={form.prays} onChange={e => setForm({ ...form, prays: e.target.value })}><option value="hayir">Hayır</option><option value="evet">Evet</option></select></div>
+                <EditableSelect fieldKey="prays" label="Namaz" value={form.prays} onChange={v => setForm({ ...form, prays: v })} defaultOptions={[['hayir', 'Hayır'], ['evet', 'Evet']]} /></div>
             </div>
             <div style={{ marginTop: '8px', padding: '8px 10px', background: 'rgba(231,76,60,0.05)', borderRadius: '8px', border: '1px solid rgba(231,76,60,0.15)' }}>
               <div style={{ fontSize: '11px', fontWeight: '700', color: '#e74c3c', marginBottom: '6px' }}>🆘 Acil Durumda Ulaşılacak Kişi</div>
               <div className="form-row">
-                <div className="form-group"><label className="form-label">Ad Soyad</label><input className="form-input" placeholder="Acil kişi adı" value={form.emergency_contact_name} onChange={e => setForm({ ...form, emergency_contact_name: e.target.value })} /></div>
-                <div className="form-group"><label className="form-label">Telefon</label><input className="form-input" type="tel" placeholder="05XX XXX XX XX" value={form.emergency_contact_phone} onChange={e => setForm({ ...form, emergency_contact_phone: e.target.value })} /></div>
+                <div className="form-group"><label className="form-label">Ad Soyad</label><EditableInput value={form.emergency_contact_name} onChange={v => setForm({ ...form, emergency_contact_name: v })} placeholder="Acil kişi adı" /></div>
+                <div className="form-group"><label className="form-label">Telefon</label><EditableInput type="tel" value={form.emergency_contact_phone} onChange={v => setForm({ ...form, emergency_contact_phone: v })} placeholder="05XX XXX XX XX" /></div>
               </div>
               <div className="form-row">
                 <div className="form-group"><label className="form-label">Yakınlık</label>
-                  <select className="form-select" value={form.emergency_contact_relation} onChange={e => setForm({ ...form, emergency_contact_relation: e.target.value })}><option value="">— Seçiniz —</option><option value="es">Eşi</option><option value="anne">Annesi</option><option value="baba">Babası</option><option value="kardes">Kardeşi</option><option value="cocuk">Çocuğu</option><option value="diger">Diğer</option></select></div>
+                  <EditableSelect fieldKey="emergency_relation" label="Yakınlık" value={form.emergency_contact_relation} onChange={v => setForm({ ...form, emergency_contact_relation: v })} defaultOptions={[['', '— Seçiniz —'], ['es', 'Eşi'], ['anne', 'Annesi'], ['baba', 'Babası'], ['kardes', 'Kardeşi'], ['cocuk', 'Çocuğu'], ['diger', 'Diğer']]} /></div>
+                <div className="form-group"></div>
               </div>
             </div>
           </div>
@@ -3026,15 +3132,15 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📋’ Aylık Ücret Bileşenleri</div>
 
             <div className="form-row">
-              <div className="form-group"><label className="form-label">Maaş (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0" value={form.base_salary} onChange={e => setForm({ ...form, base_salary: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">Yol (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0" value={form.transport_allowance} onChange={e => setForm({ ...form, transport_allowance: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Maaş (₺)</label><EditableInput type="number" step="0.01" placeholder="0" value={form.base_salary} onChange={v => setForm({ ...form, base_salary: v })} /></div>
+              <div className="form-group"><label className="form-label">Yol (₺)</label><EditableInput type="number" step="0.01" placeholder="0" value={form.transport_allowance} onChange={v => setForm({ ...form, transport_allowance: v })} /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">SSK (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0" value={form.ssk_cost} onChange={e => setForm({ ...form, ssk_cost: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">Yemek (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0" value={form.food_allowance} onChange={e => setForm({ ...form, food_allowance: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">SSK (₺)</label><EditableInput type="number" step="0.01" placeholder="0" value={form.ssk_cost} onChange={v => setForm({ ...form, ssk_cost: v })} /></div>
+              <div className="form-group"><label className="form-label">Yemek (₺)</label><EditableInput type="number" step="0.01" placeholder="0" value={form.food_allowance} onChange={v => setForm({ ...form, food_allowance: v })} /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">Tazminat (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0" value={form.compensation} onChange={e => setForm({ ...form, compensation: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Tazminat (₺)</label><EditableInput type="number" step="0.01" placeholder="0" value={form.compensation} onChange={v => setForm({ ...form, compensation: v })} /></div>
               <div className="form-group">
                 <label className="form-label">Toplam Aylık</label>
                 <div style={{ padding: '8px 12px', borderRadius: '6px', background: 'rgba(46,204,113,0.1)', border: '1px solid rgba(46,204,113,0.3)', fontSize: '14px', fontWeight: '700', color: '#2ecc71' }}>{totalMonthly.toLocaleString('tr-TR')} ₺</div>
@@ -3054,23 +3160,11 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div className="form-row">
 
               <div className="form-group"><label className="form-label">1️⃣ Teknik Ustalık</label>
-                <select className="form-select" value={form.technical_mastery} onChange={e => setForm({ ...form, technical_mastery: e.target.value })}>
-                  <option value="egitici_usta">Eğitici Usta</option>
-                  <option value="usta">Usta</option>
-                  <option value="kalfa">Kalfa</option>
-                  <option value="operator">Operatör</option>
-                  <option value="cirak">Çırak</option>
-                  <option value="stajyer">Stajyer</option>
-                </select>
+                <EditableSelect fieldKey="technical_mastery" label="Teknik Ustalık" value={form.technical_mastery} onChange={v => setForm({ ...form, technical_mastery: v })} defaultOptions={[['egitici_usta', 'Eğitici Usta'], ['usta', 'Usta'], ['kalfa', 'Kalfa'], ['operator', 'Operatör'], ['cirak', 'Çırak'], ['stajyer', 'Stajyer']]} />
               </div>
 
               <div className="form-group"><label className="form-label">2️⃣ Hız (İş Alma-Verme)</label>
-                <select className="form-select" value={form.speed_level} onChange={e => setForm({ ...form, speed_level: e.target.value })}>
-                  <option value="cok_seri">Çok Hızlı</option>
-                  <option value="seri">Hızlı</option>
-                  <option value="normal">Normal</option>
-                  <option value="yavas">Yavaş</option>
-                </select>
+                <EditableSelect fieldKey="speed_level" label="Hız" value={form.speed_level} onChange={v => setForm({ ...form, speed_level: v })} defaultOptions={[['cok_seri', 'Çok Hızlı'], ['seri', 'Hızlı'], ['normal', 'Normal'], ['yavas', 'Yavaş']]} />
               </div>
 
             </div>
@@ -3078,60 +3172,38 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div className="form-row">
 
               <div className="form-group"><label className="form-label">3️⃣ Kalite / El Temizliği</label>
-                <select className="form-select" value={form.quality_level} onChange={e => setForm({ ...form, quality_level: e.target.value })}>
-                  <option value="premium">Premium</option>
-                  <option value="iyi">İyi</option>
-                  <option value="normal">Normal</option>
-                  <option value="degisken">Değişken</option>
-                  <option value="dusuk">Düşük</option>
-                </select>
+                <EditableSelect fieldKey="quality_level" label="Kalite" value={form.quality_level} onChange={v => setForm({ ...form, quality_level: v })} defaultOptions={[['premium', 'Premium'], ['iyi', 'İyi'], ['normal', 'Normal'], ['degisken', 'Değişken'], ['dusuk', 'Düşük']]} />
               </div>
 
               <div className="form-group"><label className="form-label">4️⃣ İş Disiplini</label>
-
-                <select className="form-select" value={form.discipline_level} onChange={e => setForm({ ...form, discipline_level: e.target.value })}>
-
-                  <option value="cok_guvenilir">Çok Güvenilir</option>
-
-                  <option value="guvenilir">Güvenilir</option>
-
-                  <option value="degisken">DeĞişken</option>
-
-                  <option value="takip">Takip Gerektirir</option>
-
-                </select>
-
+                <EditableSelect fieldKey="discipline_level" label="İş Disiplini" value={form.discipline_level} onChange={v => setForm({ ...form, discipline_level: v })} defaultOptions={[['cok_guvenilir', 'Çok Güvenilir'], ['guvenilir', 'Güvenilir'], ['degisken', 'Değişken'], ['takip', 'Takip Gerektirir']]} />
               </div>
 
             </div>
 
             <div className="form-row">
               <div className="form-group"><label className="form-label">5️⃣ Çok Yönlülük</label>
-                <select className="form-select" value={form.versatility_level} onChange={e => setForm({ ...form, versatility_level: e.target.value })}>
-                  <option value="1">1 operasyon</option>
-                  <option value="2">2 operasyon</option>
-                  <option value="3">3 operasyon</option>
-                  <option value="4">4 operasyon</option>
-                  <option value="5">5 operasyon</option>
-                  <option value="6">6+ operasyon</option>
-                </select>
+                <EditableSelect fieldKey="versatility_level" label="Çok Yönlülük" value={form.versatility_level} onChange={v => setForm({ ...form, versatility_level: v })} defaultOptions={[['1', '1 operasyon'], ['2', '2 operasyon'], ['3', '3 operasyon'], ['4', '4 operasyon'], ['5', '5 operasyon'], ['6', '6+ operasyon']]} />
               </div>
               <div className="form-group"><label className="form-label">6️⃣ Parmak Becerisi</label>
-                <select className="form-select" value={form.finger_dexterity} onChange={e => setForm({ ...form, finger_dexterity: e.target.value })}><option value="cok_iyi">Çok iyi</option><option value="iyi">İyi</option><option value="normal">Normal</option><option value="zayif">Zayıf</option></select></div>
+                <EditableSelect fieldKey="finger_dexterity" label="Parmak Becerisi" value={form.finger_dexterity} onChange={v => setForm({ ...form, finger_dexterity: v })} defaultOptions={[['cok_iyi', 'Çok iyi'], ['iyi', 'İyi'], ['normal', 'Normal'], ['zayif', 'Zayıf']]} />
+              </div>
             </div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">7️⃣ Renk Algısı</label>
-                <select className="form-select" value={form.color_perception} onChange={e => setForm({ ...form, color_perception: e.target.value })}><option value="cok_iyi">Çok iyi</option><option value="normal">Normal</option><option value="zayif">Zayıf</option></select></div>
+                <EditableSelect fieldKey="color_perception" label="Renk Algısı" value={form.color_perception} onChange={v => setForm({ ...form, color_perception: v })} defaultOptions={[['cok_iyi', 'Çok iyi'], ['normal', 'Normal'], ['zayif', 'Zayıf']]} />
+              </div>
               <div className="form-group"><label className="form-label">8️⃣ Numune Okuma</label>
-                <select className="form-select" value={form.sample_reading} onChange={e => setForm({ ...form, sample_reading: e.target.value })}><option value="bagimsiz">Bağımsız okur</option><option value="gosterilmeli">Gösterilmeli</option><option value="yapamaz">Yapamaz</option></select></div>
+                <EditableSelect fieldKey="sample_reading" label="Numune Okuma" value={form.sample_reading} onChange={v => setForm({ ...form, sample_reading: v })} defaultOptions={[['bagimsiz', 'Bağımsız okur'], ['gosterilmeli', 'Gösterilmeli'], ['yapamaz', 'Yapamaz']]} />
+              </div>
             </div>
           </div>
 
           <div className="form-row">
 
-            <div className="form-group"><label className="form-label">Mesai Başlangıç</label><input className="form-input" type="time" value={form.work_start} onChange={e => setForm({ ...form, work_start: e.target.value })} /></div>
+            <div className="form-group"><label className="form-label">Mesai Başlangıç</label><EditableInput type="time" value={form.work_start} onChange={v => setForm({ ...form, work_start: v })} /></div>
 
-            <div className="form-group"><label className="form-label">Mesai Bitiş</label><input className="form-input" type="time" value={form.work_end} onChange={e => setForm({ ...form, work_end: e.target.value })} /></div>
+            <div className="form-group"><label className="form-label">Mesai Bitiş</label><EditableInput type="time" value={form.work_end} onChange={v => setForm({ ...form, work_end: v })} /></div>
 
           </div>
 
@@ -3145,34 +3217,35 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
               try { machineSkills = JSON.parse(form.operation_skill_scores || '{}'); } catch { }
               const customMachines = Object.keys(machineSkills).filter(k => !defaultMachines.includes(k));
               const allMachines = [...defaultMachines, ...customMachines];
+              const MACHINE_LEVELS_KEY = 'SELECT_OPTIONS_machine_skill_levels';
+              let machineLevels;
+              try { const saved = localStorage.getItem(MACHINE_LEVELS_KEY); machineLevels = saved ? JSON.parse(saved) : [['', '— Kullanmıyor'], ['usta_hizli', '🏅 Usta Hızlı'], ['usta_normal', '⭐ Usta Normal'], ['usta_yavas', '🟢 Usta Yavaş'], ['iyi_hizli', '💪 İyi Hızlı'], ['iyi_normal', '✅ İyi Normal'], ['normal', '🟡 Normal'], ['acemi_normal', '🔵 Acemi Normal'], ['acemi_yavas', '⚪ Acemi Yavaş']]; } catch { machineLevels = [['', '— Kullanmıyor'], ['usta_hizli', '🏅 Usta Hızlı'], ['usta_normal', '⭐ Usta Normal'], ['usta_yavas', '🟢 Usta Yavaş'], ['iyi_hizli', '💪 İyi Hızlı'], ['iyi_normal', '✅ İyi Normal'], ['normal', '🟡 Normal'], ['acemi_normal', '🔵 Acemi Normal'], ['acemi_yavas', '⚪ Acemi Yavaş']]; }
+              const saveMachineLevels = (opts) => { localStorage.setItem(MACHINE_LEVELS_KEY, JSON.stringify(opts)); };
               const colors = { 'usta_hizli': '#27ae60', 'usta_normal': '#2ecc71', 'usta_yavas': '#27ae60', 'iyi_hizli': '#3498db', 'iyi_normal': '#2ecc71', 'normal': '#f39c12', 'acemi_normal': '#e67e22', 'acemi_yavas': '#95a5a6' };
               return <>
+                <div style={{ marginBottom: '6px', display: 'flex', gap: '4px' }}>
+                  <button type="button" onClick={() => { const selLevel = machineLevels.find(([k]) => k !== ''); if (!selLevel) return; const nl = prompt(`Yetkinlik seçeneğini düzenle:`, selLevel[1]); if (!nl || !nl.trim()) return; const idx = machineLevels.findIndex(([k]) => k === selLevel[0]); if (idx >= 0) { const u = [...machineLevels]; u[idx] = [selLevel[0], nl.trim()]; saveMachineLevels(u); setForm({ ...form }); } }} style={{ fontSize: '11px', padding: '4px 8px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>✏️ Seviye Düzenle</button>
+                  <button type="button" onClick={() => { const name = prompt('Yeni yetkinlik seviyesi ekleyin:'); if (!name || !name.trim()) return; const key = name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_çşıöüğ]/g, ''); const u = [...machineLevels, [key, name.trim()]]; saveMachineLevels(u); setForm({ ...form }); }} style={{ fontSize: '11px', padding: '4px 8px', border: '1px dashed rgba(52,152,219,0.4)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>➕ Seviye Ekle</button>
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                   {allMachines.map(m => {
                     const level = machineSkills[m] || '';
-                    return <div key={m} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 30px', alignItems: 'center', gap: '6px', padding: '4px 8px', borderRadius: '6px', background: level ? `${colors[level]}15` : 'transparent', border: `1px solid ${level ? colors[level] : 'var(--border-color)'}` }}>
-                      <span style={{ fontSize: '13px', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: level ? colors[level] : 'var(--text-muted)' }}>{m}</span>
-                      <select style={{ width: '100%', fontSize: '12px', padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                    return <div key={m} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 26px 26px', alignItems: 'center', gap: '4px', padding: '4px 6px', borderRadius: '6px', background: level ? `${colors[level] || '#999'}15` : 'transparent', border: `1px solid ${level ? (colors[level] || '#999') : 'var(--border-color)'}` }}>
+                      <span style={{ fontSize: '12px', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: level ? (colors[level] || '#999') : 'var(--text-muted)' }}>{m}</span>
+                      <select style={{ width: '100%', fontSize: '11px', padding: '3px 4px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
                         value={level} onChange={e => {
                           const updated = { ...machineSkills };
                           if (e.target.value) updated[m] = e.target.value; else delete updated[m];
                           setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') });
                         }}>
-                        <option value="">— Kullanmıyor</option>
-                        <option value="usta_hizli">🏅 Usta Hızlı</option>
-                        <option value="usta_normal">⭐ Usta Normal</option>
-                        <option value="usta_yavas">🟢 Usta Yavaş</option>
-                        <option value="iyi_hizli">💪 İyi Hızlı</option>
-                        <option value="iyi_normal">✅ İyi Normal</option>
-                        <option value="normal">🟡 Normal</option>
-                        <option value="acemi_normal">🔵 Acemi Normal</option>
-                        <option value="acemi_yavas">⚪ Acemi Yavaş</option>
+                        {machineLevels.map(([val, lbl]) => <option key={val} value={val}>{lbl}</option>)}
                       </select>
-                      <button type="button" onClick={() => { const updated = { ...machineSkills }; delete updated[m]; setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') }); }} style={{ background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', color: '#e74c3c', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }} title="Sil">✕</button>
+                      <button type="button" title="Makina Adını Düzenle" onClick={() => { const newName = prompt(`"${m}" adını değiştir:`, m); if (!newName || !newName.trim() || newName.trim() === m) return; const updated = {}; Object.entries(machineSkills).forEach(([k, v]) => { updated[k === m ? newName.trim() : k] = v; }); setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') }); }} style={{ fontSize: '10px', padding: '2px 4px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>✏️</button>
+                      <button type="button" title="Sil" onClick={() => { const updated = { ...machineSkills }; delete updated[m]; setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') }); }} style={{ fontSize: '10px', padding: '2px 4px', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', color: '#e74c3c', borderRadius: '4px', cursor: 'pointer' }}>❌</button>
                     </div>;
                   })}
                 </div>
-                <button type="button" onClick={() => { const name = prompt('Yeni makine adı yazın (ör: Singer, Juki, Özel Overlok):'); if (name && name.trim()) { const updated = { ...machineSkills, [name.trim()]: 'normal' }; setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') }); } }} style={{ marginTop: '8px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', padding: '6px 14px', borderRadius: '6px', fontSize: '14px', cursor: 'pointer', fontWeight: '600' }}>➕ Makine Ekle</button>
+                <button type="button" onClick={() => { const name = prompt('Yeni makina adı yazın (ör: Singer, Juki, Özel Overlok):'); if (name && name.trim()) { const updated = { ...machineSkills, [name.trim()]: 'normal' }; setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') }); } }} style={{ marginTop: '8px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', padding: '6px 14px', borderRadius: '6px', fontSize: '14px', cursor: 'pointer', fontWeight: '600' }}>➕ Makina Ekle</button>
               </>;
             })()}
           </div>
@@ -3183,7 +3256,7 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div style={{ fontSize: '14px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}> Özel Notlar & Gözlemler</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">🧵 Güçlü Yönleri, Zayıf Yönleri, Sevdiği İşlemler</label>
-                <textarea className="form-input" rows={3} placeholder="Örn: Gömlek dikiminde çok iyi, fermuar takmada tecrübeli. İnce kumaşlarda dikkatli, kalın kumaşta zorlanır. Overlok'ta çalışmayı seviyor..." value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} style={{ resize: 'vertical' }} /></div>
+                <div style={{ display: 'flex', gap: '2px', alignItems: 'flex-start' }}><textarea className="form-input" rows={3} placeholder="Örn: Gömlek dikiminde çok iyi, fermuar takmada tecrübeli. İnce kumaşlarda dikkatli, kalın kumaşta zorlanır. Overlok'ta çalışmayı seviyor..." value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} style={{ resize: 'vertical', flex: 1 }} /><button type="button" title="Temizle" onClick={() => setForm({ ...form, skills: '' })} style={{ fontSize: '11px', padding: '4px 5px', border: '1px solid var(--border-color)', background: form.skills ? 'rgba(231,76,60,0.06)' : 'rgba(150,150,150,0.06)', color: form.skills ? '#e74c3c' : '#bbb', cursor: form.skills ? 'pointer' : 'default', borderRadius: '4px', minWidth: '26px', marginTop: '2px', opacity: form.skills ? 1 : 0.5 }}>❌</button></div></div>
             </div>
           </div>
           {/* ===== P5: MAKİNE AYAR BECERİLERİ ===== */}
@@ -3193,41 +3266,104 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             {(() => {
               let adj = {};
               try { adj = JSON.parse(form.machine_adjustments || '{}'); } catch { }
-              const machines = {
+              const ADJ_STORAGE_KEY = 'MACHINE_ADJ_SKILLS_CUSTOM';
+              const defaultMachines = {
                 'Singer Düz Makina': ['İplik ayarı', 'Konpile ayarı', 'Dişli ayarı', 'Çıtlama', 'Esneme ayarı', 'Toplama', 'Büzgü', 'Lastik esneme çıtlama'],
                 'Overlok': ['İplik ayarı', 'Çıtlama', 'Bıçak ayarı', 'Loper ayarı', 'Esneme ayarı', 'Toplama', 'Büzgü'],
                 'Reçme': ['İplik ayarı', 'Çıtlama', 'Bıçak ayarı', 'Loper ayarı', 'Esneme ayarı', 'Toplama', 'Büzgü']
               };
-              return Object.entries(machines).map(([machine, skills]) => (
-                <div key={machine} style={{ marginBottom: '8px', padding: '8px', borderRadius: '6px', background: 'rgba(155,89,182,0.04)', border: '1px solid rgba(155,89,182,0.1)' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#8e44ad', marginBottom: '4px' }}>{machine}</div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                    {skills.map(skill => {
-                      const key = `${machine}_${skill}`;
-                      const checked = adj[key] || false;
-                      return <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '4px 8px', borderRadius: '4px', background: checked ? 'rgba(46,204,113,0.1)' : 'transparent', border: `1px solid ${checked ? '#27ae60' : 'var(--border-color)'}`, cursor: 'pointer' }}>
-                        <input type="checkbox" checked={checked} onChange={() => {
-                          const updated = { ...adj, [key]: !checked };
-                          if (!updated[key]) delete updated[key];
-                          setForm({ ...form, machine_adjustments: JSON.stringify(updated) });
-                        }} style={{ width: '12px', height: '12px', accentColor: '#27ae60' }} />{skill}
-                      </label>;
-                    })}
+              let machines;
+              try { const saved = localStorage.getItem(ADJ_STORAGE_KEY); machines = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultMachines)); } catch { machines = JSON.parse(JSON.stringify(defaultMachines)); }
+              const saveMachines = (m) => { localStorage.setItem(ADJ_STORAGE_KEY, JSON.stringify(m)); };
+              const handleRenameMachine = (oldName) => {
+                const newName = prompt(`"${oldName}" makine adını ne olarak değiştirmek istiyorsunuz?`, oldName);
+                if (!newName || !newName.trim() || newName.trim() === oldName) return;
+                const updated = {}; const newAdj = { ...adj };
+                Object.entries(machines).forEach(([k, v]) => { if (k === oldName) { updated[newName.trim()] = v; v.forEach(skill => { const oldKey = `${oldName}_${skill}`; const newKey = `${newName.trim()}_${skill}`; if (newAdj[oldKey]) { newAdj[newKey] = newAdj[oldKey]; delete newAdj[oldKey]; } }); } else { updated[k] = v; } });
+                saveMachines(updated); setForm({ ...form, machine_adjustments: JSON.stringify(newAdj) });
+              };
+              const handleDeleteMachine = (name) => {
+                if (!confirm(`"${name}" makinesini ve tüm becerilerini silmek istediğinize emin misiniz?`)) return;
+                const updated = {}; const newAdj = { ...adj };
+                Object.entries(machines).forEach(([k, v]) => { if (k !== name) { updated[k] = v; } else { v.forEach(skill => { delete newAdj[`${name}_${skill}`]; }); } });
+                saveMachines(updated); setForm({ ...form, machine_adjustments: JSON.stringify(newAdj) });
+              };
+              const handleAddMachine = () => {
+                const name = prompt('Yeni makine adı yazın:');
+                if (!name || !name.trim()) return;
+                if (machines[name.trim()]) { alert('Bu makine zaten mevcut!'); return; }
+                const updated = { ...machines, [name.trim()]: [] };
+                saveMachines(updated); setForm({ ...form });
+              };
+              const handleRenameSkill = (machine, skillIdx) => {
+                const oldSkill = machines[machine][skillIdx];
+                const newSkill = prompt(`"${oldSkill}" beceri adını ne olarak değiştirmek istiyorsunuz?`, oldSkill);
+                if (!newSkill || !newSkill.trim() || newSkill.trim() === oldSkill) return;
+                const updated = JSON.parse(JSON.stringify(machines));
+                updated[machine][skillIdx] = newSkill.trim();
+                const newAdj = { ...adj };
+                const oldKey = `${machine}_${oldSkill}`; const newKey = `${machine}_${newSkill.trim()}`;
+                if (newAdj[oldKey]) { newAdj[newKey] = newAdj[oldKey]; delete newAdj[oldKey]; }
+                saveMachines(updated); setForm({ ...form, machine_adjustments: JSON.stringify(newAdj) });
+              };
+              const handleDeleteSkill = (machine, skillIdx) => {
+                const skill = machines[machine][skillIdx];
+                if (!confirm(`"${skill}" becerisini silmek istediğinize emin misiniz?`)) return;
+                const updated = JSON.parse(JSON.stringify(machines));
+                updated[machine].splice(skillIdx, 1);
+                const newAdj = { ...adj }; delete newAdj[`${machine}_${skill}`];
+                saveMachines(updated); setForm({ ...form, machine_adjustments: JSON.stringify(newAdj) });
+              };
+              const handleAddSkill = (machine) => {
+                const skill = prompt(`"${machine}" makinesine yeni beceri ekleyin:`);
+                if (!skill || !skill.trim()) return;
+                if (machines[machine].includes(skill.trim())) { alert('Bu beceri zaten mevcut!'); return; }
+                const updated = JSON.parse(JSON.stringify(machines));
+                updated[machine].push(skill.trim());
+                saveMachines(updated); setForm({ ...form });
+              };
+              return <>
+                {Object.entries(machines).map(([machine, skills]) => (
+                  <div key={machine} style={{ marginBottom: '8px', padding: '8px', borderRadius: '6px', background: 'rgba(155,89,182,0.04)', border: '1px solid rgba(155,89,182,0.1)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: '700', color: '#8e44ad', flex: 1 }}>{machine}</div>
+                      <button type="button" title="Makine Adını Düzenle" onClick={() => handleRenameMachine(machine)} style={{ fontSize: '10px', padding: '2px 4px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>✏️</button>
+                      <button type="button" title="Makineyi Sil" onClick={() => handleDeleteMachine(machine)} style={{ fontSize: '10px', padding: '2px 4px', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', color: '#e74c3c', borderRadius: '4px', cursor: 'pointer' }}>❌</button>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {skills.map((skill, skillIdx) => {
+                        const key = `${machine}_${skill}`;
+                        const checked = adj[key] || false;
+                        return <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '4px 8px', borderRadius: '4px 0 0 4px', background: checked ? 'rgba(46,204,113,0.1)' : 'transparent', border: `1px solid ${checked ? '#27ae60' : 'var(--border-color)'}`, cursor: 'pointer' }}>
+                            <input type="checkbox" checked={checked} onChange={() => {
+                              const updated = { ...adj, [key]: !checked };
+                              if (!updated[key]) delete updated[key];
+                              setForm({ ...form, machine_adjustments: JSON.stringify(updated) });
+                            }} style={{ width: '12px', height: '12px', accentColor: '#27ae60' }} />{skill}
+                          </label>
+                          <button type="button" title="Beceri Adını Düzenle" onClick={() => handleRenameSkill(machine, skillIdx)} style={{ fontSize: '10px', padding: '4px 3px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '0' }}>✏️</button>
+                          <button type="button" title="Beceriyi Sil" onClick={() => handleDeleteSkill(machine, skillIdx)} style={{ fontSize: '10px', padding: '4px 3px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(231,76,60,0.06)', color: '#e74c3c', cursor: 'pointer', borderRadius: '0 4px 4px 0' }}>❌</button>
+                        </div>;
+                      })}
+                      <button type="button" onClick={() => handleAddSkill(machine)} style={{ fontSize: '12px', padding: '4px 8px', borderRadius: '4px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', cursor: 'pointer', fontWeight: '600' }}>➕ Beceri Ekle</button>
+                    </div>
                   </div>
-                </div>
-              ));
+                ))}
+                <button type="button" onClick={handleAddMachine} style={{ marginTop: '6px', fontSize: '12px', padding: '6px 14px', borderRadius: '6px', background: 'rgba(155,89,182,0.08)', border: '1px dashed rgba(155,89,182,0.4)', color: '#8e44ad', cursor: 'pointer', fontWeight: '600' }}>➕ Yeni Makine Ekle</button>
+              </>;
             })()}
             <div className="form-row" style={{ marginTop: '8px' }}>
               <div className="form-group"><label className="form-label">Genel Ayar Özeni</label>
-                <select className="form-select" value={form.machine_adjustment_care} onChange={e => setForm({ ...form, machine_adjustment_care: e.target.value })}><option value="ozenli">Özenli</option><option value="normal">Normal</option><option value="ozensiz">Özensiz</option></select></div>
+                <EditableSelect fieldKey="machine_adjustment_care" label="Ayar Özeni" value={form.machine_adjustment_care} onChange={v => setForm({ ...form, machine_adjustment_care: v })} defaultOptions={[['ozenli', 'Özenli'], ['normal', 'Normal'], ['ozensiz', 'Özensiz']]} /></div>
               <div className="form-group"><label className="form-label">Bakım Becerisi</label>
-                <select className="form-select" value={form.maintenance_skill} onChange={e => setForm({ ...form, maintenance_skill: e.target.value })}><option value="tam">Tam bakım yapabilir</option><option value="basit">Basit bakım yapabilir</option><option value="sadece_temizlik">Sadece temizlik</option><option value="yapamaz">Yapamaz</option></select></div>
+                <EditableSelect fieldKey="maintenance_skill" label="Bakım" value={form.maintenance_skill} onChange={v => setForm({ ...form, maintenance_skill: v })} defaultOptions={[['tam', 'Tam bakım yapabilir'], ['basit', 'Basit bakım yapabilir'], ['sadece_temizlik', 'Sadece temizlik'], ['yapamaz', 'Yapamaz']]} /></div>
             </div>
             <div className="form-row" style={{ marginTop: '8px' }}>
               <div className="form-group"><label className="form-label">💚 Tercih Ettiği Makine</label>
-                <select className="form-select" value={form.preferred_machine} onChange={e => setForm({ ...form, preferred_machine: e.target.value })}><option value="">— Seçiniz —</option>{['Düz Dikiş', 'Overlok', 'Reçme', 'Flatlock', 'Çift İğne', 'Zigzag', 'Ütü', 'Kesim'].map(m => <option key={m} value={m}>{m}</option>)}</select></div>
+                <EditableSelect fieldKey="preferred_machine" label="Makine Tercihi" value={form.preferred_machine} onChange={v => setForm({ ...form, preferred_machine: v })} defaultOptions={[['', '— Seçiniz —'], ['Duz_Dikiş', 'Düz Dikiş'], ['Overlok', 'Overlok'], ['Recme', 'Reçme'], ['Flatlock', 'Flatlock'], ['Cift_Igne', 'Çift İğne'], ['Zigzag', 'Zigzag'], ['Utu', 'Ütü'], ['Kesim', 'Kesim']]} /></div>
               <div className="form-group"><label className="form-label">⭐ En Verimli Olduğu Makine</label>
-                <select className="form-select" value={form.most_efficient_machine} onChange={e => setForm({ ...form, most_efficient_machine: e.target.value })}><option value="">— Seçiniz —</option>{['Düz Dikiş', 'Overlok', 'Reçme', 'Flatlock', 'Çift İğne', 'Zigzag', 'Ütü', 'Kesim'].map(m => <option key={m} value={m}>{m}</option>)}</select></div>
+                <EditableSelect fieldKey="most_efficient_machine" label="Verimli Makine" value={form.most_efficient_machine} onChange={v => setForm({ ...form, most_efficient_machine: v })} defaultOptions={[['', '— Seçiniz —'], ['Duz_Dikiş', 'Düz Dikiş'], ['Overlok', 'Overlok'], ['Recme', 'Reçme'], ['Flatlock', 'Flatlock'], ['Cift_Igne', 'Çift İğne'], ['Zigzag', 'Zigzag'], ['Utu', 'Ütü'], ['Kesim', 'Kesim']]} /></div>
             </div>
           </div>
 
@@ -3245,19 +3381,10 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', marginBottom: '8px' }}>🎯 Beceri Detayları</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">📚 Öğrenme Hızı</label>
-                <select className="form-select" value={form.learning_speed} onChange={e => setForm({ ...form, learning_speed: e.target.value })}>
-                  <option value="cok_hizli">Çok Hızlı</option>
-                  <option value="hizli">Hızlı</option>
-                  <option value="normal">Normal</option>
-                  <option value="yavas">Yavaş</option>
-                </select>
+                <EditableSelect fieldKey="learning_speed" label="Öğrenme Hızı" value={form.learning_speed} onChange={v => setForm({ ...form, learning_speed: v })} defaultOptions={[['cok_hizli', 'Çok Hızlı'], ['hizli', 'Hızlı'], ['normal', 'Normal'], ['yavas', 'Yavaş']]} />
               </div>
               <div className="form-group"><label className="form-label">🔓 Bağımsız Çalışma</label>
-                <select className="form-select" value={form.independence_level} onChange={e => setForm({ ...form, independence_level: e.target.value })}>
-                  <option value="tam">Tam Bağımsız</option>
-                  <option value="kismen">Kısmen</option>
-                  <option value="bagli">Bağımlı</option>
-                </select>
+                <EditableSelect fieldKey="independence_level" label="Bağımsızlık" value={form.independence_level} onChange={v => setForm({ ...form, independence_level: v })} defaultOptions={[['tam', 'Tam Bağımsız'], ['kismen', 'Kısmen'], ['bagli', 'Bağımlı']]} />
               </div>
             </div>
           </div>
@@ -3267,71 +3394,92 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div style={{ fontSize: '14px', fontWeight: '700', color: '#f39c12', marginBottom: '8px' }}>⭐ Çalışma Disiplini & Davranış</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">📅 Aylık Devamsızlık</label>
-                <select className="form-select" value={form.attendance} onChange={e => setForm({ ...form, attendance: e.target.value })}>
-                  <option value="yok">Yok</option>
-                  <option value="ayda_yarim">Ayda yarım gün (çok nadir)</option>
-                  <option value="ayda_1">Ayda 1 gün</option>
-                  <option value="ayda_2">Ayda 2 gün</option>
-                  <option value="ayda_3_4">Ayda 3-4 gün</option>
-                  <option value="ayda_5_ustu">Ayda 5+ gün (çok sık)</option>
-                </select>
+                <EditableSelect fieldKey="attendance" label="Devamsızlık" value={form.attendance} onChange={v => setForm({ ...form, attendance: v })} defaultOptions={[['yok', 'Yok'], ['ayda_yarim', 'Ayda yarım gün (çok nadir)'], ['ayda_1', 'Ayda 1 gün'], ['ayda_2', 'Ayda 2 gün'], ['ayda_3_4', 'Ayda 3-4 gün'], ['ayda_5_ustu', 'Ayda 5+ gün (çok sık)']]} />
               </div>
               <div className="form-group"><label className="form-label">⏰ Sabah Geç Kalma</label>
-                <select className="form-select" value={form.punctuality} onChange={e => setForm({ ...form, punctuality: e.target.value })}>
-                  <option value="herzaman">Asla geç kalmaz</option>
-                  <option value="genelde">Nadiren</option>
-                  <option value="bazen">Bazen</option>
-                  <option value="sik">Sık</option>
-                  <option value="surekli">Sürekli</option>
-                </select>
+                <EditableSelect fieldKey="punctuality" label="Geç Kalma" value={form.punctuality} onChange={v => setForm({ ...form, punctuality: v })} defaultOptions={[['herzaman', 'Asla geç kalmaz'], ['genelde', 'Nadiren'], ['bazen', 'Bazen'], ['sik', 'Sık'], ['surekli', 'Sürekli']]} />
               </div>
             </div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">📋 İzin Kullanımı (Çalışma Günlerinde)</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-                  {[
+                {(() => {
+                  const LEAVE_STORAGE_KEY = 'LEAVE_TYPES_CUSTOM';
+                  const defaultLeaveTypes = [
                     { id: 'yillik_izin', label: '🏖️ Yıllık İzin', color: '#3498db' },
                     { id: 'saglik_raporu', label: '🏥 Sağlık Raporu', color: '#e74c3c' },
                     { id: 'ucretsiz_izin', label: '💤 Ücretsiz İzin', color: '#95a5a6' },
                     { id: 'aile_izni', label: '👨‍👩‍👧 Aile İzni (evlilik/ölüm)', color: '#8e44ad' },
                     { id: 'resmi_izin', label: '🏛️ Resmi Tatil', color: '#27ae60' },
                     { id: 'mazeret_izni', label: '📝 Mazeret İzni', color: '#f39c12' },
-                  ].map(izin => {
+                  ];
+                  let leaveTypes;
+                  try { const saved = localStorage.getItem(LEAVE_STORAGE_KEY); leaveTypes = saved ? JSON.parse(saved) : [...defaultLeaveTypes]; } catch { leaveTypes = [...defaultLeaveTypes]; }
+                  const saveLeaveTypes = (types) => { localStorage.setItem(LEAVE_STORAGE_KEY, JSON.stringify(types)); };
+                  const handleRenameLeave = (idx) => {
+                    const old = leaveTypes[idx].label;
+                    const newLabel = prompt(`"${old}" adını ne olarak değiştirmek istiyorsunuz?`, old);
+                    if (!newLabel || !newLabel.trim() || newLabel.trim() === old) return;
+                    const updated = JSON.parse(JSON.stringify(leaveTypes));
+                    const oldId = updated[idx].id;
+                    const newId = newLabel.trim().toLowerCase().replace(/[^a-z0-9çşıöüğ]/g, '_').replace(/_+/g, '_');
+                    updated[idx] = { ...updated[idx], id: newId, label: newLabel.trim() };
+                    saveLeaveTypes(updated);
                     const izinler = (form.leave_types || '').split(',').map(s => s.trim()).filter(Boolean);
-                    const isChecked = izinler.includes(izin.id);
-                    return <label key={izin.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '4px 8px', borderRadius: '6px', background: isChecked ? `${izin.color}15` : 'var(--bg-input)', border: `1px solid ${isChecked ? izin.color : 'var(--border-color)'}`, cursor: 'pointer' }}>
-                      <input type="checkbox" checked={isChecked} onChange={() => {
-                        const newList = isChecked ? izinler.filter(s => s !== izin.id) : [...izinler, izin.id];
-                        setForm({ ...form, leave_types: newList.join(', ') });
-                      }} style={{ accentColor: izin.color }} />{izin.label}
-                    </label>;
-                  })}
-                </div>
+                    if (izinler.includes(oldId)) { setForm({ ...form, leave_types: izinler.map(s => s === oldId ? newId : s).join(', ') }); }
+                    else { setForm({ ...form }); }
+                  };
+                  const handleDeleteLeave = (idx) => {
+                    if (!confirm(`"${leaveTypes[idx].label}" izin tipini silmek istediğinize emin misiniz?`)) return;
+                    const removedId = leaveTypes[idx].id;
+                    const updated = leaveTypes.filter((_, i) => i !== idx);
+                    saveLeaveTypes(updated);
+                    const izinler = (form.leave_types || '').split(',').map(s => s.trim()).filter(Boolean);
+                    setForm({ ...form, leave_types: izinler.filter(s => s !== removedId).join(', ') });
+                  };
+                  const handleAddLeave = () => {
+                    const name = prompt('Yeni izin tipi ekleyin (ör: Doğum İzni):');
+                    if (!name || !name.trim()) return;
+                    const id = name.trim().toLowerCase().replace(/[^a-z0-9çşıöüğ]/g, '_').replace(/_+/g, '_');
+                    if (leaveTypes.some(l => l.id === id)) { alert('Bu izin tipi zaten mevcut!'); return; }
+                    const colors = ['#3498db', '#e74c3c', '#27ae60', '#8e44ad', '#f39c12', '#95a5a6', '#e67e22', '#1abc9c'];
+                    const color = colors[leaveTypes.length % colors.length];
+                    const updated = [...leaveTypes, { id, label: name.trim(), color }];
+                    saveLeaveTypes(updated);
+                    setForm({ ...form });
+                  };
+                  const izinler = (form.leave_types || '').split(',').map(s => s.trim()).filter(Boolean);
+                  return <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                    {leaveTypes.map((izin, idx) => {
+                      const isChecked = izinler.includes(izin.id);
+                      return <div key={izin.id} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '4px 8px', borderRadius: '6px 0 0 6px', background: isChecked ? `${izin.color}15` : 'var(--bg-input)', border: `1px solid ${isChecked ? izin.color : 'var(--border-color)'}`, cursor: 'pointer' }}>
+                          <input type="checkbox" checked={isChecked} onChange={() => {
+                            const newList = isChecked ? izinler.filter(s => s !== izin.id) : [...izinler, izin.id];
+                            setForm({ ...form, leave_types: newList.join(', ') });
+                          }} style={{ accentColor: izin.color }} />{izin.label}
+                        </label>
+                        <button type="button" title="İzin Adını Düzenle" onClick={() => handleRenameLeave(idx)} style={{ fontSize: '10px', padding: '4px 3px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '0' }}>✏️</button>
+                        <button type="button" title="İzin Tipini Sil" onClick={() => handleDeleteLeave(idx)} style={{ fontSize: '10px', padding: '4px 3px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(231,76,60,0.06)', color: '#e74c3c', cursor: 'pointer', borderRadius: '0 6px 6px 0' }}>❌</button>
+                      </div>;
+                    })}
+                    <button type="button" onClick={handleAddLeave} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', cursor: 'pointer', fontWeight: '600' }}>➕ İzin Tipi Ekle</button>
+                  </div>;
+                })()}
               </div>
             </div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">💡 İnisiyatif Alma</label>
-                <select className="form-select" value={form.initiative_level} onChange={e => setForm({ ...form, initiative_level: e.target.value })}>
-                  <option value="yuksek">Yüksek</option>
-                  <option value="orta">Orta</option>
-                  <option value="dusuk">Düşük</option>
-                </select>
+                <EditableSelect fieldKey="initiative_level" label="İnisiyatif" value={form.initiative_level} onChange={v => setForm({ ...form, initiative_level: v })} defaultOptions={[['yuksek', 'Yüksek'], ['orta', 'Orta'], ['dusuk', 'Düşük']]} />
               </div>
               <div className="form-group"><label className="form-label">🤝 Takım Çalışması</label>
-                <select className="form-select" value={form.teamwork_level} onChange={e => setForm({ ...form, teamwork_level: e.target.value })}>
-                  <option value="cok_iyi">Çok İyi</option>
-                  <option value="iyi">İyi</option>
-                  <option value="orta">Orta</option>
-                  <option value="zayif">Zayıf</option>
-                </select>
+                <EditableSelect fieldKey="teamwork_level" label="Takım" value={form.teamwork_level} onChange={v => setForm({ ...form, teamwork_level: v })} defaultOptions={[['cok_iyi', 'Çok İyi'], ['iyi', 'İyi'], ['orta', 'Orta'], ['zayif', 'Zayıf']]} />
               </div>
+            </div>
+            <div className="form-row">
               <div className="form-group"><label className="form-label">🧩 Problem Çözme</label>
-                <select className="form-select" value={form.problem_solving} onChange={e => setForm({ ...form, problem_solving: e.target.value })}>
-                  <option value="cozer">Çözer</option>
-                  <option value="sorar">Sorar</option>
-                  <option value="bekler">Bekler</option>
-                </select>
+                <EditableSelect fieldKey="problem_solving" label="Problem" value={form.problem_solving} onChange={v => setForm({ ...form, problem_solving: v })} defaultOptions={[['cozer', 'Çözer'], ['sorar', 'Sorar'], ['bekler', 'Bekler']]} />
               </div>
+              <div className="form-group"></div>
             </div>
           </div>
 
@@ -3340,14 +3488,14 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', marginBottom: '8px' }}>📂 İş Geçmişi</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">Sözleşme Tipi</label>
-                <select className="form-select" value={form.contract_type} onChange={e => setForm({ ...form, contract_type: e.target.value })}><option value="belirsiz">Belirsiz süreli</option><option value="belirli">Belirli süreli</option><option value="mevsimlik">Mevsimlik</option></select></div>
-              <div className="form-group"><label className="form-label">SGK Giriş Tarihi</label><input className="form-input" type="date" value={form.sgk_entry_date} onChange={e => setForm({ ...form, sgk_entry_date: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">Önceki İş Yeri</label>
-                <select className="form-select" value={form.previous_workplaces} onChange={e => setForm({ ...form, previous_workplaces: e.target.value })}><option value="ilk_isi">İlk işi</option><option value="1-2">1-2 iş yeri</option><option value="3-5">3-5 iş yeri</option><option value="5+">5+ iş yeri</option></select></div>
+                <EditableSelect fieldKey="contract_type" label="Sözleşme" value={form.contract_type} onChange={v => setForm({ ...form, contract_type: v })} defaultOptions={[['belirsiz', 'Belirsiz süreli'], ['belirli', 'Belirli süreli'], ['mevsimlik', 'Mevsimlik']]} /></div>
+              <div className="form-group"><label className="form-label">SGK Giriş Tarihi</label><EditableInput type="date" value={form.sgk_entry_date} onChange={v => setForm({ ...form, sgk_entry_date: v })} /></div>
             </div>
             <div className="form-row">
+              <div className="form-group"><label className="form-label">Önceki İş Yeri</label>
+                <EditableSelect fieldKey="previous_workplaces" label="Önceki İşyeri" value={form.previous_workplaces} onChange={v => setForm({ ...form, previous_workplaces: v })} defaultOptions={[['ilk_isi', 'İlk işi'], ['1-2', '1-2 iş yeri'], ['3-5', '3-5 iş yeri'], ['5+', '5+ iş yeri']]} /></div>
               <div className="form-group"><label className="form-label">Son İş Yeri Ayrılma Nedeni</label>
-                <select className="form-select" value={form.leave_reason} onChange={e => setForm({ ...form, leave_reason: e.target.value })}><option value="">— Seçiniz —</option><option value="maas">Maaş</option><option value="is_ortami">İş ortamı</option><option value="ailevi">Ailevi nedenler</option><option value="tasinma">Taşınma</option><option value="karsilikli">Karşılıklı ayrıldı</option><option value="ilk_isi">İlk işi</option><option value="belirtmek_istemiyor">Belirtmek istemiyor</option><option value="diger">Diğer</option></select></div>
+                <EditableSelect fieldKey="leave_reason" label="Ayrılma Nedeni" value={form.leave_reason} onChange={v => setForm({ ...form, leave_reason: v })} defaultOptions={[['', '— Seçiniz —'], ['maas', 'Maaş'], ['is_ortami', 'İş ortamı'], ['ailevi', 'Ailevi nedenler'], ['tasinma', 'Taşınma'], ['karsilikli', 'Karşılıklı ayrıldı'], ['ilk_isi', 'İlk işi'], ['belirtmek_istemiyor', 'Belirtmek istemiyor'], ['diger', 'Diğer']]} /></div>
             </div>
           </div>
 
@@ -3356,13 +3504,13 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div style={{ fontSize: '14px', fontWeight: '700', color: '#e74c3c', marginBottom: '8px' }}>🏋️ Fiziksel & İş Kapasitesi</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">Vücut Yapısı (iş ataması)</label>
-                <select className="form-select" value={form.body_type} onChange={e => setForm({ ...form, body_type: e.target.value })}><option value="guclu_iri">Güçlü/İri</option><option value="normal">Normal</option><option value="ince_narin">İnce/Narin</option><option value="kilolu">Kilolu</option><option value="kisa_boylu">Kısa boylu</option></select></div>
+                <EditableSelect fieldKey="body_type" label="Vücut Yapısı" value={form.body_type} onChange={v => setForm({ ...form, body_type: v })} defaultOptions={[['guclu_iri', 'Güçlü/İri'], ['normal', 'Normal'], ['ince_narin', 'İnce/Narin'], ['kilolu', 'Kilolu'], ['kisa_boylu', 'Kısa boylu']]} /></div>
               <div className="form-group"><label className="form-label">İş Kapasitesi</label>
-                <select className="form-select" value={form.work_capacity} onChange={e => setForm({ ...form, work_capacity: e.target.value })}><option value="her_turlu">Her türlü işi yapar</option><option value="agir_yarim">Ağır işleri yapar</option><option value="agir_kisa">Ağır işleri kısa süre</option><option value="normal_rahat">Normal işleri rahat yapar</option><option value="normal_mola">Normal işler</option><option value="hafif">Hafif işlere uygun</option><option value="sadece_hafif">Sadece hafif işler</option></select></div>
+                <EditableSelect fieldKey="work_capacity" label="Kapasite" value={form.work_capacity} onChange={v => setForm({ ...form, work_capacity: v })} defaultOptions={[['her_turlu', 'Her türlü işi yapar'], ['agir_yarim', 'Ağır işleri yapar'], ['agir_kisa', 'Ağır işleri kısa süre'], ['normal_rahat', 'Normal işleri rahat yapar'], ['normal_mola', 'Normal işler'], ['hafif', 'Hafif işlere uygun'], ['sadece_hafif', 'Sadece hafif işler']]} /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">İSG Eğitimi Tarihi</label><input className="form-input" type="date" value={form.isg_training_date} onChange={e => setForm({ ...form, isg_training_date: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">Son Sağlık Kontrolü</label><input className="form-input" type="date" value={form.last_health_check} onChange={e => setForm({ ...form, last_health_check: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">İSG Eğitimi Tarihi</label><EditableInput type="date" value={form.isg_training_date} onChange={v => setForm({ ...form, isg_training_date: v })} /></div>
+              <div className="form-group"><label className="form-label">Son Sağlık Kontrolü</label><EditableInput type="date" value={form.last_health_check} onChange={v => setForm({ ...form, last_health_check: v })} /></div>
             </div>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>💡 Herkes kendi sağlığından sorumludur. Önce insan, sonra iş.</div>
           </div>
@@ -3372,17 +3520,20 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div style={{ fontSize: '14px', fontWeight: '700', color: '#f1c40f', marginBottom: '8px' }}>🧠 Karakteristik & İnsan İlişkileri</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">Güvenilirlik</label>
-                <select className="form-select" value={form.reliability} onChange={e => setForm({ ...form, reliability: e.target.value })}><option value="cok_guvenilir">Çok güvenilir</option><option value="guvenilir">Güvenilir</option><option value="normal">Normal</option><option value="degisken">Değişken</option></select></div>
+                <EditableSelect fieldKey="reliability" label="Güvenilirlik" value={form.reliability} onChange={v => setForm({ ...form, reliability: v })} defaultOptions={[['cok_guvenilir', 'Çok güvenilir'], ['guvenilir', 'Güvenilir'], ['normal', 'Normal'], ['degisken', 'Değişken']]} /></div>
               <div className="form-group"><label className="form-label">Temizlik/Hijyen</label>
-                <select className="form-select" value={form.hygiene} onChange={e => setForm({ ...form, hygiene: e.target.value })}><option value="cok_ozenli">Çok özenli</option><option value="normal">Normal</option><option value="dikkat">Dikkat gerekir</option></select></div>
-              <div className="form-group"><label className="form-label">Değişime Açıklık</label>
-                <select className="form-select" value={form.change_openness} onChange={e => setForm({ ...form, change_openness: e.target.value })}><option value="cok_acik">Çok açık</option><option value="acik">Açık</option><option value="direncli">Dirençli</option></select></div>
+                <EditableSelect fieldKey="hygiene" label="Hijyen" value={form.hygiene} onChange={v => setForm({ ...form, hygiene: v })} defaultOptions={[['cok_ozenli', 'Çok özenli'], ['normal', 'Normal'], ['dikkat', 'Dikkat gerekir']]} /></div>
             </div>
             <div className="form-row">
+              <div className="form-group"><label className="form-label">Değişime Açıklık</label>
+                <EditableSelect fieldKey="change_openness" label="Değişime Açıklık" value={form.change_openness} onChange={v => setForm({ ...form, change_openness: v })} defaultOptions={[['cok_acik', 'Çok açık'], ['acik', 'Açık'], ['direncli', 'Dirençli']]} /></div>
               <div className="form-group"><label className="form-label">Sorumluluğunu Kabul Etme</label>
-                <select className="form-select" value={form.responsibility_acceptance} onChange={e => setForm({ ...form, responsibility_acceptance: e.target.value })}><option value="kabul_eder">Kabul eder</option><option value="kismen">Kısmen kabul eder</option><option value="reddeder">Başkasına atar</option></select></div>
+                <EditableSelect fieldKey="responsibility_acceptance" label="Sorumluluk" value={form.responsibility_acceptance} onChange={v => setForm({ ...form, responsibility_acceptance: v })} defaultOptions={[['kabul_eder', 'Kabul eder'], ['kismen', 'Kısmen kabul eder'], ['reddeder', 'Başkasına atar']]} /></div>
+            </div>
+            <div className="form-row">
               <div className="form-group"><label className="form-label">Hata Görünce Duruş</label>
-                <select className="form-select" value={form.error_stance} onChange={e => setForm({ ...form, error_stance: e.target.value })}><option value="soyler_gosterir">Söyler ve gösterir</option><option value="soyler">Söyler ama çekinir</option><option value="susar">Susar</option><option value="fark_etmez">Fark etmez</option></select></div>
+                <EditableSelect fieldKey="error_stance" label="Hata Duruş" value={form.error_stance} onChange={v => setForm({ ...form, error_stance: v })} defaultOptions={[['soyler_gosterir', 'Söyler ve gösterir'], ['soyler', 'Söyler ama çekinir'], ['susar', 'Susar'], ['fark_etmez', 'Fark etmez']]} /></div>
+              <div className="form-group"></div>
             </div>
           </div>
 
@@ -3391,32 +3542,45 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div style={{ fontSize: '14px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}>🎯 İşlem Becerileri & Kumaş Deneyimi</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">Renk Tonu Eşleştirme</label>
-                <select className="form-select" value={form.color_tone_matching} onChange={e => setForm({ ...form, color_tone_matching: e.target.value })}><option value="fark_eder">Fark eder</option><option value="fark_eder_devam">Fark eder ama devam eder</option><option value="fark_etmez">Fark etmez</option></select></div>
+                <EditableSelect fieldKey="color_tone_matching" label="Renk Eşleştirme" value={form.color_tone_matching} onChange={v => setForm({ ...form, color_tone_matching: v })} defaultOptions={[['fark_eder', 'Fark eder'], ['fark_eder_devam', 'Fark eder ama devam eder'], ['fark_etmez', 'Fark etmez']]} /></div>
               <div className="form-group"><label className="form-label">Kritik Eşleşme Sorumluluğu</label>
-                <select className="form-select" value={form.critical_matching_responsibility} onChange={e => setForm({ ...form, critical_matching_responsibility: e.target.value })}><option value="sorumluluk_alir">Sorumluluk alır</option><option value="sorulursa">Sorulursa söyler</option><option value="almaz">Sorumluluk almaz</option></select></div>
+                <EditableSelect fieldKey="critical_matching" label="Kritik Eşleşme" value={form.critical_matching_responsibility} onChange={v => setForm({ ...form, critical_matching_responsibility: v })} defaultOptions={[['sorumluluk_alir', 'Sorumluluk alır'], ['sorulursa', 'Sorulursa söyler'], ['almaz', 'Sorumluluk almaz']]} /></div>
             </div>
             <div style={{ fontSize: '11px', fontWeight: '700', color: '#27ae60', marginTop: '10px', marginBottom: '6px' }}>🧵 Kumaş Tipi Deneyimi</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
               {(() => {
                 let fabExp = {};
                 try { fabExp = JSON.parse(form.fabric_experience || '{}'); } catch { }
-                return ['Penye', 'Esnek / Likralı', 'İnce Kumaş', 'Dokuma', 'Denim / Kot', 'Kadife', 'Astar / Tül', 'Triko'].map(fabric => (
-                  <div key={fabric} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                    <span style={{ fontSize: '11px', fontWeight: '600', minWidth: '100px' }}>{fabric}</span>
-                    <select style={{ width: '100%', fontSize: '12px', padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
-                      value={fabExp[fabric] || ''} onChange={e => {
-                        const updated = { ...fabExp };
-                        if (e.target.value) updated[fabric] = e.target.value; else delete updated[fabric];
-                        setForm({ ...form, fabric_experience: JSON.stringify(updated) });
-                      }}>
-                      <option value="">— Deneyimi yok</option>
-                      <option value="uzman">Uzman</option>
-                      <option value="iyi">İyi</option>
-                      <option value="orta">Orta</option>
-                      <option value="zayif">Zayıf</option>
-                    </select>
+                const FABRIC_KEY = 'SELECT_OPTIONS_fabric_types';
+                let fabricTypes;
+                try { const saved = localStorage.getItem(FABRIC_KEY); fabricTypes = saved ? JSON.parse(saved) : ['Penye', 'Esnek / Likralı', 'İnce Kumaş', 'Dokuma', 'Denim / Kot', 'Kadife', 'Astar / Tül', 'Triko']; } catch { fabricTypes = ['Penye', 'Esnek / Likralı', 'İnce Kumaş', 'Dokuma', 'Denim / Kot', 'Kadife', 'Astar / Tül', 'Triko']; }
+                const saveFabricTypes = (types) => { localStorage.setItem(FABRIC_KEY, JSON.stringify(types)); };
+                const FABRIC_LEVELS_KEY = 'SELECT_OPTIONS_fabric_levels';
+                let fabricLevels;
+                try { const saved = localStorage.getItem(FABRIC_LEVELS_KEY); fabricLevels = saved ? JSON.parse(saved) : [['', '— Deneyimi yok'], ['uzman', 'Uzman'], ['iyi', 'İyi'], ['orta', 'Orta'], ['zayif', 'Zayıf']]; } catch { fabricLevels = [['', '— Deneyimi yok'], ['uzman', 'Uzman'], ['iyi', 'İyi'], ['orta', 'Orta'], ['zayif', 'Zayıf']]; }
+                const saveFabricLevels = (opts) => { localStorage.setItem(FABRIC_LEVELS_KEY, JSON.stringify(opts)); };
+                return <>
+                  {fabricTypes.map((fabric, idx) => (
+                    <div key={fabric} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 6px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                      <span style={{ fontSize: '11px', fontWeight: '600', minWidth: '80px', flex: '0 0 auto' }}>{fabric}</span>
+                      <select style={{ flex: 1, fontSize: '11px', padding: '3px 4px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                        value={fabExp[fabric] || ''} onChange={e => {
+                          const updated = { ...fabExp };
+                          if (e.target.value) updated[fabric] = e.target.value; else delete updated[fabric];
+                          setForm({ ...form, fabric_experience: JSON.stringify(updated) });
+                        }}>
+                        {fabricLevels.map(([val, lbl]) => <option key={val} value={val}>{lbl}</option>)}
+                      </select>
+                      <button type="button" title="Kumaş Adını Düzenle" onClick={() => { const newName = prompt(`"${fabric}" adını değiştir:`, fabric); if (!newName || !newName.trim() || newName.trim() === fabric) return; const newTypes = [...fabricTypes]; newTypes[idx] = newName.trim(); saveFabricTypes(newTypes); const newExp = {}; Object.entries(fabExp).forEach(([k, v]) => { newExp[k === fabric ? newName.trim() : k] = v; }); setForm({ ...form, fabric_experience: JSON.stringify(newExp) }); }} style={{ fontSize: '10px', padding: '2px 4px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>✏️</button>
+                      <button type="button" title="Sil" onClick={() => { const newTypes = fabricTypes.filter((_, i) => i !== idx); saveFabricTypes(newTypes); const newExp = { ...fabExp }; delete newExp[fabric]; setForm({ ...form, fabric_experience: JSON.stringify(newExp) }); }} style={{ fontSize: '10px', padding: '2px 4px', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', color: '#e74c3c', borderRadius: '4px', cursor: 'pointer' }}>❌</button>
+                    </div>
+                  ))}
+                  <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '4px', marginTop: '4px' }}>
+                    <button type="button" onClick={() => { const name = prompt('Yeni kumaş tipi ekleyin:'); if (!name || !name.trim()) return; if (fabricTypes.includes(name.trim())) { alert('Bu kumaş zaten mevcut!'); return; } const newTypes = [...fabricTypes, name.trim()]; saveFabricTypes(newTypes); setForm({ ...form }); }} style={{ fontSize: '11px', padding: '4px 8px', border: '1px dashed rgba(52,152,219,0.4)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>➕ Kumaş Ekle</button>
+                    <button type="button" onClick={() => { const selLevel = fabricLevels.find(([k]) => k !== ''); if (!selLevel) return; const nl = prompt(`Deneyim seviyesi düzenle:`, selLevel[1]); if (!nl || !nl.trim()) return; const i = fabricLevels.findIndex(([k]) => k === selLevel[0]); if (i >= 0) { const u = [...fabricLevels]; u[i] = [selLevel[0], nl.trim()]; saveFabricLevels(u); setForm({ ...form }); } }} style={{ fontSize: '11px', padding: '4px 8px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>✏️ Seviye Düzenle</button>
+                    <button type="button" onClick={() => { const name = prompt('Yeni deneyim seviyesi ekleyin:'); if (!name || !name.trim()) return; const key = name.trim().toLowerCase().replace(/\s+/g, '_'); const u = [...fabricLevels, [key, name.trim()]]; saveFabricLevels(u); setForm({ ...form }); }} style={{ fontSize: '11px', padding: '4px 8px', border: '1px dashed rgba(46,204,113,0.4)', background: 'rgba(46,204,113,0.06)', color: '#27ae60', cursor: 'pointer', borderRadius: '4px' }}>➕ Seviye Ekle</button>
                   </div>
-                ));
+                </>;
               })()}
             </div>
           </div>
@@ -3426,18 +3590,19 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div style={{ fontSize: '14px', fontWeight: '700', color: '#2980b9', marginBottom: '8px' }}>🚀 Gelişim & Kariyer</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">👑 Liderlik Potansiyeli</label>
-                <select className="form-select" value={form.leadership_potential} onChange={e => setForm({ ...form, leadership_potential: e.target.value })}><option value="yuksek">Yüksek</option><option value="potansiyel">Potansiyel</option><option value="hayir">Şu an uygun değil</option></select></div>
+                <EditableSelect fieldKey="leadership_potential" label="Liderlik" value={form.leadership_potential} onChange={v => setForm({ ...form, leadership_potential: v })} defaultOptions={[['yuksek', 'Yüksek'], ['potansiyel', 'Potansiyel'], ['hayir', 'Şu an uygun değil']]} /></div>
               <div className="form-group"><label className="form-label">🔧 Yeni Makina Öğrenme</label>
-                <select className="form-select" value={form.new_machine_learning} onChange={e => setForm({ ...form, new_machine_learning: e.target.value })}><option value="aktif">Aktif öğreniyor</option><option value="istekli">İstekli</option><option value="destege_ihtiyac">Desteğe ihtiyacı var</option></select></div>
+                <EditableSelect fieldKey="new_machine_learning" label="Yeni Makina" value={form.new_machine_learning} onChange={v => setForm({ ...form, new_machine_learning: v })} defaultOptions={[['aktif', 'Aktif öğreniyor'], ['istekli', 'İstekli'], ['destege_ihtiyac', 'Desteğe ihtiyacı var']]} /></div>
             </div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">💪 Zor İşten Kaçma</label>
-                <select className="form-select" value={form.hard_work_avoidance} onChange={e => setForm({ ...form, hard_work_avoidance: e.target.value })}><option value="kacmaz">Kaçmaz</option><option value="isteksiz">İsteksiz</option><option value="kacar">Kaçar</option><option value="baskasinayikar">Başkasına yıkar</option></select></div>
+                <EditableSelect fieldKey="hard_work_avoidance" label="Zor İş" value={form.hard_work_avoidance} onChange={v => setForm({ ...form, hard_work_avoidance: v })} defaultOptions={[['kacmaz', 'Kaçmaz'], ['isteksiz', 'İsteksiz'], ['kacar', 'Kaçar'], ['baskasinayikar', 'Başkasına yıkar']]} /></div>
               <div className="form-group"><label className="form-label">📈 Kendini Geliştirme</label>
-                <select className="form-select" value={form.self_improvement} onChange={e => setForm({ ...form, self_improvement: e.target.value })}><option value="surekli">Sürekli gelişir</option><option value="gelisir">Gelişir</option><option value="yerinde">Yerinde sayar</option><option value="geriler">Geriler</option></select></div>
+                <EditableSelect fieldKey="self_improvement" label="Gelişim" value={form.self_improvement} onChange={v => setForm({ ...form, self_improvement: v })} defaultOptions={[['surekli', 'Sürekli gelişir'], ['gelisir', 'Gelişir'], ['yerinde', 'Yerinde sayar'], ['geriler', 'Geriler']]} /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">📚 Eğitim İhtiyacı</label><input className="form-input" placeholder="Hangi konularda?" value={form.training_needs} onChange={e => setForm({ ...form, training_needs: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">📚 Eğitim İhtiyacı</label><EditableInput value={form.training_needs} onChange={v => setForm({ ...form, training_needs: v })} placeholder="Hangi konularda?" /></div>
+              <div className="form-group"></div>
             </div>
           </div>
 
@@ -3446,12 +3611,12 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
             <div style={{ fontSize: '14px', fontWeight: '700', color: '#D4A847', marginBottom: '8px' }}>⭐ Performans & Değerlendirme</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">Operatör Sınıfı</label>
-                <select className="form-select" value={form.operator_class} onChange={e => setForm({ ...form, operator_class: e.target.value })}><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div>
+                <EditableSelect fieldKey="operator_class" label="Sınıf" value={form.operator_class} onChange={v => setForm({ ...form, operator_class: v })} defaultOptions={[['A', 'A'], ['B', 'B'], ['C', 'C']]} /></div>
               <div className="form-group"><label className="form-label">Tavsiye</label>
-                <select className="form-select" value={form.recommend} onChange={e => setForm({ ...form, recommend: e.target.value })}><option value="kesinlikle">Kesinlikle evet</option><option value="evet">Evet</option><option value="degerlendirmeli">Değerlendirmeli</option><option value="hayir">Hayır</option></select></div>
+                <EditableSelect fieldKey="recommend" label="Tavsiye" value={form.recommend} onChange={v => setForm({ ...form, recommend: v })} defaultOptions={[['kesinlikle', 'Kesinlikle evet'], ['evet', 'Evet'], ['degerlendirmeli', 'Değerlendirmeli'], ['hayir', 'Hayır']]} /></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">📝 Genel Değerlendirme</label><textarea className="form-input" rows={2} placeholder="Yöneticinin kısa değerlendirmesi..." value={form.general_evaluation} onChange={e => setForm({ ...form, general_evaluation: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">📝 Genel Değerlendirme</label><div style={{ display: 'flex', gap: '2px', alignItems: 'flex-start' }}><textarea className="form-input" rows={2} placeholder="Yöneticinin kısa değerlendirmesi..." value={form.general_evaluation} onChange={e => setForm({ ...form, general_evaluation: e.target.value })} style={{ flex: 1 }} /><button type="button" title="Temizle" onClick={() => setForm({ ...form, general_evaluation: '' })} style={{ fontSize: '11px', padding: '4px 5px', border: '1px solid var(--border-color)', background: form.general_evaluation ? 'rgba(231,76,60,0.06)' : 'rgba(150,150,150,0.06)', color: form.general_evaluation ? '#e74c3c' : '#bbb', cursor: form.general_evaluation ? 'pointer' : 'default', borderRadius: '4px', minWidth: '26px', marginTop: '2px', opacity: form.general_evaluation ? 1 : 0.5 }}>❌</button></div></div>
             </div>
           </div>
 
@@ -5404,11 +5569,17 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
 
 
-  const masteryLabels = { usta: '🞣 Usta', kalfa: '🔵 Kalfa', operator: '🞢 Operatör', cirak: '🞡 Çırak' };
+  const masteryLabels = { egitici_usta: '👑 Eğitici Usta', usta: '🟣 Usta', kalfa: '🔵 Kalfa', operator: '🟢 Operatör', cirak: '🟡 Çırak', stajyer: '⚪ Stajyer' };
 
   const speedLabels = { cok_seri: '⚡⚡', seri: '⚡', normal: '▶️', yavas: '🐢' };
 
-  const qualityLabels = { premium: '💎', kaliteli: '✨', standart: '✅', dusuk: '⚠️' };
+  const qualityLabels = { premium: '💎', iyi: '✨', normal: '✅', degisken: '🟡', dusuk: '⚠️', kaliteli: '✨', standart: '✅' };
+
+  // Çoklu rol gösterimi için yardımcı
+  const formatRoles = (roleStr) => {
+    if (!roleStr) return '—';
+    return roleStr.split(',').map(r => r.trim()).filter(Boolean).map(r => roleLabels[r] || r).join(', ');
+  };
 
 
 
@@ -5547,7 +5718,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
                 <td style={{ fontWeight: '600', color: 'var(--text-muted)', textAlign: 'center', minWidth: '30px' }}>{idx + 1}</td>
                 <td style={{ fontWeight: '600' }}>{p.name}</td>
 
-                <td><span className="badge badge-info">{roleLabels[p.role] || p.role}</span></td>
+                <td><span className="badge badge-info">{formatRoles(p.role)}</span></td>
 
                 <td>{masteryLabels[p.technical_mastery] || masteryLabels.operator}</td>
 

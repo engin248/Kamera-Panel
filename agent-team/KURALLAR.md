@@ -48,11 +48,11 @@ Bu panel İŞLETME İÇİ bir sistemdir:
 
 ## 🔒 DOSYA ERİŞİM TABLOSU
 
-| Dosya | Claude (Kod) | Gemini (Analiz) | GPT (Doküman) | DeepSeek (Review) |
-|-------|-------------|-----------------|---------------|-------------------|
-| `app/page.js` | Yazma ✅ | Okuma 🔒 | Okuma 🔒 | Okuma 🔒 |
-| `app/api/*` | Yazma ✅ | Okuma 🔒 | ❌ | Okuma 🔒 |
-| `lib/db.js` | Yazma ✅ (dikkatli) | Okuma 🔒 | ❌ | Okuma 🔒 |
+| Dosya | Claude (Kod) | Gemini (Analiz) | GPT (Doküman) | Perplexity (Araştırma) |
+|-------|-------------|-----------------|---------------|----------------------|
+| `app/page.js` | Yazma ✅ | Okuma 🔒 | Okuma 🔒 | ❌ |
+| `app/api/*` | Yazma ✅ | Okuma 🔒 | ❌ | ❌ |
+| `lib/db.js` | Yazma ✅ (dikkatli) | Okuma 🔒 | ❌ | ❌ |
 | `.env` | ❌ | ❌ | ❌ | ❌ |
 | `package.json` | ❌ | ❌ | ❌ | ❌ |
 | `agent-team/*` | ❌ | ❌ | ❌ | ❌ |

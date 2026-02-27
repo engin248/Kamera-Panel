@@ -136,15 +136,28 @@ export async function DELETE(request, { params }) {
         const db = getDb();
         const { id } = await params;
 
-        const person = db.prepare('SELECT * FROM personnel WHERE id = ?').get(id);
-        if (person) {
-            db.prepare(
-                'INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)'
-            ).run('personnel', String(id), 'SİLME İŞLEMİ', `${person.name} (${person.role})`, 'SİLİNDİ', 'admin');
+        const person = db.prepare('SELECT * FROM personnel WHERE id = ? AND deleted_at IS NULL').get(id);
+        if (!person) {
+            return NextResponse.json({ error: 'Personel bulunamadı' }, { status: 404 });
         }
 
-        db.prepare('DELETE FROM personnel WHERE id = ?').run(id);
-        return NextResponse.json({ success: true });
+        // Soft-delete: veriyi silme, işaretle
+        db.prepare("UPDATE personnel SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?")
+            .run('Koordinatör', id);
+
+        // Audit trail
+        db.prepare(
+            'INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)'
+        ).run('personnel', String(id), 'SOFT-DELETE', `${person.name} (${person.role})`, 'SİLİNDİ (geri alınabilir)', 'Koordinatör');
+
+        // Activity log
+        try {
+            db.prepare(
+                'INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)'
+            ).run('Koordinatör', 'SOFT_DELETE', 'personnel', id, `${person.name} soft-delete yapıldı`);
+        } catch (e) { }
+
+        return NextResponse.json({ success: true, message: 'Personel silindi (geri alınabilir)' });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

@@ -59,17 +59,15 @@ export async function DELETE(request, { params }) {
     try {
         const db = getDb();
         const { id } = await params;
+        const machine = db.prepare('SELECT * FROM machines WHERE id = ? AND deleted_at IS NULL').get(id);
+        if (!machine) return NextResponse.json({ error: 'Makina bulunamadı' }, { status: 404 });
 
-        // Silmeden önce kaydı audit trail'e yaz
-        const machine = db.prepare('SELECT * FROM machines WHERE id = ?').get(id);
-        if (machine) {
-            db.prepare(
-                'INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)'
-            ).run('machines', String(id), 'SİLME İŞLEMİ', `${machine.name} (${machine.type})`, 'SİLİNDİ', 'admin');
-        }
+        db.prepare("UPDATE machines SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
+        db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)')
+            .run('machines', String(id), 'SOFT-DELETE', `${machine.name} (${machine.type})`, 'SİLİNDİ (geri alınabilir)', 'Koordinatör');
+        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'machines', id, `${machine.name} soft-delete`); } catch (e) { }
 
-        db.prepare('DELETE FROM machines WHERE id = ?').run(id);
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, message: 'Makina silindi (geri alınabilir)' });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

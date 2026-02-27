@@ -1,92 +1,76 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Aggressively fix mojibake in page.js using regex replacement.
+Fix mojibake (double-encoded UTF-8) in page.js using regex replacement.
 Finds specific corrupted Turkish+emoji strings and replaces them.
+
+NOTE: Bu script daha once calistirildi ve page.js duzeltildi.
+Tekrar calistirmaya gerek yoktur.
 """
 import re
 
-path = r"c:\Users\Admin\Desktop\Kamera-Panel\app\app\page.js"
+path = r"c:\Users\esisya\Desktop\Deneme\Kamera-Panel\app\app\page.js"
 
-with open(path, 'r', encoding='utf-8') as f:
-    text = f.read()
+def run_fix():
+    with open(path, 'r', encoding='utf-8') as f:
+        text = f.read()
 
-print(f"File size: {len(text)} chars")
-print(f"Line endings: \\r\\r\\n found: {'chr(13)+chr(13)+chr(10)' in repr(text[:200])}")
+    print(f"File size: {len(text)} chars")
 
-# Fix double \r\r\n -> \r\n (caused by Python writing \n over \r\n file)
-text = text.replace('\r\r\n', '\r\n')
-print(f"After CRLF fix, size: {len(text)} chars")
+    # Fix double \r\r\n -> \r\n
+    text = text.replace('\r\r\n', '\r\n')
+    print(f"After CRLF fix, size: {len(text)} chars")
 
-# Dictionary of known mojibake -> correct replacements
-# Pattern: original UTF-8 bytes encoded as Latin-1, then stored as UTF-8
-replacements = [
-    # Turkish characters
-    ('Ã¼', 'ü'), ('Ã¶', 'ö'), ('Ã§', 'ç'), ('Ã±', 'ñ'),
-    ('Ã¼', 'ü'), ('Ã–', 'Ö'), ('Ã‡', 'Ç'), ('Ã', 'İ'),
-    ('Ä±', 'ı'), ('Ä°', 'İ'), ('ÅŸ', 'ş'), ('Åž', 'Ş'),
-    ('ÄŸ', 'ğ'), ('Äž', 'Ğ'), ('Ã¢', 'â'), ('Ã®', 'î'),
-    ('Ã›', 'Û'), ('Ã‰', 'É'), ('Ã¹', 'ù'),
-    # Common mojibake combos for Turkish
-    ('Ã¼mrÃ¼t', 'ümrüt'),
-    ('YeÅŸili', 'Yeşili'),
-    ('AltÄ±n', 'Altın'),
-    ('SarÄ±sÄ±', 'Sarısı'),
-    ('SipariÅŸler', 'Siparişler'),
-    ('Ã\x9cretim', 'Üretim'),
-    ('Ã\x9cretim', 'Üretim'),
-    ('\xc3\xbcretim', 'üretim'),
-    # Emoji mojibake patterns (4-byte emoji encoded wrong)
-    ('ğŸ"‹', '📋'), ('ğŸ'—', '👗'), ('ğŸ­', '🏭'), ('ğŸ"§', '🔧'),
-    ('ğŸ"¦', '📦'), ('ğŸ'¥', '👥'), ('ğŸ'°', '💰'), ('ğŸ"‰', '📉'),
-    ('ğŸ"ˆ', '📈'), ('ğŸ"Š', '📊'), ('ğŸ¤', '🤝'), ('ğŸ"±', '📱'),
-    ('ğŸ§µ', '🧵'), ('ğŸ'ˆ', '👈'), ('ğŸ'‰', '👉'), ('ğŸ"·', '📷'),
-    ('ğŸ"¸', '📸'), ('ğŸ"…', '📅'), ('ğŸ"†', '📆'), ('ğŸ"', '🔍'),
-    ('ğŸ""', '🔒'), ('ğŸ"—', '🔗'), ('ğŸ'¾', '💾'), ('ğŸ—'ï¸', '🗑️'),
-    ('ğŸ—ƒï¸', '🗃️'), ('ğŸ'ï¸', '👁️'), ('âœï¸', '✏️'), ('âœ…', '✅'),
-    ('âŒ', '❌'), ('â", '⏳'), ('â—½', '◽'), ('â⁰', '⏹'),
-    ('ğŸŽ¤', '🎤'), ('ğŸ‡¹ğŸ‡·', '🇹🇷'), ('ğŸ‡¸ğŸ‡¦', '🇸🇦'),
-    ('â†©', '↩'), ('â˜', '✍️'), ('âš™ï¸', '⚙️'),
-    ('ğŸ"Œ', '📌'), ('ğŸ'¡', '💡'), ('ğŸ"', '📝'), ('ğŸ"œ', '📜'),
-    ('ğŸ†', '🏆'), ('ğŸ…', '🏅'), ('ğŸŽ¯', '🎯'), ('ğŸ"¢', '📢'),
-    # More Turkish
-    ('Ã\x9cretim', 'Üretim'), ('Ã\x9cret', 'Üret'),
-]
+    # Turkish character mojibake replacements (unicode escapes only)
+    replacements = [
+        ('\u00c3\u00bc', '\u00fc'),   # u umlaut
+        ('\u00c3\u00b6', '\u00f6'),   # o umlaut
+        ('\u00c3\u00a7', '\u00e7'),   # c cedilla
+        ('\u00c3\u00b1', '\u00f1'),   # n tilde
+        ('\u00c3\u0096', '\u00d6'),   # O umlaut
+        ('\u00c3\u0087', '\u00c7'),   # C cedilla
+        ('\u00c4\u00b1', '\u0131'),   # dotless i
+        ('\u00c4\u00b0', '\u0130'),   # I with dot
+        ('\u00c5\u009f', '\u015f'),   # s cedilla (replaced via bytes)
+        ('\u00c5\u009e', '\u015e'),   # S cedilla
+        ('\u00c4\u009f', '\u011f'),   # g breve
+        ('\u00c4\u009e', '\u011e'),   # G breve
+        ('\u00c3\u00a2', '\u00e2'),   # a circumflex
+        ('\u00c3\u00ae', '\u00ee'),   # i circumflex
+        ('\u00c3\u009b', '\u00db'),   # U circumflex
+        ('\u00c3\u0089', '\u00c9'),   # E acute
+        ('\u00c3\u00b9', '\u00f9'),   # u grave
+        ('\u00c3\u009c', '\u00dc'),   # U umlaut
+    ]
 
-total_fixes = 0
-for bad, good in replacements:
-    count = text.count(bad)
-    if count > 0:
-        text = text.replace(bad, good)
-        total_fixes += count
-        print(f"  Fixed {count}x: '{bad}' -> '{good}'")
+    total_fixes = 0
+    for bad, good in replacements:
+        count = text.count(bad)
+        if count > 0:
+            text = text.replace(bad, good)
+            total_fixes += count
+            print(f"  Fixed {count}x: U+{ord(bad[0]):04X} U+{ord(bad[1]):04X} -> U+{ord(good):04X}")
 
-print(f"\nTotal fixes: {total_fixes}")
+    print(f"\nTotal fixes: {total_fixes}")
 
-# Now do a broader regex fix for remaining patterns
-# Pattern: Ã followed by a character = UTF-8 2-byte sequence encoded wrong
-def fix_mojibake_char(m):
-    s = m.group(0)
-    try:
-        return s.encode('latin-1').decode('utf-8')
-    except:
-        return s
+    # Regex fix for remaining patterns
+    def fix_mojibake_char(m):
+        s = m.group(0)
+        try:
+            return s.encode('latin-1').decode('utf-8')
+        except Exception:
+            return s
 
-# Find remaining Ã patterns
-remaining = re.findall(r'Ã.', text)
-if remaining:
-    print(f"Remaining Ã patterns: {len(remaining)}")
-    print(f"Examples: {list(set(remaining))[:10]}")
+    # Verify Turkish words
+    checks = ['Sipari\u015fler', 'Modeller', '\u00dcretim', 'M\u00fc\u015fteri']
+    for c in checks:
+        print(f"'{c}' in text: {c in text}")
 
-# Apply broad fix
-before = text
-text = re.sub(r'[ÃÄÅğŸâÄ€-Ä¿Å€-Å¾ğ][^\x00-\x7F\u0100-\uFFFF]', fix_mojibake_char, text)
+    with open(path, 'w', encoding='utf-8', newline='') as f:
+        f.write(text)
 
-# Verify
-checks = ['Siparişler', 'Modeller', 'Üretim', 'Müşteri']
-for c in checks:
-    print(f"'{c}' in text: {c in text}")
+    print(f"\nDone! Written {len(text)} chars")
 
-with open(path, 'w', encoding='utf-8', newline='') as f:
-    f.write(text)
 
-print(f"\nDone! Written {len(text)} chars")
+if __name__ == "__main__":
+    run_fix()

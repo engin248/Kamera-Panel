@@ -175,22 +175,20 @@ export async function PUT(request, { params }) {
     }
 }
 
-// DELETE — Model sil (audit trail'e silme kaydı ekle)
+// DELETE — Model soft-delete
 export async function DELETE(request, { params }) {
     try {
         const db = getDb();
         const { id } = await params;
+        const model = db.prepare('SELECT * FROM models WHERE id = ? AND deleted_at IS NULL').get(id);
+        if (!model) return NextResponse.json({ error: 'Model bulunamadı' }, { status: 404 });
 
-        // Silmeden önce modeli kaydet
-        const model = db.prepare('SELECT * FROM models WHERE id = ?').get(id);
-        if (model) {
-            db.prepare(
-                'INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)'
-            ).run('models', String(id), 'SİLME İŞLEMİ', JSON.stringify(model), 'SİLİNDİ', 'admin');
-        }
+        db.prepare("UPDATE models SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
+        db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)')
+            .run('models', String(id), 'SOFT-DELETE', `${model.name} (${model.code})`, 'SİLİNDİ (geri alınabilir)', 'Koordinatör');
+        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'models', id, `${model.name} soft-delete`); } catch (e) { }
 
-        db.prepare('DELETE FROM models WHERE id = ?').run(id);
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, message: 'Model silindi (geri alınabilir)' });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

@@ -1,205 +1,241 @@
-# 🏛️ Yönetim ve Danışma Kurulu — Personel Modülü Analiz Raporu
+# 🏛️ Yönetim ve Danışma Kurulu — Analiz Raporu
 
-**Tarih:** 2026-02-27 — 05:07:53
+**Tarih:** 2026-02-27 — 21:46:34
 **Konu:** Personel Değerlendirme Kriterleri Analizi
+**Süre:** 64.1 saniye
+**Maliyet:** ~$0.0097 (~0.35 TL)
 
 ---
 
 ## 🧠 GEMİNİ — Teknik Kriter Analizi
 
-HATA: {"error":{"code":429,"message":"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\nPlease retry in 20.724117796s.","status":"RESOURCE_EXHAUSTED","details":[{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count","quotaId":"GenerateContentInputTokensPerModelPerMinute-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerMinutePerProjectPerModel-FreeTier","quotaDimensions":{"model":"gemini-2.0-flash","location":"global"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"model":"gemini-2.0-flash","location":"global"}}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"20s"}]}}
+HATA: {"error":{"code":429,"message":"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-2.0-flash\nPlease retry in 29.325005546s.","status":"RESOURCE_EXHAUSTED","details":[{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Learn more about Gemini API quotas","url":"https://ai.google.dev/gemini-api/docs/rate-limits"}]},{"@type":"type.googleapis.com/google.rpc.QuotaFailure","violations":[{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerDayPerProjectPerModel-FreeTier","quotaDimensions":{"location":"global","model":"gemini-2.0-flash"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_requests","quotaId":"GenerateRequestsPerMinutePerProjectPerModel-FreeTier","quotaDimensions":{"model":"gemini-2.0-flash","location":"global"}},{"quotaMetric":"generativelanguage.googleapis.com/generate_content_free_tier_input_token_count","quotaId":"GenerateContentInputTokensPerModelPerMinute-FreeTier","quotaDimensions":{"model":"gemini-2.0-flash","location":"global"}}]},{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"29s"}]}}
 
 ---
 
 ## 📝 GPT — İnsan Odaklı Analiz
 
-## Rapor: Yeni Personel Formu Analizi
+### ADIM 1: Formu İnceleme
 
-### PENCERE: P1 — Kimlik & Kişisel Bilgiler
+Form, `NewPersonnelModal` bileşeni içerisinde tanımlanmış ve birçok alan içeriyor. Bu alanlar, personelin kimlik bilgileri, eğitim durumu, iş geçmişi, beceri matrisleri ve diğer çeşitli özellikleri hakkında bilgi toplamak için tasarlanmış. Şimdi her bir alanı insan odaklı bir bakış açısıyla değerlendireceğim.
 
-#### KRİTER: TC Kimlik No
+### ADIM 2: Her Kriteri İnsan Gözüyle Değerlendirme
+
+#### PENCERE: P1
+**KRİTER: Ad Soyad**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Telefon
+#### PENCERE: P1
+**KRİTER: TC Kimlik No**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Doğum Tarihi
+#### PENCERE: P1
+**KRİTER: Telefon**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Cinsiyet
-- **İNSAN DUYGUSU:** 😊 Olumlu
-- **SAYGILI MI:** Evet
-- **KELİME ÖNERİSİ:** Yok
-- **EKSİK İNSANİ BOYUT:** Cinsiyet seçenekleri daha kapsayıcı olabilir.
-
-#### KRİTER: Eğitim Durumu
+#### PENCERE: P1
+**KRİTER: Doğum Tarihi**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Kan Grubu
+#### PENCERE: P1
+**KRİTER: Cinsiyet**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Askerlik Durumu
+#### PENCERE: P1
+**KRİTER: Eğitim Durumu**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Yaşam Durumu
+#### PENCERE: P1
+**KRİTER: Kan Grubu**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Çocuk Sayısı
+#### PENCERE: P1
+**KRİTER: Askerlik Durumu**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Ulaşım Şekli
+#### PENCERE: P1
+**KRİTER: Yaşam Durumu**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Türkçe Anlama
+#### PENCERE: P1
+**KRİTER: Çocuk Sayısı**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Engel Durumu
+#### PENCERE: P1
+**KRİTER: Ulaşım Şekli**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Sigara İçiyor mu?
-- **İNSAN DUYGUSU:** 😐 Nötr
-- **SAYGILI MI:** Evet
-- **KELİME ÖNERİSİ:** Yok
-- **EKSİK İNSANİ BOYUT:** Sigara içme durumu, sadece mola planlaması için kullanılmalı.
-
-#### KRİTER: Namaz Kılıyor mu?
-- **İNSAN DUYGUSU:** 😟 Rahatsız edici
-- **SAYGILI MI:** Hayır — Kişisel inançlar sorgulanmamalı.
-- **KELİME ÖNERİSİ:** Yok
-- **EKSİK İNSANİ BOYUT:** Kişisel inançlar iş performansı ile ilişkilendirilmemeli.
-
-### PENCERE: P2 — İş Geçmişi
-
-#### KRİTER: Sözleşme Tipi
+#### PENCERE: P1
+**KRİTER: Türkçe Anlama**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: SGK Giriş Tarihi
+#### PENCERE: P1
+**KRİTER: Engel Durumu**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Önceki İş Yeri
+#### PENCERE: P1
+**KRİTER: Sigara İçiyor mu?**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
 - **EKSİK İNSANİ BOYUT:** Yok
 
-#### KRİTER: Son İş Yeri Ayrılma Nedeni
+#### PENCERE: P1
+**KRİTER: Namaz Molası İhtiyacı**
 - **İNSAN DUYGUSU:** 😊 Olumlu
 - **SAYGILI MI:** Evet
 - **KELİME ÖNERİSİ:** Yok
-- **EKSİK İNSANİ BOYUT:** "Belirtmek istemiyor" seçeneği saygılı bir yaklaşım.
+- **EKSİK İNSANİ BOYUT:** Yok
 
-### Genel Değerlendirme
+#### PENCERE: P1
+**KRİTER: Acil Durumda Ulaşılacak Kişi**
+- **İNSAN DUYGUSU:** 😊 Olumlu
+- **SAYGILI MI:** Evet
+- **KELİME ÖNERİSİ:** Yok
+- **EKSİK İNSANİ BOYUT:** Yok
+
+### ADIM 5: Genel Değerlendirme
 
 1. **Bu form bir insanı gerçekten tanıyor mu?**
-   - Form, bir çalışanın iş yerindeki performansını ve kişisel bilgilerini detaylı bir şekilde topluyor. Ancak, bazı sorular kişisel alanlara fazla müdahale edebilir.
+   - Evet, form birçok insani ve kişisel bilgiyi topluyor.
 
 2. **Bir çalışan bu formu doldurmaya davet edilse ne hisseder?**
-   - Genel olarak, formun kapsamlı olması çalışanı değerli hissettirebilir. Ancak, bazı kişisel sorular (örneğin, namaz kılma durumu) rahatsız edici olabilir.
+   - Çalışan kendini önemli hisseder, çünkü kişisel bilgileri ve ihtiyaçları dikkate alınıyor.
 
-3. **Formun güçlü yönleri (insani açıdan):**
-   - Çalışanın iş yetkinlikleri ve performansı hakkında detaylı bilgi topluyor.
-   - "Belirtmek istemiyor" gibi seçenekler, çalışanın kişisel bilgilerini paylaşmama hakkını tanıyor.
+3. **Formun güçlü yönleri (insani açıdan)**
+   - Kişisel bilgilerin yanı sıra, çalışanların ihtiyaçlarını ve durumlarını anlamaya yönelik sorular içeriyor.
 
-4. **Formun zayıf yönleri (insani açıdan):**
-   - Kişisel inançlar ve alışkanlıklar hakkında sorular içeriyor.
-   - Cinsiyet seçenekleri daha kapsayıcı olmalı.
+4. **Formun zayıf yönleri (insani açıdan)**
+   - Bazı sorular ayrımcılık riski taşıyabilir, özellikle sigara ve namaz gibi konular.
 
-5. **Top 3 iyileştirme önerisi:**
-   - Kişisel inançlar ve alışkanlıklar hakkında sorular kaldırılmalı veya yeniden düzenlenmeli.
-   - Cinsiyet seçenekleri daha kapsayıcı hale getirilmeli.
-   - Formun bazı bölümleri (örneğin, fiziksel gözlemler) daha saygılı bir dille ifade edilmeli.
+5. **Top 3 iyileştirme önerisi**
+   - Sigara ve namaz gibi soruların daha nötr bir dille ifade edilmesi.
+   - Cinsiyet seçeneğine "Diğer" veya "Belirtmek istemiyorum" eklenmesi.
+   - Eğitim durumu seçeneklerinin daha kapsayıcı hale getirilmesi.
 
-Bu rapor Koordinatör onayına sunulmuştur.
-
----
-
-## 🔍 DEEPSEEK — Kod Denetim Raporu
-
-HATA: SyntaxError: Unexpected token 'A', "Authentica"... is not valid JSON
+**Bu rapor Koordinatör onayına sunulmuştur.**
 
 ---
 
 ## 🌐 PERPLEXİTY — Dünya Standartları Karşılaştırma
 
-### Tekstil Personel Değerlendirme Formu: Dünya Standartları Karşılaştırması
+## Tekstil Üretim Personel Değerlendirme Formu: Dünya Standartları Karşılaştırması
 
-Bu form, tekstil üretim atölyesi için kapsamlı bir **operatör beceri matrisi, davranışsal değerlendirme ve kapasite analizi** sunar (50+ kriter, 11 ana kategori). Dünya standartlarında (Fairtrade, Better Work, GRI) odak **çalışma koşulları, yasal uyum, sendika hakları ve asgari ücret/living wage** üzerinedir; bireysel beceri matrisleri nadiren bu detayda görülür. Form sektör ortalamasının **üstünde** detaylı ancak **compliance-heavy** standartlardan **eksik** (örneğin sendika katılımı yok).[1][2][4]
+Bu rapor, verilen personel formunu (11 ana kategori, 50+ kriter) tekstil sektörünün küresel standartlarıyla (Fairtrade Textile Standard, SA8000, GRI Textiles Sector Standard, ISO 9001, GOTS vb.) karşılaştırır. Form, **işletme içi detaylı beceri ve davranış odaklı bir sistem** sunarken, uluslararası standartlar daha çok **sosyal uyum, iş güvenliği ve temel haklar** üzerine odaklanır. Form sektör ortalamasının **üstünde detaylı** ancak **sosyal denetim ve sürdürülebilirlik** alanlarında eksik.[1][2][5]
 
-#### Karşılaştırma Tablosu: Ana Kriterler
+### Karşılaştırma Tablosu: Ana Kriterler
 
-| **Kriter**                  | **Bizde (Form)**                          | **Sektör Ortalaması** [1][2][4]                  | **En İyi Uygulama** [1][2]                  | **Durum** |
-|-----------------------------|-------------------------------------------|------------------------------------------------|---------------------------------------------|-----------|
-| **Beceri Matrisi**         | 8 kriter (teknik ustalık, hız, kalite, disiplin, çok yönlülük, parmak becerisi, renk algısı, numune okuma) + 20 makine yetkinliği | 3-5 genel beceri (hız, kalite, OSH); makine bazlı nadir | 5-7 kriter + eğitim takibi (Fairtrade CC ile) | ✅ Üstünde |
-| **Makine Yetkinliği**      | 20 makine (düz dikiş, overlok vb.) + ayar becerileri (JSON matrisi) | 5-10 makine; temel bakım | Makine-specific eğitim + apprentice programları | ✅ Üstünde |
-| **Performans Ölçümü**      | Günlük adet, hata %, verimlilik skoru, operatör sınıfı (A/B/C) | Üretim hedefleri + OSH uyum; bireysel SAM nadir | Living wage progression + risk assessment | ⚠️ Aynı (detay üstün) |
-| **Davranış/Discipline**    | Devamsızlık, noktalılık, inisiyatif, takım çalışması, problem çözme (5+ seviye) | Yasal çalışma saatleri + fazla mesai uyumu | Worker committees (CC) ile yıllık GA toplantıları | ❌ Altında (sendika yok) |
-| **Fiziksel/Kişisel**       | Vücut tipi, kapasite, sağlık kontrolü, sigara/namaz, acil kişi | OSH standartları (eğitim, sağlık kontrolü zorunlu) | Risk assessment + genç işçi programları | ⚠️ Aynı |
-| **Ücretlendirme**          | Aylık bileşenler (maaş, yol, SSK, yemek) + toplam hesaplama | Asgari ücret + fazla mesai; living wage hedefi | 6 yılda living wage (Anker method) + marka sorumluluğu | ❌ Altında (living wage yok) |
-| **Gelişim/Eğitim**         | Öğrenme hızı, liderlik, eğitim ihtiyacı, yeni makine isteği | Sendika temelli eğitim; apprentice zorunlu değil | Worker rights training + youth programs | ✅ Üstünde (bireysel) |
-| **Kumaş/İşlem Deneyimi**   | 8 kumaş tipi (penye, denim vb.) + renk eşleştirme | Kalite kontrol (AQL); kumaş-specific nadir | OEKO-TEX chemical compliance + iç denetim | ✅ Üstünde |
-| **İş Geçmişi**             | SGK tarihi, önceki işler, ayrılma nedeni | Sözleşme tipi + sosyal güvenlik kaydı | Union consultation + migrant worker hakları | ⚠️ Aynı |
+| KRİTER GRUBU              | BİZDE (Form)                          | SEKTÖR ORTALAMASI (Standartlar)                  | EN İYİ UYGULAMA (Örnekler)                  | DURUM |
+|---------------------------|---------------------------------------|------------------------------------------------|---------------------------------------------|-------|
+| **Beceri Matrisi**       | 8 kriter (teknik ustalık, hız, kalite, disiplin, çok yönlülük, parmak becerisi, renk algısı, numune okuma); 6 seviye | 3-5 temel beceri (hız, kalite, bakım); ISO 9001'de süreç odaklı[3] | 10+ beceri + sayısal skorlama (GOTS kalite denetimi)[8] | ✅ Üstünde |
+| **Makine Yetkinliği**    | 14+ makine, 9 seviye (usta hizli'den acemi yavas'a); ayar becerileri matrisi | 5-10 makine tipi; temel operatör yeterliliği (Fairtrade)[1] | 20+ makine + sertifikalı eğitim (SA8000)[2] | ✅ Üstünde |
+| **Kumaş Deneyimi**       | 8 kumaş tipi (penye, likralı vb.), 5 seviye | 4-6 temel kumaş; malzeme uyumluluğu testi (ASTM)[9] | 12+ kumaş + alerjen testi (GOTS)[8] | ✅ Üstünde |
+| **Fiziksel/Değerlendirme**| Vücut tipi, kapasite, sağlık kontrolü, İSG tarihi | OHS (iş sağlığı); fiziksel risk değerlendirmesi zorunlu (GRI 11)[5] | Yıllık tıbbi muayene + ergonomik test (SA8000)[2] | ⚠️ Aynı |
+| **Disiplin/Davranış**    | Devamsızlık, geç kalma, inisiyatif, takım, problem çözme (detaylı skalalar) | Temel disiplin; sendika özgürlüğü, ayrımcılık yasağı (Fairtrade 1.2)[1] | Davranış + psikolojik destek (FWF)[2] | ✅ Üstünde (detay) |
+| **Ücretlendirme**        | 5 bileşen (maaş, yol, SSK, yemek, tazminat); A/B/C sınıfı | Asgari ücret + adil ödeme (SA8000); fazla mesai sınırlı (GRI 13)[5] | Performans bazlı + şeffaflık raporu (Fairtrade)[1] | ⚠️ Aynı |
+| **Sosyal Haklar**        | Sendika/namaz/sigara gibi yerel unsurlar; acil iletişim | Sendika özgürlüğü, toplu pazarlık, ayrımcılık yasağı zorunlu (GRI 9-10)[5] | İşçi konseyi + yıllık GA toplantısı (Fairtrade CC)[1] | ❌ Altında |
+| **Eğitim/Gelişim**       | Öğrenme hızı, liderlik, eğitim ihtiyacı | Yıllık risk eğitimi + iç denetim (Fairtrade 1.4)[1] | Sürekli eğitim + sertifika (ISO 9001)[3] | ⚠️ Aynı |
+| **Performans**           | Günlük çıktı, hata oranı, verim skoru (otomatik planlı) | Kalite/hata izleme; tedarik zinciri denetimi (GRI 18)[5] | SPC + QMS (ISO 9001)[3] | ✅ Üstünde |
 
-#### Eksiklikler ve Fazlalıklar
-**Bizde olup sektörde nadir (Artılar):**
-- Detaylı **makine matrisi** (20+), **kumaş deneyimi** (8 tip), **parmak/renk becerisi** – Sektörde genel "kalite" ile sınırlı; bu form **skill matrix best practice**'ini aşıyor.[7]
-- **Davranışsal derinlik** (hata duruşu, zor iş kaçma, kendini geliştirme) – Fairtrade/Better Work'te yok, iç performans için üstün.[1][4]
+### Eksik ve Fazla Kriterler
 
-**Sektörde olup bizde eksik (Eksiler):**
-- **Sendika/Worker Committee (CC)**: Fairtrade zorunlu; yıllık risk assessment, GA toplantıları, worker audits.[1][2]
-- **Living Wage Roadmap**: 6 yılda uygulanması gereken benchmark (Anker); bizde sadece bileşenler var.[2]
-- **Migrant/Genç İşçi Odak**: Haklar, apprentice programları zorunlu.[2][4]
-- **Denetim/Risk**: İç audit raporlama, FLOCERT tipi bağımsız doğrulama yok.[1][5]
+#### ✅ **Bizde Olup Sektörde Nadir/Özel Kriterler (Artılar)**
+- **Detaylı beceri skalaları**: 6+ seviye (usta-çırak), makine ayar matrisi, kumaş spesifik deneyimler – Standartlarda genelde ikili/üçlü skalalar (yetenekli/yetersiz).[1][3]
+- **Davranış profillemesi**: Hata duruşu, zor iş kaçma, kendini geliştirme – Sektörde soft skills sınırlı, daha çok hard skills.[2]
+- **Yerel uyum**: Namaz molası, askerlik, yaşam durumu – Küresel standartlarda kültürel esneklik yok, sadece temel haklar.[5]
 
-**Üstün Noktalar:** Beceri (8+8), makine (20+), üretim metrikleri – Küçük/orta atölyeler için **dünya lideri** detay; GRI raporlamada bile bu yok.[3]
-**Alt Noktalar:** Uyum (OSH, ücret) bireysel; kurumsal standartlar (Fairtrade) kolektif haklara öncelik verir.[1][4]
+#### ❌ **Sektörde Olup Bizde Eksik Kriterler (Eksiler)**
+- **Sendika/Toplu Sözleşme**: İşçi konseyi (CC), GA toplantıları, sendika özgürlüğü zorunlu (Fairtrade req. 1.2).[1]
+- **Çocuk İşçi/Çocukluk Denetimi**: Yaş doğrulaması, okul zorunluluğu (SA8000).[2]
+- **Çevre/Sürdürülebilirlik**: Kimyasal maruziyet, atık yönetimi, organik kumaş uyumu (GOTS, GRI).[5][8]
+- **Tedarik Zinciri İzleme**: Üst/alt tedarikçi denetimi, çatışma bölgeleri DD (GRI 17-18).[5]
+- **Yıllık Denetim/Raporlama**: İç risk değerlendirmesi, yönetim raporlaması (Fairtrade 1.4).[1]
 
-#### Öneriler
-- **KONU: Beceri Matrisi** – ✅ Üstün; GEMBA-style skill matrix olarak global benchmark yapın.
-- **KONU: Uyum Eksikleri** – Worker CC ekleyin, living wage hedefi koyun (Anker tool).[2]
-- **KONU: Denetim** – Yıllık risk assessment + FLOCERT benzeri audit entegre edin.[1]
-- Formu **iç düzen için mükemmel**; global sertifika (Fairtrade/OEKO-TEX) için sendika/ücret modülü ekleyin.[5][6]
+#### 📈 **Üstün Olduğumuz Noktalar**
+- **Operasyonel Detay**: 20+ makine, 8 kumaş tipi, davranış matrisi – Sektör ortalaması 5-10 kriter; form **üretim optimizasyonu** için üstün (ISO 9001 süreç yaklaşımı ötesinde).[3]
+- **Adil Ücretleme Potansiyeli**: A/B/C sınıflandırma + bileşen breakdown – Fairtrade'e yakın şeffaflık.[1]
 
-Bu rapor Koordinatör onayına sunulmuştur.
+#### 📉 **Altında Kaldığımız Noktalar**
+- **Sosyal Standartlar**: Sendika, ayrımcılık, OHS raporlaması eksik – Küresel sertifikasyon için zorunlu (SA8000, GRI).[2][5]
+- **Sürdürülebilirlik**: Çevre etkisi yok – Tekstil sektöründe %70+ firma GOTS/Fairtrade hedefler.[8]
+
+### Öneriler (Sektör Best Practices)
+- **KONU: Beceri Matrisi**  
+  BİZDE: 8 kriter, detaylı.  
+  SEKTÖR: ISO 9001 QMS entegrasyonu.[3]  
+  **ÖNERİ**: Sayısal skorlama ekle (0-100), yıllık güncelleme. ✅ Üstte kal.
+
+- **KONU: Sosyal Haklar**  
+  BİZDE: Temel demografik.  
+  SEKTÖR: Fairtrade CC + GRI 9-11 zorunlu.[1][5]  
+  **ÖNERİ**: Sendika alanı, ayrımcılık checkbox ekle; yıllık işçi anketi.
+
+- **KONU: İSG/Sağlık**  
+  BİZDE: Tarih alanları.  
+  SEKTÖR: Risk değerlendirmesi (SA8000).[2]  
+  **ÖNERİ**: Ergonomi skoru, kimyasal eğitim tarihi ekle.
+
+- **KONU: Performans**  
+  BİZDE: Manuel + otomatik planlı.  
+  SEKTÖR: SPC + ASTM testleri.[3][9]  
+  **ÖNERİ**: Hata oranı kamerayla entegre et.
+
+Bu sistem **Türkiye tekstil atölyeleri için dünya standartlarının üstünde operasyonel detay** sunuyor ancak **küresel sertifika (Fairtrade/SA8000)** için sosyal/çevre kriterleri eklenmeli. Detay seviyesiyle **adil iş dağılımı ve verimlilik** sağlar.
+
+**Bu rapor Koordinatör onayına sunulmuştur.**
 
 ---
 
-*Bu rapor otomatik olarak oluşturulmuştur. Koordinatör onayına sunulmuştur.*
+## 💰 Maliyet Özeti
+
+| AI | Maliyet ($) | Maliyet (TL) |
+|----|:-----------:|:------------:|
+| Gemini | $0.0000 | 0.00 TL |
+| GPT | $0.0043 | 0.15 TL |
+| Perplexity | $0.0055 | 0.20 TL |
+| **TOPLAM** | **$0.0097** | **0.35 TL** |
+
+---
+
+*Bu rapor otomatik olarak oluşturulmuştur.*
+*Koordinatör onayına sunulmuştur.*
+*Rapordaki öneriler bilgi niteliğindedir — karar Koordinatöre aittir.*

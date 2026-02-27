@@ -1,4 +1,4 @@
-# -*- coding: ascii -*-
+# -*- coding: utf-8 -*-
 # Fix encoding for page.js
 # Uses escape sequences to avoid encoding issues in the script file itself
 

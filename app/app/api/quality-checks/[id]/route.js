@@ -42,13 +42,15 @@ export async function DELETE(request, { params }) {
     try {
         const db = getDb();
         const { id } = await params;
-        const check = db.prepare('SELECT * FROM quality_checks WHERE id = ?').get(id);
-        if (check) {
-            db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)')
-                .run('quality_checks', String(id), 'SİLME İŞLEMİ', `Sonuç: ${check.result}, Hata: ${check.defect_type || 'Yok'}`, 'SİLİNDİ', 'admin');
-        }
-        db.prepare('DELETE FROM quality_checks WHERE id = ?').run(id);
-        return NextResponse.json({ success: true });
+        const check = db.prepare('SELECT * FROM quality_checks WHERE id = ? AND deleted_at IS NULL').get(id);
+        if (!check) return NextResponse.json({ error: 'Kalite kontrolü bulunamadı' }, { status: 404 });
+
+        db.prepare("UPDATE quality_checks SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
+        db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)')
+            .run('quality_checks', String(id), 'SOFT-DELETE', `Sonuç: ${check.result}, Hata: ${check.defect_type || 'Yok'}`, 'SİLİNDİ (geri alınabilir)', 'Koordinatör');
+        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'quality_checks', id, `Kalite #${id} soft-delete`); } catch (e) { }
+
+        return NextResponse.json({ success: true, message: 'Kalite kontrolü silindi (geri alınabilir)' });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

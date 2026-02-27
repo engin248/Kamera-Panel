@@ -42,13 +42,15 @@ export async function DELETE(request, { params }) {
     try {
         const db = getDb();
         const { id } = await params;
-        const shipment = db.prepare('SELECT * FROM shipments WHERE id = ?').get(id);
-        if (shipment) {
-            db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)')
-                .run('shipments', String(id), 'SİLME İŞLEMİ', JSON.stringify({ tracking: shipment.tracking_no, status: shipment.status }), 'SİLİNDİ', 'admin');
-        }
-        db.prepare('DELETE FROM shipments WHERE id = ?').run(id);
-        return NextResponse.json({ success: true });
+        const shipment = db.prepare('SELECT * FROM shipments WHERE id = ? AND deleted_at IS NULL').get(id);
+        if (!shipment) return NextResponse.json({ error: 'Sevkiyat bulunamadı' }, { status: 404 });
+
+        db.prepare("UPDATE shipments SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
+        db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)')
+            .run('shipments', String(id), 'SOFT-DELETE', JSON.stringify({ tracking: shipment.tracking_no, status: shipment.status }), 'SİLİNDİ (geri alınabilir)', 'Koordinatör');
+        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'shipments', id, `Sevkiyat #${id} soft-delete`); } catch (e) { }
+
+        return NextResponse.json({ success: true, message: 'Sevkiyat silindi (geri alınabilir)' });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

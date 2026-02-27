@@ -43,13 +43,15 @@ export async function DELETE(request, { params }) {
     try {
         const db = getDb();
         const { id } = await params;
-        const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(id);
-        if (customer) {
-            db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)')
-                .run('customers', String(id), 'SİLME İŞLEMİ', `${customer.name} (${customer.company || ''})`, 'SİLİNDİ', 'admin');
-        }
-        db.prepare('DELETE FROM customers WHERE id = ?').run(id);
-        return NextResponse.json({ success: true });
+        const customer = db.prepare('SELECT * FROM customers WHERE id = ? AND deleted_at IS NULL').get(id);
+        if (!customer) return NextResponse.json({ error: 'Müşteri bulunamadı' }, { status: 404 });
+
+        db.prepare("UPDATE customers SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
+        db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)')
+            .run('customers', String(id), 'SOFT-DELETE', `${customer.name} (${customer.company || ''})`, 'SİLİNDİ (geri alınabilir)', 'Koordinatör');
+        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'customers', id, `${customer.name} soft-delete`); } catch (e) { }
+
+        return NextResponse.json({ success: true, message: 'Müşteri silindi (geri alınabilir)' });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

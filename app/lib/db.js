@@ -228,6 +228,32 @@ function initTables() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- Kullanıcılar (Yetki Sistemi)
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      role TEXT DEFAULT 'operator'
+        CHECK(role IN ('koordinator','ustabasi','kaliteci','operator')),
+      status TEXT DEFAULT 'active',
+      last_login DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- İşlem Günlüğü (Kim ne zaman ne yaptı)
+    CREATE TABLE IF NOT EXISTS activity_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      user_name TEXT,
+      action TEXT NOT NULL,
+      table_name TEXT,
+      record_id INTEGER,
+      record_summary TEXT,
+      ip_address TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- Düzeltme Geçmişi (Audit Trail)
     CREATE TABLE IF NOT EXISTS audit_trail (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -577,9 +603,39 @@ function initTables() {
     "ALTER TABLE personnel ADD COLUMN satisfaction_score TEXT DEFAULT '5'",
     "ALTER TABLE personnel ADD COLUMN recommend TEXT DEFAULT 'evet'",
     "ALTER TABLE personnel ADD COLUMN weekly_note TEXT DEFAULT ''",
+    // ===== SOFT-DELETE SÜTUNLARI =====
+    "ALTER TABLE personnel ADD COLUMN deleted_at TEXT DEFAULT NULL",
+    "ALTER TABLE personnel ADD COLUMN deleted_by TEXT DEFAULT NULL",
+    "ALTER TABLE models ADD COLUMN deleted_at TEXT DEFAULT NULL",
+    "ALTER TABLE models ADD COLUMN deleted_by TEXT DEFAULT NULL",
+    "ALTER TABLE machines ADD COLUMN deleted_at TEXT DEFAULT NULL",
+    "ALTER TABLE machines ADD COLUMN deleted_by TEXT DEFAULT NULL",
+    "ALTER TABLE customers ADD COLUMN deleted_at TEXT DEFAULT NULL",
+    "ALTER TABLE customers ADD COLUMN deleted_by TEXT DEFAULT NULL",
+    "ALTER TABLE shipments ADD COLUMN deleted_at TEXT DEFAULT NULL",
+    "ALTER TABLE shipments ADD COLUMN deleted_by TEXT DEFAULT NULL",
+    "ALTER TABLE production_logs ADD COLUMN deleted_at TEXT DEFAULT NULL",
+    "ALTER TABLE production_logs ADD COLUMN deleted_by TEXT DEFAULT NULL",
+    "ALTER TABLE quality_checks ADD COLUMN deleted_at TEXT DEFAULT NULL",
+    "ALTER TABLE quality_checks ADD COLUMN deleted_by TEXT DEFAULT NULL",
+    "ALTER TABLE cost_entries ADD COLUMN deleted_at TEXT DEFAULT NULL",
+    "ALTER TABLE cost_entries ADD COLUMN deleted_by TEXT DEFAULT NULL",
+    "ALTER TABLE business_expenses ADD COLUMN deleted_at TEXT DEFAULT NULL",
+    "ALTER TABLE business_expenses ADD COLUMN deleted_by TEXT DEFAULT NULL",
+    "ALTER TABLE fason_orders ADD COLUMN deleted_at TEXT DEFAULT NULL",
+    "ALTER TABLE fason_orders ADD COLUMN deleted_by TEXT DEFAULT NULL",
   ];
   for (const sql of alterStatements) {
     try { db.exec(sql); } catch (e) { /* sütun zaten var */ }
+  }
+
+  // Varsayılan Koordinatör kullanıcısı oluştur (yoksa)
+  const userCount = db.prepare('SELECT COUNT(*) as cnt FROM users').get().cnt;
+  if (userCount === 0) {
+    // Basit hash — sonra bcrypt'e geçilebilir
+    db.prepare(
+      'INSERT INTO users (username, password_hash, display_name, role) VALUES (?, ?, ?, ?)'
+    ).run('admin', '47admin2026', 'Koordinatör', 'koordinator');
   }
 
   // Varsayılan mola çizelgesi ekle (yoksa)

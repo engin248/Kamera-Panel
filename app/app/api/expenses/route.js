@@ -66,15 +66,21 @@ export async function PUT(request) {
     }
 }
 
-// DELETE — Gider sil
+// DELETE — Gider soft-delete
 export async function DELETE(request) {
     try {
         const db = getDb();
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
         if (!id) return NextResponse.json({ error: 'ID zorunlu' }, { status: 400 });
-        db.prepare('DELETE FROM business_expenses WHERE id = ?').run(id);
-        return NextResponse.json({ success: true });
+
+        const expense = db.prepare('SELECT * FROM business_expenses WHERE id = ? AND deleted_at IS NULL').get(id);
+        if (!expense) return NextResponse.json({ error: 'Gider bulunamadı' }, { status: 404 });
+
+        db.prepare("UPDATE business_expenses SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
+        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'business_expenses', id, `Gider #${id} soft-delete`); } catch (e) { }
+
+        return NextResponse.json({ success: true, message: 'Gider silindi (geri alınabilir)' });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
