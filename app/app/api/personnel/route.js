@@ -17,24 +17,20 @@ export async function POST(request) {
     try {
         const db = getDb();
         const body = await request.json();
-        const { name, role, daily_wage, skill_level, machines, skills, language, work_start, work_end, start_date,
-            base_salary, transport_allowance, ssk_cost, food_allowance, compensation,
-            technical_mastery, speed_level, quality_level, discipline_level, versatility_level, position, department,
-            // Yeni beceri/kapasite kriterleri
-            daily_avg_output, error_rate, efficiency_score,
-            capable_operations, operation_skill_scores, learning_speed, independence_level,
-            attendance, punctuality, initiative_level, teamwork_level, problem_solving,
-            physical_endurance, eye_health, health_restrictions,
-            leadership_potential, training_needs, general_evaluation,
-            photo_url, national_id, phone } = body;
 
-        if (!name) {
+        if (!body.name) {
             return NextResponse.json({ error: 'Personel adı zorunlu' }, { status: 400 });
         }
 
-        // Günlük ücret hesapla: Toplam aylık maliyet / Aylık çalışma günü
-        let calculatedDailyWage = daily_wage || 0;
-        const totalMonthly = (base_salary || 0) + (transport_allowance || 0) + (ssk_cost || 0) + (food_allowance || 0) + (compensation || 0);
+        // Günlük ücret hesapla
+        const base_salary = parseFloat(body.base_salary) || 0;
+        const transport_allowance = parseFloat(body.transport_allowance) || 0;
+        const ssk_cost = parseFloat(body.ssk_cost) || 0;
+        const food_allowance = parseFloat(body.food_allowance) || 0;
+        const compensation = parseFloat(body.compensation) || 0;
+        const totalMonthly = base_salary + transport_allowance + ssk_cost + food_allowance + compensation;
+
+        let calculatedDailyWage = parseFloat(body.daily_wage) || 0;
         if (totalMonthly > 0) {
             const now = new Date();
             const monthRow = db.prepare('SELECT work_days FROM monthly_work_days WHERE year = ? AND month = ?').get(now.getFullYear(), now.getMonth() + 1);
@@ -42,39 +38,55 @@ export async function POST(request) {
             calculatedDailyWage = Math.round((totalMonthly / workDays) * 100) / 100;
         }
 
-        const result = db.prepare(`
-      INSERT INTO personnel (name, role, daily_wage, skill_level, machines, skills, language, work_start, work_end, start_date,
-        base_salary, transport_allowance, ssk_cost, food_allowance, compensation,
-        technical_mastery, speed_level, quality_level, discipline_level, versatility_level, position, department,
-        daily_avg_output, error_rate, efficiency_score,
-        capable_operations, operation_skill_scores, learning_speed, independence_level,
-        attendance, punctuality, initiative_level, teamwork_level, problem_solving,
-        physical_endurance, eye_health, health_restrictions,
-        leadership_potential, training_needs, general_evaluation,
-        photo_url, national_id, phone)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-            name, role || 'duz_makineci', calculatedDailyWage,
-            skill_level || 'orta', machines || '', skills || '',
-            language || 'tr', work_start || '08:00', work_end || '19:00',
-            start_date || new Date().toISOString().split('T')[0],
-            base_salary || 0, transport_allowance || 0, ssk_cost || 0,
-            food_allowance || 0, compensation || 0,
-            technical_mastery || 'operator', speed_level || 'normal',
-            quality_level || 'standart', discipline_level || 'guvenilir',
-            versatility_level || '1-2', position || role || 'duz_makineci', department || '',
-            // Yeni alanlar
-            daily_avg_output || 0, error_rate || 0, efficiency_score || 0,
-            capable_operations || '', typeof operation_skill_scores === 'object' ? JSON.stringify(operation_skill_scores) : (operation_skill_scores || '{}'),
-            learning_speed || 'normal', independence_level || 'kismen',
-            attendance || 'az', punctuality || 'genelde',
-            initiative_level || 'orta', teamwork_level || 'iyi', problem_solving || 'sorar',
-            physical_endurance || 'iyi', eye_health || 'iyi', health_restrictions || '',
-            leadership_potential || 'hayir', training_needs || '', general_evaluation || '',
-            photo_url || '', national_id || '', phone || ''
-        );
+        // Tüm personel alanları (P1-P11)
+        const textFields = [
+            'name', 'role', 'skill_level', 'machines', 'skills', 'language', 'work_start', 'work_end', 'start_date',
+            'technical_mastery', 'speed_level', 'quality_level', 'discipline_level', 'versatility_level', 'position', 'department',
+            'capable_operations', 'operation_skill_scores', 'learning_speed', 'independence_level',
+            'attendance', 'punctuality', 'initiative_level', 'teamwork_level', 'problem_solving',
+            'physical_endurance', 'eye_health', 'health_restrictions',
+            'leadership_potential', 'training_needs', 'general_evaluation',
+            'photo_url', 'national_id', 'phone', 'leave_types',
+            // P1: Kimlik
+            'birth_date', 'gender', 'education', 'children_count', 'blood_type', 'military_status',
+            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation',
+            'smokes', 'prays', 'transport_type', 'turkish_level', 'living_status', 'disability_status',
+            // P2: İş Geçmişi
+            'contract_type', 'sgk_entry_date', 'previous_workplaces', 'leave_reason',
+            // P4: Beceri
+            'finger_dexterity', 'color_perception', 'sample_reading',
+            // P5: Makine Ayar
+            'machine_adjustment_care', 'preferred_machine', 'most_efficient_machine', 'maintenance_skill', 'machine_adjustments',
+            // P6: Fiziksel
+            'body_type', 'work_capacity', 'isg_training_date', 'last_health_check',
+            // P7: Karakteristik
+            'reliability', 'hygiene', 'change_openness', 'responsibility_acceptance', 'error_stance',
+            // P9: İşlemler
+            'color_tone_matching', 'critical_matching_responsibility', 'fabric_experience',
+            // P10: Gelişim
+            'new_machine_learning', 'hard_work_avoidance', 'self_improvement',
+            // P11: Performans
+            'operator_class', 'satisfaction_score', 'recommend', 'weekly_note'
+        ];
 
+        const numericFields = ['daily_avg_output', 'error_rate', 'efficiency_score'];
+        const moneyFields = ['daily_wage', 'base_salary', 'transport_allowance', 'ssk_cost', 'food_allowance', 'compensation'];
+
+        const allFields = [...textFields, ...numericFields, ...moneyFields];
+        const columns = allFields.join(', ');
+        const placeholders = allFields.map(() => '?').join(', ');
+
+        const values = [
+            ...textFields.map(f => {
+                const v = body[f];
+                if (typeof v === 'object' && v !== null) return JSON.stringify(v);
+                return v ?? '';
+            }),
+            ...numericFields.map(f => parseFloat(body[f]) || 0),
+            calculatedDailyWage, base_salary, transport_allowance, ssk_cost, food_allowance, compensation
+        ];
+
+        const result = db.prepare(`INSERT INTO personnel (${columns}) VALUES (${placeholders})`).run(...values);
         const person = db.prepare('SELECT * FROM personnel WHERE id = ?').get(result.lastInsertRowid);
         return NextResponse.json(person, { status: 201 });
     } catch (error) {

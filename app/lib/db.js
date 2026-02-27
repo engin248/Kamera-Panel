@@ -521,6 +521,62 @@ function initTables() {
     "ALTER TABLE personnel ADD COLUMN photo_url TEXT DEFAULT ''",
     "ALTER TABLE personnel ADD COLUMN national_id TEXT DEFAULT ''",
     "ALTER TABLE personnel ADD COLUMN phone TEXT DEFAULT ''",
+    // ===== P1: KİMLİK & KİŞİSEL (YENİ) =====
+    "ALTER TABLE personnel ADD COLUMN birth_date TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN gender TEXT DEFAULT 'erkek'",
+    "ALTER TABLE personnel ADD COLUMN education TEXT DEFAULT 'ilkokul'",
+    "ALTER TABLE personnel ADD COLUMN children_count TEXT DEFAULT '0'",
+    "ALTER TABLE personnel ADD COLUMN blood_type TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN military_status TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN emergency_contact_name TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN emergency_contact_phone TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN emergency_contact_relation TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN smokes TEXT DEFAULT 'hayir'",
+    "ALTER TABLE personnel ADD COLUMN prays TEXT DEFAULT 'hayir'",
+    "ALTER TABLE personnel ADD COLUMN transport_type TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN turkish_level TEXT DEFAULT 'ana_dil'",
+    "ALTER TABLE personnel ADD COLUMN living_status TEXT DEFAULT 'ailesiyle'",
+    "ALTER TABLE personnel ADD COLUMN disability_status TEXT DEFAULT 'yok'",
+    // ===== P2: İŞ GEÇMİŞİ (YENİ) =====
+    "ALTER TABLE personnel ADD COLUMN contract_type TEXT DEFAULT 'belirsiz'",
+    "ALTER TABLE personnel ADD COLUMN sgk_entry_date TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN previous_workplaces TEXT DEFAULT 'ilk_isi'",
+    "ALTER TABLE personnel ADD COLUMN leave_reason TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN leave_types TEXT DEFAULT ''",
+    // ===== P4: BECERİ (YENİ) =====
+    "ALTER TABLE personnel ADD COLUMN finger_dexterity TEXT DEFAULT 'normal'",
+    "ALTER TABLE personnel ADD COLUMN color_perception TEXT DEFAULT 'normal'",
+    "ALTER TABLE personnel ADD COLUMN sample_reading TEXT DEFAULT 'gosterilmeli'",
+    // ===== P5: MAKİNE AYAR (YENİ) =====
+    "ALTER TABLE personnel ADD COLUMN machine_adjustment_care TEXT DEFAULT 'normal'",
+    "ALTER TABLE personnel ADD COLUMN preferred_machine TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN most_efficient_machine TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN maintenance_skill TEXT DEFAULT 'basit'",
+    "ALTER TABLE personnel ADD COLUMN machine_adjustments TEXT DEFAULT '{}'",
+    // ===== P6: FİZİKSEL (YENİ) =====
+    "ALTER TABLE personnel ADD COLUMN body_type TEXT DEFAULT 'normal'",
+    "ALTER TABLE personnel ADD COLUMN work_capacity TEXT DEFAULT 'normal_rahat'",
+    "ALTER TABLE personnel ADD COLUMN isg_training_date TEXT DEFAULT ''",
+    "ALTER TABLE personnel ADD COLUMN last_health_check TEXT DEFAULT ''",
+    // ===== P7: KARAKTERİSTİK (YENİ) =====
+    "ALTER TABLE personnel ADD COLUMN reliability TEXT DEFAULT 'guvenilir'",
+    "ALTER TABLE personnel ADD COLUMN hygiene TEXT DEFAULT 'normal'",
+    "ALTER TABLE personnel ADD COLUMN change_openness TEXT DEFAULT 'acik'",
+    "ALTER TABLE personnel ADD COLUMN responsibility_acceptance TEXT DEFAULT 'kabul_eder'",
+    "ALTER TABLE personnel ADD COLUMN error_stance TEXT DEFAULT 'soyler'",
+    // ===== P9: İŞLEMLER (YENİ) =====
+    "ALTER TABLE personnel ADD COLUMN color_tone_matching TEXT DEFAULT 'fark_eder'",
+    "ALTER TABLE personnel ADD COLUMN critical_matching_responsibility TEXT DEFAULT 'sorumluluk_alir'",
+    "ALTER TABLE personnel ADD COLUMN fabric_experience TEXT DEFAULT '{}'",
+    // ===== P10: GELİŞİM (YENİ) =====
+    "ALTER TABLE personnel ADD COLUMN new_machine_learning TEXT DEFAULT 'istekli'",
+    "ALTER TABLE personnel ADD COLUMN hard_work_avoidance TEXT DEFAULT 'kacmaz'",
+    "ALTER TABLE personnel ADD COLUMN self_improvement TEXT DEFAULT 'gelisir'",
+    // ===== P11: PERFORMANS (YENİ) =====
+    "ALTER TABLE personnel ADD COLUMN operator_class TEXT DEFAULT 'B'",
+    "ALTER TABLE personnel ADD COLUMN satisfaction_score TEXT DEFAULT '5'",
+    "ALTER TABLE personnel ADD COLUMN recommend TEXT DEFAULT 'evet'",
+    "ALTER TABLE personnel ADD COLUMN weekly_note TEXT DEFAULT ''",
   ];
   for (const sql of alterStatements) {
     try { db.exec(sql); } catch (e) { /* sütun zaten var */ }

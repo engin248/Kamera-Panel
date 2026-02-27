@@ -1077,7 +1077,7 @@ function NewModelModal({ onClose, onSave }) {
           {/* MADDE 6: Operasyon Alt Kırılımları */}
           {sectionTitle('⚙️', 'Operasyon Kırılımları')}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', margin: '0 0 12px 0' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '14px' }}>
               {(() => {
                 const total = (parseInt(form.op_kesim_count) || 0) + (parseInt(form.op_dikim_count) || 0) +
                   (parseInt(form.op_utu_paket_count) || 0) + (parseInt(form.op_nakis_count) || 0) + (parseInt(form.op_yikama_count) || 0);
@@ -1087,7 +1087,7 @@ function NewModelModal({ onClose, onSave }) {
 
             {/* Kesim */}
             <div style={{ marginBottom: '10px', padding: '10px', background: 'rgba(52,152,219,0.06)', borderRadius: '8px', border: '1px solid rgba(52,152,219,0.15)' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: '#2980b9', marginBottom: '6px', display: 'block' }}>✂️ Kesim Operasyonu</label>
+              <label style={{ fontSize: '14px', fontWeight: '700', color: '#2980b9', marginBottom: '6px', display: 'block' }}>✂️ Kesim Operasyonu</label>
               <div className="form-row" style={{ gap: '8px', marginBottom: '0' }}>
                 <input className="form-input" type="number" placeholder="Adet" value={form.op_kesim_count} onChange={e => setForm({ ...form, op_kesim_count: e.target.value })} style={{ maxWidth: '80px' }} />
                 {VI('op_kesim_details', 'Detay (örn: Beden kesimi, Garni kesimi, Tüp kesimi, Tela kesimi, Taş kesimi)')}
@@ -1096,7 +1096,7 @@ function NewModelModal({ onClose, onSave }) {
 
             {/* Dikim */}
             <div style={{ marginBottom: '10px', padding: '10px', background: 'rgba(155,89,182,0.06)', borderRadius: '8px', border: '1px solid rgba(155,89,182,0.15)' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: '#8e44ad', marginBottom: '6px', display: 'block' }}>🧵 Dikim Operasyonu</label>
+              <label style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', marginBottom: '6px', display: 'block' }}>🧵 Dikim Operasyonu</label>
               <div className="form-row" style={{ gap: '8px', marginBottom: '0' }}>
                 <input className="form-input" type="number" placeholder="Adet" value={form.op_dikim_count} onChange={e => setForm({ ...form, op_dikim_count: e.target.value })} style={{ maxWidth: '80px' }} />
                 {VI('op_dikim_details', 'Detay (örn: Düz dikiş, Overlok, Reçme, Çift iğne...)')}
@@ -1105,7 +1105,7 @@ function NewModelModal({ onClose, onSave }) {
 
             {/* Ütü & Paket */}
             <div style={{ marginBottom: '10px', padding: '10px', background: 'rgba(230,126,34,0.06)', borderRadius: '8px', border: '1px solid rgba(230,126,34,0.15)' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: '#d35400', marginBottom: '6px', display: 'block' }}>♨️ Ütü & Paket</label>
+              <label style={{ fontSize: '14px', fontWeight: '700', color: '#d35400', marginBottom: '6px', display: 'block' }}>♨️ Ütü & Paket</label>
               <div className="form-row" style={{ gap: '8px', marginBottom: '0' }}>
                 <input className="form-input" type="number" placeholder="Adet" value={form.op_utu_paket_count} onChange={e => setForm({ ...form, op_utu_paket_count: e.target.value })} style={{ maxWidth: '80px' }} />
                 {VI('op_utu_paket_details', 'Detay (örn: Ara ütü, Son ütü, Katlama, Etiket, Paket)')}
@@ -1114,7 +1114,7 @@ function NewModelModal({ onClose, onSave }) {
 
             {/* Nakış */}
             <div style={{ marginBottom: '10px', padding: '10px', background: 'rgba(241,196,15,0.06)', borderRadius: '8px', border: '1px solid rgba(241,196,15,0.15)' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: '#f39c12', marginBottom: '6px', display: 'block' }}>🪡 Nakış</label>
+              <label style={{ fontSize: '14px', fontWeight: '700', color: '#f39c12', marginBottom: '6px', display: 'block' }}>🪡 Nakış</label>
               <div className="form-row" style={{ gap: '8px', marginBottom: '0' }}>
                 <input className="form-input" type="number" placeholder="Adet" value={form.op_nakis_count} onChange={e => setForm({ ...form, op_nakis_count: e.target.value })} style={{ maxWidth: '80px' }} />
                 {VI('op_nakis_details', 'Detay (örn: Logo nakış, Biye nakış, Desen nakış)')}
@@ -1123,7 +1123,7 @@ function NewModelModal({ onClose, onSave }) {
 
             {/* Yıkama */}
             <div style={{ padding: '10px', background: 'rgba(26,188,156,0.06)', borderRadius: '8px', border: '1px solid rgba(26,188,156,0.15)' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: '#16a085', marginBottom: '6px', display: 'block' }}>🌊 Yıkama</label>
+              <label style={{ fontSize: '14px', fontWeight: '700', color: '#16a085', marginBottom: '6px', display: 'block' }}>🌊 Yıkama</label>
               <div className="form-row" style={{ gap: '8px', marginBottom: '0' }}>
                 <input className="form-input" type="number" placeholder="Adet" value={form.op_yikama_count} onChange={e => setForm({ ...form, op_yikama_count: e.target.value })} style={{ maxWidth: '80px' }} />
                 {VI('op_yikama_details', 'Detay (örn: Taş yıkama, Enzim yıkama, Silikon yıkama)')}
@@ -1222,7 +1222,7 @@ function NewModelModal({ onClose, onSave }) {
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
+            <button type="button" className="btn btn-secondary" onClick={handleClose}>İptal</button>
             <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}
             </button>
@@ -1908,11 +1908,11 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
                 <div className="form-group">
                   <label className="form-label">{'\u2B50'} Gereken Min. Ustal{'\u0131'}k Seviyesi</label>
                   <select className="form-input" value={form.required_skill_level} onChange={e => setForm({ ...form, required_skill_level: e.target.value })}>
-                    <option value="1_sinif">{'\u2B50\u2B50\u2B50'} 1. S{'\u0131'}n{'\u0131'}f — Usta (Kaliteli & H{'\u0131'}zl{'\u0131'})</option>
-                    <option value="2_sinif">{'\u2B50\u2B50'} 2. S{'\u0131'}n{'\u0131'}f — Tecr{'\u00FC'}beli (Kaliteli & Dikkatli)</option>
-                    <option value="3_sinif">{'\u2B50'} 3. S{'\u0131'}n{'\u0131'}f — Orta (Standart)</option>
-                    <option value="4_sinif">4. S{'\u0131'}n{'\u0131'}f — Geli{'\u015F'}mekte</option>
-                    <option value="5_sinif">5. S{'\u0131'}n{'\u0131'}f — Ba{'\u015F'}lang{'\u0131\u00E7'}</option>
+                    <option value="1_sinif">{'\u2B50\u2B50\u2B50'} 1. S{'\u0131'}n{'\u0131'}f</option>
+                    <option value="2_sinif">{'\u2B50\u2B50'} 2. S{'\u0131'}n{'\u0131'}f</option>
+                    <option value="3_sinif">{'\u2B50'} 3. S{'\u0131'}n{'\u0131'}f</option>
+                    <option value="4_sinif">4. S{'\u0131'}n{'\u0131'}f</option>
+                    <option value="5_sinif">5. S{'\u0131'}n{'\u0131'}f</option>
                   </select>
                 </div>
               </div>
@@ -2201,7 +2201,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
                 {/* Mikrofondan Doğrudan Kayıt */}
                 {!form.audio_path && (
-                  <div style={{ marginBottom: '10px' }}>
+                  <div style={{ marginBottom: '14px' }}>
                     {!audioRecActive ? (
                       <button type="button" onClick={startAudioRecording}
                         style={{ width: '100%', padding: '16px', borderRadius: 'var(--radius-lg)', border: '2px dashed #8b5cf6', background: 'rgba(139,92,246,0.04)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
@@ -2799,7 +2799,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
           <div className="modal-footer">
 
-            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
+            <button type="button" className="btn btn-secondary" onClick={handleClose}>İptal</button>
 
             <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}</button>
 
@@ -2819,19 +2819,58 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
 // ========== MODAL: YENİ PERSONEL ==========
 
-function NewPersonnelModal({ onClose, onSave }) {
+function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
 
-  const [form, setForm] = useState({
+  const DRAFT_KEY = 'personnel_draft';
+  const defaultForm = {
     name: '', role: 'duz_makineci', daily_wage: '', skill_level: 'orta', work_start: '08:00', work_end: '19:00', machines: '', language: 'tr', base_salary: '', transport_allowance: '', ssk_cost: '', food_allowance: '', compensation: '', technical_mastery: 'operator', speed_level: 'normal', quality_level: 'standart', discipline_level: 'guvenilir', versatility_level: '1-2', department: 'dikim',
-    // Yeni beceri/kapasite kriterleri
     daily_avg_output: '', error_rate: '', efficiency_score: '',
     capable_operations: '', learning_speed: 'normal', independence_level: 'kismen',
     attendance: 'az', punctuality: 'genelde', initiative_level: 'orta', teamwork_level: 'iyi', problem_solving: 'sorar',
     physical_endurance: 'iyi', eye_health: 'iyi', health_restrictions: '',
     leadership_potential: 'hayir', training_needs: '', general_evaluation: '',
     phone: '', national_id: '',
-    operation_skill_scores: '{}', leave_types: ''
-  });
+    operation_skill_scores: '{}', leave_types: '',
+    birth_date: '', gender: 'erkek', education: 'ilkokul', children_count: '0',
+    blood_type: '', military_status: '', emergency_contact_name: '', emergency_contact_phone: '', emergency_contact_relation: '',
+    smokes: 'hayir', prays: 'hayir', transport_type: '', turkish_level: 'ana_dil',
+    living_status: 'ailesiyle', disability_status: 'yok',
+    contract_type: 'belirsiz', sgk_entry_date: '', previous_workplaces: 'ilk_isi',
+    leave_reason: '',
+    finger_dexterity: 'normal', color_perception: 'normal', sample_reading: 'gosterilmeli',
+    difficult_work: 'zorlanir', detail_work: 'orta', hard_work_skill: 'yapabilir',
+    machine_adjustment_care: 'normal', preferred_machine: '', most_efficient_machine: '',
+    maintenance_skill: 'basit',
+    machine_adjustments: '{}',
+    body_type: 'normal', work_capacity: 'normal_rahat',
+    isg_training_date: '', last_health_check: '',
+    reliability: 'guvenilir', hygiene: 'normal', change_openness: 'acik',
+    responsibility_acceptance: 'kabul_eder', error_stance: 'soyler',
+    color_tone_matching: 'fark_eder', critical_matching_responsibility: 'sorumluluk_alir',
+    fabric_experience: '{}',
+    new_machine_learning: 'istekli', hard_work_avoidance: 'kacmaz', self_improvement: 'gelisir',
+    operator_class: 'B', satisfaction_score: '5', recommend: 'evet', weekly_note: ''
+  };
+
+  // localStorage'dan taslak yükle veya editData kullan
+  const loadDraft = () => {
+    if (editData) return { ...defaultForm, ...editData };
+    try { const d = localStorage.getItem(DRAFT_KEY); return d ? { ...defaultForm, ...JSON.parse(d) } : defaultForm; } catch { return defaultForm; }
+  };
+
+  const [form, setForm] = useState(loadDraft);
+
+  // Her değişiklikte otomatik kaydet (sadece yeni ekleme modunda)
+  useEffect(() => {
+    if (!editData) localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+  }, [form]);
+
+  // Kapatma onayı — veri varsa sor
+  const handleClose = () => {
+    if (form.name) {
+      if (confirm('⚠️ Kaydedilmemiş veri var! Taslak olarak saklanacak.\nÇıkmak istediğinize emin misiniz?')) { onClose(); }
+    } else { localStorage.removeItem(DRAFT_KEY); onClose(); }
+  };
 
   const totalMonthly = (parseFloat(form.base_salary) || 0) + (parseFloat(form.transport_allowance) || 0) + (parseFloat(form.ssk_cost) || 0) + (parseFloat(form.food_allowance) || 0) + (parseFloat(form.compensation) || 0);
 
@@ -2849,10 +2888,13 @@ function NewPersonnelModal({ onClose, onSave }) {
 
     try {
 
-      await onSave({
+      const submitData = {
         ...form, daily_wage: parseFloat(form.daily_wage) || 0, base_salary: parseFloat(form.base_salary) || 0, transport_allowance: parseFloat(form.transport_allowance) || 0, ssk_cost: parseFloat(form.ssk_cost) || 0, food_allowance: parseFloat(form.food_allowance) || 0, compensation: parseFloat(form.compensation) || 0,
         daily_avg_output: parseInt(form.daily_avg_output) || 0, error_rate: parseFloat(form.error_rate) || 0, efficiency_score: parseFloat(form.efficiency_score) || 0
-      });
+      };
+      if (editData && onUpdate) { await onUpdate(submitData); }
+      else { await onSave(submitData); }
+      if (!editData) localStorage.removeItem(DRAFT_KEY);
 
     } finally { setSaving(false); }
 
@@ -2862,182 +2904,141 @@ function NewPersonnelModal({ onClose, onSave }) {
 
   return (
 
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
 
       <div className="modal" onClick={e => e.stopPropagation()}>
 
         <div className="modal-header">
 
-          <h2 className="modal-title">📋‘ Yeni Personel</h2>
+          <h2 className="modal-title">{editData ? `✏️ Düzenle — ${form.name}` : `📋 Yeni Personel ${form.name ? `— ${form.name}` : ''}`}</h2>
 
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={handleClose}>✕</button>
 
         </div>
 
         <form onSubmit={handleSubmit}>
 
-          <div className="form-row">
-
+          <div style={{ marginBottom: '14px' }}>
             <div className="form-group"><label className="form-label">Ad Soyad *</label><input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
+          </div>
 
-            <div className="form-group"><label className="form-label">Pozisyon / Görev</label>
+          <div className="form-group" style={{ marginBottom: '14px' }}><label className="form-label">Pozisyon / Görev (birden fazla seçilebilir)</label>
+            {(() => {
+              const selectedRoles = (form.role || '').split(',').map(r => r.trim()).filter(Boolean);
+              const toggleRole = (val) => {
+                const current = selectedRoles.includes(val) ? selectedRoles.filter(r => r !== val) : [...selectedRoles, val];
+                setForm({ ...form, role: current.join(',') });
+              };
+              const addCustomRole = () => {
+                const custom = prompt('Yeni pozisyon/makine adı girin:');
+                if (custom && custom.trim()) {
+                  const key = custom.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                  if (!selectedRoles.includes(key)) {
+                    setForm({ ...form, role: [...selectedRoles, key].join(',') });
+                  }
+                }
+              };
+              const categories = [
+                { label: '✂️ Kesim Bölümü', roles: [['makastar', 'Makastar'], ['makastar_yardimcisi', 'Makastar Yardımcısı'], ['kesimci', 'Kesimci'], ['kesimci_yardimcisi', 'Kesimci Yardımcısı'], ['kesim_ustasi', 'Kesim Ustası']] },
+                { label: '🧵 Dikim', roles: [['duz_makineci', 'Düz Makineci'], ['overlokcu', 'Overlokçu'], ['recmeci', 'Reçmeci'], ['cift_igneci', 'Çift İğneci']] },
+                { label: '♨️ Ütü & Son İşlem', roles: [['ara_utucu', 'Ara Ütücü'], ['son_utucu', 'Son Ütücü'], ['paketci', 'Paketçi'], ['kolileme_operatoru', 'Kolileme'], ['baski_operatoru', 'Baskıcı']] },
+                { label: '📋’ Kalite', roles: [['inline_kalite', 'Ara Kalite Kontrol'], ['son_kontrolcu', 'Son Kontrol']] },
+                { label: '📋” Yönetim & Destek', roles: [['ustabasi', 'Usta Başı'], ['numuneci', 'Numuneci'], ['makinaci', 'Makinacı'], ['modelist', 'Modelist'], ['teknisyen', 'Teknisyen']] }
+              ];
+              return <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {selectedRoles.length > 0 && <div style={{ fontSize: '14px', color: 'var(--accent)', fontWeight: '700' }}>{selectedRoles.length} pozisyon seçili</div>}
+                {categories.map(cat => (
+                  <div key={cat.label} style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '8px' }}>{cat.label}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                      {cat.roles.map(([val, label]) => {
+                        const checked = selectedRoles.includes(val);
+                        return <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', padding: '6px 12px', borderRadius: '6px', background: checked ? 'rgba(46,204,113,0.15)' : 'transparent', border: `1px solid ${checked ? '#27ae60' : 'var(--border-color)'}`, cursor: 'pointer', fontWeight: checked ? '700' : '400', color: checked ? '#27ae60' : 'var(--text-primary)' }}>
+                          <input type="checkbox" checked={checked} onChange={() => toggleRole(val)} style={{ display: 'none' }} />{checked ? '✅' : ''} {label}
+                        </label>;
+                      })}
+                      <button type="button" onClick={() => { const custom = prompt(cat.label + ' bölümüne ekle:'); if (custom && custom.trim()) { const key = custom.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_\u00e7\u015f\u0131\u00f6\u00fc\u011f]/g, ''); if (!selectedRoles.includes(key)) setForm({ ...form, role: [...selectedRoles, key].join(',') }); } }} style={{ fontSize: '14px', padding: '6px 12px', borderRadius: '6px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', cursor: 'pointer', fontWeight: '600' }}>➕ Ekle</button>
+                    </div>
+                  </div>
+                ))}
+              </div>;
+            })()}
+          </div>
 
-              <select className="form-select" value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
-
-                <optgroup label="✂️ Kesim Bölümü">
-
-                  <option value="pastalci">Pastalcı</option>
-
-                  <option value="serimci">Serimci (Kumaş Serim)</option>
-
-                  <option value="kesim_operatoru">Kesim Operatörü</option>
-
-                  <option value="kesim_yardimcisi">Kesim Yardımcısı</option>
-
-                </optgroup>
-
-                <optgroup label="🧵 Dikim Hattı — Temel">
-
-                  <option value="duz_makineci">Düz Makineci</option>
-
-                  <option value="overlokcu">Overlokçu</option>
-
-                  <option value="recmeci">Reçmeci</option>
-
-                  <option value="flatlock_operatoru">Flatlockçu</option>
-
-                  <option value="cift_igneci">Çift İĞneci</option>
-
-                  <option value="zincir_dikisci">Zincir Dikişçi</option>
-
-                  <option value="zigzagci">Zigzagcı</option>
-
-                  <option value="gizli_dikisci">Gizli Dikişçi</option>
-
-                </optgroup>
-
-                <optgroup label="🧵 Dikim Hattı — Uzmanlık">
-
-                  <option value="kolcu">Kolcu (Kol Takma)</option>
-
-                  <option value="ortaci">Ortacı (Orta Monte)</option>
-
-                  <option value="kemerci">Kemerci (Kemer Takma)</option>
-
-                  <option value="yakalikci">Yakalıkçı</option>
-
-                  <option value="mansetci">Manşetçi / Rib Op.</option>
-
-                  <option value="cepci">Cepçi (Cep Dikme)</option>
-
-                  <option value="fermuar_operatoru">Fermuar Operatörü</option>
-
-                  <option value="lastik_operatoru">Lastik Takma Op.</option>
-
-                  <option value="biye_operatoru">Biye Operatörü</option>
-
-                  <option value="ilikci">İlikçi (İlik Açma)</option>
-
-                  <option value="dugmeci">DüĞmeci (DüĞme Dikme)</option>
-
-                </optgroup>
-
-                <optgroup label="⚙️ Özel Operasyon">
-
-                  <option value="punterizci">Punterizcı (Bartack)</option>
-
-                  <option value="kopru_operatoru">Köprü Operatörü</option>
-
-                  <option value="aksesuar_operatoru">Aksesuar / Parça Sabitleme</option>
-
-                </optgroup>
-
-                <optgroup label="♨️ Ütü & Son İşlem">
-
-                  <option value="ara_utucu">Ara Ütücü</option>
-
-                  <option value="son_utucu">Son Ütücü</option>
-
-                  <option value="iplik_temizleme">İplik Temizleme Op.</option>
-
-                  <option value="etiketci">Etiketçi</option>
-
-                  <option value="katlama_operatoru">Katlama Operatörü</option>
-
-                  <option value="paketci">Paketçi</option>
-
-                  <option value="kolileme_operatoru">Kolileme Operatörü</option>
-
-                  <option value="baski_operatoru">Baskı Operatörü</option>
-
-                </optgroup>
-
-                <optgroup label="📋‘️ Kalite & Kontrol">
-
-                  <option value="inline_kalite">Proses (Inline) Kalite Kontrol</option>
-
-                  <option value="son_kontrolcu">Son Kontrolcü</option>
-
-                  <option value="olcum_kontrol">Ölçüm Kontrol Op.</option>
-
-                  <option value="aql_kalite">AQL Kalite Kontrol</option>
-
-                </optgroup>
-
-                <optgroup label="📋‘” Yönetim & Destek">
-
-                  <option value="hat_sefi">Hat / Bant Şefi</option>
-
-                  <option value="ustabasi">Usta Başı</option>
-
-                  <option value="numuneci">Numuneci</option>
-
-                  <option value="modelci">Modelci / Kalıpçı</option>
-
-                  <option value="modelhane_operatoru">Modelhane Operatörü</option>
-
-                  <option value="makine_teknisyeni">Makine Bakım Teknisyeni</option>
-
-                  <option value="yardimci_operator">Yardımcı Operatör</option>
-
-                </optgroup>
-
-              </select>
-
+          {/* ===== P1: KİMLİK & KİŞİSEL BİLGİLER ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(52,152,219,0.2)' }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#3498db', marginBottom: '8px' }}>🪪 Kimlik & Kişisel Bilgiler</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">TC Kimlik No</label><input className="form-input" maxLength={11} placeholder="11 hane" value={form.national_id} onChange={e => setForm({ ...form, national_id: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Telefon</label><input className="form-input" type="tel" placeholder="05XX XXX XX XX" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
             </div>
-
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Doğum Tarihi</label><input className="form-input" type="date" value={form.birth_date} onChange={e => setForm({ ...form, birth_date: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Cinsiyet</label>
+                <select className="form-select" value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}><option value="erkek">Erkek</option><option value="kadin">Kadın</option></select></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Eğitim Durumu</label>
+                <select className="form-select" value={form.education} onChange={e => setForm({ ...form, education: e.target.value })}><option value="yok">Eğitim almamış</option><option value="ilkokul">İlkokul</option><option value="ortaokul">Ortaokul</option><option value="lise">Lise</option><option value="universite">Üniversite</option></select></div>
+              <div className="form-group"><label className="form-label">Kan Grubu *</label>
+                <select className="form-select" value={form.blood_type} onChange={e => setForm({ ...form, blood_type: e.target.value })}><option value="">— Seçiniz —</option><option value="A+">A Rh+</option><option value="A-">A Rh-</option><option value="B+">B Rh+</option><option value="B-">B Rh-</option><option value="AB+">AB Rh+</option><option value="AB-">AB Rh-</option><option value="0+">0 Rh+</option><option value="0-">0 Rh-</option></select></div>
+            </div>
+            <div className="form-row">
+              {form.gender !== 'kadin' && <div className="form-group"><label className="form-label">Askerlik Durumu</label>
+                <select className="form-select" value={form.military_status} onChange={e => setForm({ ...form, military_status: e.target.value })}><option value="">— Seçiniz —</option><option value="yapildi">Yapıldı</option><option value="tecilli">Tecilli</option><option value="muaf">Muaf</option></select></div>}
+              <div className="form-group"><label className="form-label">Yaşam Durumu</label>
+                <select className="form-select" value={form.living_status} onChange={e => setForm({ ...form, living_status: e.target.value })}><option value="ailesiyle">Ailesiyle yaşıyor</option><option value="esi_cocuklariyla">Eşi ve çocuklarıyla</option><option value="cocuguyla">Çocuğuyla yaşıyor</option><option value="yalniz">Yalnız yaşıyor</option><option value="arkadasla">Arkadaşla yaşıyor</option><option value="yurtta">Yurtta yaşıyor</option></select></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Çocuk Sayısı</label><input className="form-input" type="number" min="0" max="15" value={form.children_count} onChange={e => setForm({ ...form, children_count: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Ulaşım Şekli</label>
+                <select className="form-select" value={form.transport_type} onChange={e => setForm({ ...form, transport_type: e.target.value })}><option value="">— Seçiniz —</option><option value="yuruyerek">Yürüyerek</option><option value="toplu_tasima">Toplu taşıma</option><option value="servis">Servis</option><option value="kendi_araci">Kendi aracı</option></select></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Türkçe Anlama</label>
+                <select className="form-select" value={form.turkish_level} onChange={e => setForm({ ...form, turkish_level: e.target.value })}><option value="ana_dil">Ana dil</option><option value="iyi">İyi anlıyor</option><option value="temel">Temel düzey</option><option value="cok_az">Çok az</option></select></div>
+              <div className="form-group"><label className="form-label">Engel Durumu</label>
+                <select className="form-select" value={form.disability_status} onChange={e => setForm({ ...form, disability_status: e.target.value })}><option value="yok">Yok</option><option value="hafif">Hafif</option><option value="var">Var</option></select></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">🚬 Sigara İçiyor mu?</label>
+                <select className="form-select" value={form.smokes} onChange={e => setForm({ ...form, smokes: e.target.value })}><option value="hayir">Hayır</option><option value="evet">Evet</option></select></div>
+              <div className="form-group"><label className="form-label">🕌 Namaz Molası İhtiyacı</label>
+                <select className="form-select" value={form.prays} onChange={e => setForm({ ...form, prays: e.target.value })}><option value="hayir">Hayır</option><option value="evet">Evet</option></select></div>
+            </div>
+            <div style={{ marginTop: '8px', padding: '8px 10px', background: 'rgba(231,76,60,0.05)', borderRadius: '8px', border: '1px solid rgba(231,76,60,0.15)' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#e74c3c', marginBottom: '6px' }}>🆘 Acil Durumda Ulaşılacak Kişi</div>
+              <div className="form-row">
+                <div className="form-group"><label className="form-label">Ad Soyad</label><input className="form-input" placeholder="Acil kişi adı" value={form.emergency_contact_name} onChange={e => setForm({ ...form, emergency_contact_name: e.target.value })} /></div>
+                <div className="form-group"><label className="form-label">Telefon</label><input className="form-input" type="tel" placeholder="05XX XXX XX XX" value={form.emergency_contact_phone} onChange={e => setForm({ ...form, emergency_contact_phone: e.target.value })} /></div>
+              </div>
+              <div className="form-row">
+                <div className="form-group"><label className="form-label">Yakınlık</label>
+                  <select className="form-select" value={form.emergency_contact_relation} onChange={e => setForm({ ...form, emergency_contact_relation: e.target.value })}><option value="">— Seçiniz —</option><option value="es">Eşi</option><option value="anne">Annesi</option><option value="baba">Babası</option><option value="kardes">Kardeşi</option><option value="cocuk">Çocuğu</option><option value="diger">Diğer</option></select></div>
+              </div>
+            </div>
           </div>
 
           {/* MAAŞ BİLEŞENLERİ */}
 
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
 
-            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📋’ Aylık Ücret Bileşenleri</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📋’ Aylık Ücret Bileşenleri</div>
 
             <div className="form-row">
-
               <div className="form-group"><label className="form-label">Maaş (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0" value={form.base_salary} onChange={e => setForm({ ...form, base_salary: e.target.value })} /></div>
-
               <div className="form-group"><label className="form-label">Yol (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0" value={form.transport_allowance} onChange={e => setForm({ ...form, transport_allowance: e.target.value })} /></div>
-
-              <div className="form-group"><label className="form-label">SSK (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0" value={form.ssk_cost} onChange={e => setForm({ ...form, ssk_cost: e.target.value })} /></div>
-
             </div>
-
             <div className="form-row">
-
+              <div className="form-group"><label className="form-label">SSK (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0" value={form.ssk_cost} onChange={e => setForm({ ...form, ssk_cost: e.target.value })} /></div>
               <div className="form-group"><label className="form-label">Yemek (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0" value={form.food_allowance} onChange={e => setForm({ ...form, food_allowance: e.target.value })} /></div>
-
+            </div>
+            <div className="form-row">
               <div className="form-group"><label className="form-label">Tazminat (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0" value={form.compensation} onChange={e => setForm({ ...form, compensation: e.target.value })} /></div>
-
               <div className="form-group">
-
                 <label className="form-label">Toplam Aylık</label>
-
                 <div style={{ padding: '8px 12px', borderRadius: '6px', background: 'rgba(46,204,113,0.1)', border: '1px solid rgba(46,204,113,0.3)', fontSize: '14px', fontWeight: '700', color: '#2ecc71' }}>{totalMonthly.toLocaleString('tr-TR')} ₺</div>
-
               </div>
-
             </div>
 
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>⚙️ Günlük ücret = Toplam aylık / Ayın çalışma günü sayısı olarak otomatik hesaplanır</div>
@@ -3048,40 +3049,28 @@ function NewPersonnelModal({ onClose, onSave }) {
 
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
 
-            <div style={{ fontSize: '12px', fontWeight: '700', color: '#e67e22', marginBottom: '8px' }}>📏Š Operatör Beceri Matrisi</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#e67e22', marginBottom: '8px' }}>📏Š Operatör Beceri Matrisi</div>
 
             <div className="form-row">
 
               <div className="form-group"><label className="form-label">1️⃣ Teknik Ustalık</label>
-
                 <select className="form-select" value={form.technical_mastery} onChange={e => setForm({ ...form, technical_mastery: e.target.value })}>
-
-                  <option value="usta">Usta — Her işlemi baĞımsız yapar</option>
-
-                  <option value="kalfa">Kalfa — Az yönlendirme yeter</option>
-
-                  <option value="operator">Operatör — Yönlendirme gerekir</option>
-
-                  <option value="cirak">Çırak — Sürekli gözetim</option>
-
+                  <option value="egitici_usta">Eğitici Usta</option>
+                  <option value="usta">Usta</option>
+                  <option value="kalfa">Kalfa</option>
+                  <option value="operator">Operatör</option>
+                  <option value="cirak">Çırak</option>
+                  <option value="stajyer">Stajyer</option>
                 </select>
-
               </div>
 
-              <div className="form-group"><label className="form-label">2️⃣ Hız</label>
-
+              <div className="form-group"><label className="form-label">2️⃣ Hız (İş Alma-Verme)</label>
                 <select className="form-select" value={form.speed_level} onChange={e => setForm({ ...form, speed_level: e.target.value })}>
-
-                  <option value="cok_seri">Çok Seri — Standart üstü</option>
-
-                  <option value="seri">Seri — Standart sürede</option>
-
-                  <option value="normal">Normal — Biraz altında</option>
-
-                  <option value="yavas">Yavaş — Standart altı</option>
-
+                  <option value="cok_seri">Çok Hızlı</option>
+                  <option value="seri">Hızlı</option>
+                  <option value="normal">Normal</option>
+                  <option value="yavas">Yavaş</option>
                 </select>
-
               </div>
 
             </div>
@@ -3090,13 +3079,11 @@ function NewPersonnelModal({ onClose, onSave }) {
 
               <div className="form-group"><label className="form-label">3️⃣ Kalite / El Temizliği</label>
                 <select className="form-select" value={form.quality_level} onChange={e => setForm({ ...form, quality_level: e.target.value })}>
-                  <option value="premium">Premium — Hata %1 altı</option>
-                  <option value="kaliteli">Kaliteli — Temiz işçilik</option>
-                  <option value="normal">Normal — Ortalama düzey</option>
-                  <option value="orta">Orta — İdare eder</option>
-                  <option value="standart">Standart — Kabul edilebilir</option>
-                  <option value="degisken">Değişken — Bazen iyi bazen düşük</option>
-                  <option value="dusuk">Düşük — Sık kontrol gerekir</option>
+                  <option value="premium">Premium</option>
+                  <option value="iyi">İyi</option>
+                  <option value="normal">Normal</option>
+                  <option value="degisken">Değişken</option>
+                  <option value="dusuk">Düşük</option>
                 </select>
               </div>
 
@@ -3104,11 +3091,11 @@ function NewPersonnelModal({ onClose, onSave }) {
 
                 <select className="form-select" value={form.discipline_level} onChange={e => setForm({ ...form, discipline_level: e.target.value })}>
 
-                  <option value="cok_guvenilir">Çok Güvenilir — Sorunsuz</option>
+                  <option value="cok_guvenilir">Çok Güvenilir</option>
 
-                  <option value="guvenilir">Güvenilir — Stabil</option>
+                  <option value="guvenilir">Güvenilir</option>
 
-                  <option value="degisken">DeĞişken — Bazen düşük</option>
+                  <option value="degisken">DeĞişken</option>
 
                   <option value="takip">Takip Gerektirir</option>
 
@@ -3119,25 +3106,25 @@ function NewPersonnelModal({ onClose, onSave }) {
             </div>
 
             <div className="form-row">
-
               <div className="form-group"><label className="form-label">5️⃣ Çok Yönlülük</label>
-
                 <select className="form-select" value={form.versatility_level} onChange={e => setForm({ ...form, versatility_level: e.target.value })}>
-
-                  <option value="5+">5+ operasyon yapabilir</option>
-
-                  <option value="3-4">3-4 operasyon</option>
-
-                  <option value="1-2">1-2 operasyon</option>
-
-                  <option value="tek">Tek operasyon</option>
-
+                  <option value="1">1 operasyon</option>
+                  <option value="2">2 operasyon</option>
+                  <option value="3">3 operasyon</option>
+                  <option value="4">4 operasyon</option>
+                  <option value="5">5 operasyon</option>
+                  <option value="6">6+ operasyon</option>
                 </select>
-
               </div>
-
+              <div className="form-group"><label className="form-label">6️⃣ Parmak Becerisi</label>
+                <select className="form-select" value={form.finger_dexterity} onChange={e => setForm({ ...form, finger_dexterity: e.target.value })}><option value="cok_iyi">Çok iyi</option><option value="iyi">İyi</option><option value="normal">Normal</option><option value="zayif">Zayıf</option></select></div>
             </div>
-
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">7️⃣ Renk Algısı</label>
+                <select className="form-select" value={form.color_perception} onChange={e => setForm({ ...form, color_perception: e.target.value })}><option value="cok_iyi">Çok iyi</option><option value="normal">Normal</option><option value="zayif">Zayıf</option></select></div>
+              <div className="form-group"><label className="form-label">8️⃣ Numune Okuma</label>
+                <select className="form-select" value={form.sample_reading} onChange={e => setForm({ ...form, sample_reading: e.target.value })}><option value="bagimsiz">Bağımsız okur</option><option value="gosterilmeli">Gösterilmeli</option><option value="yapamaz">Yapamaz</option></select></div>
+            </div>
           </div>
 
           <div className="form-row">
@@ -3150,102 +3137,126 @@ function NewPersonnelModal({ onClose, onSave }) {
 
           {/* ===== MAKİNE YETKİNLİK MATRİSİ ===== */}
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(52,152,219,0.3)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '700', color: '#2980b9', marginBottom: '8px' }}>🔧 Kullanabildiği Makineler & Yetkinlik Seviyesi</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '8px' }}>Her makine için yetkinlik seviyesi seçin. Kullanmıyorsa boş bırakın.</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-              {['Düz Dikiş', 'Çift İğne', 'Zincir Dikiş', '3İp Overlok', '4İp Overlok', '5İp Overlok', '2İğ Reçme', '3İğ Reçme', 'Bıçaklı Reçme', 'Flatlock', 'İlik Mak.', 'Düğme Mak.', 'Punteriz', 'Kemer Mak.', 'Zigzag', 'Gizli Dikiş', 'Fermuar Mak.', 'Kesim', 'Ütü', 'Nakış'].map(m => {
-                let machineSkills = {};
-                try { machineSkills = JSON.parse(form.operation_skill_scores || '{}'); } catch { }
-                const level = machineSkills[m] || '';
-                const colors = { 'cok_iyi': '#27ae60', 'iyi': '#2ecc71', 'orta': '#f39c12', 'normal': '#e67e22' };
-                return <div key={m} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', borderRadius: '6px', background: level ? `${colors[level]}15` : 'transparent', border: `1px solid ${level ? colors[level] : 'var(--border-color)'}` }}>
-                  <span style={{ fontSize: '11px', fontWeight: '600', minWidth: '90px', color: level ? colors[level] : 'var(--text-muted)' }}>{m}</span>
-                  <select style={{ flex: 1, fontSize: '10px', padding: '2px 4px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
-                    value={level} onChange={e => {
-                      const updated = { ...machineSkills };
-                      if (e.target.value) updated[m] = e.target.value; else delete updated[m];
-                      setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') });
-                    }}>
-                    <option value="">— Kullanmıyor</option>
-                    <option value="cok_iyi">⭐ Çok İyi</option>
-                    <option value="iyi">✅ İyi</option>
-                    <option value="orta">🔶 Orta</option>
-                    <option value="normal">⚪ Normal</option>
-                  </select>
-                </div>;
-              })}
-            </div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#2980b9', marginBottom: '8px' }}>🔧 Kullanabildiği Makineler & Yetkinlik Seviyesi</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Her makine için yetkinlik seviyesi seçin. Kullanmıyorsa boş bırakın.</div>
+            {(() => {
+              const defaultMachines = ['Düz Makina', 'Çift İğne', 'Zincir Dikiş', 'Overlok', '5İp Overlok', 'Mekanik Reçme', 'Bıçaklı Reçme', 'İlik Mak.', 'Düğme Mak.', 'Punteriz', 'Kemer Mak.', 'Zigzag', 'Gizli Dikiş', 'Ütü'];
+              let machineSkills = {};
+              try { machineSkills = JSON.parse(form.operation_skill_scores || '{}'); } catch { }
+              const customMachines = Object.keys(machineSkills).filter(k => !defaultMachines.includes(k));
+              const allMachines = [...defaultMachines, ...customMachines];
+              const colors = { 'usta_hizli': '#27ae60', 'usta_normal': '#2ecc71', 'usta_yavas': '#27ae60', 'iyi_hizli': '#3498db', 'iyi_normal': '#2ecc71', 'normal': '#f39c12', 'acemi_normal': '#e67e22', 'acemi_yavas': '#95a5a6' };
+              return <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                  {allMachines.map(m => {
+                    const level = machineSkills[m] || '';
+                    return <div key={m} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 30px', alignItems: 'center', gap: '6px', padding: '4px 8px', borderRadius: '6px', background: level ? `${colors[level]}15` : 'transparent', border: `1px solid ${level ? colors[level] : 'var(--border-color)'}` }}>
+                      <span style={{ fontSize: '13px', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: level ? colors[level] : 'var(--text-muted)' }}>{m}</span>
+                      <select style={{ width: '100%', fontSize: '12px', padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                        value={level} onChange={e => {
+                          const updated = { ...machineSkills };
+                          if (e.target.value) updated[m] = e.target.value; else delete updated[m];
+                          setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') });
+                        }}>
+                        <option value="">— Kullanmıyor</option>
+                        <option value="usta_hizli">🏅 Usta Hızlı</option>
+                        <option value="usta_normal">⭐ Usta Normal</option>
+                        <option value="usta_yavas">🟢 Usta Yavaş</option>
+                        <option value="iyi_hizli">💪 İyi Hızlı</option>
+                        <option value="iyi_normal">✅ İyi Normal</option>
+                        <option value="normal">🟡 Normal</option>
+                        <option value="acemi_normal">🔵 Acemi Normal</option>
+                        <option value="acemi_yavas">⚪ Acemi Yavaş</option>
+                      </select>
+                      <button type="button" onClick={() => { const updated = { ...machineSkills }; delete updated[m]; setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') }); }} style={{ background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', color: '#e74c3c', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }} title="Sil">✕</button>
+                    </div>;
+                  })}
+                </div>
+                <button type="button" onClick={() => { const name = prompt('Yeni makine adı yazın (ör: Singer, Juki, Özel Overlok):'); if (name && name.trim()) { const updated = { ...machineSkills, [name.trim()]: 'normal' }; setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') }); } }} style={{ marginTop: '8px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', padding: '6px 14px', borderRadius: '6px', fontSize: '14px', cursor: 'pointer', fontWeight: '600' }}>➕ Makine Ekle</button>
+              </>;
+            })()}
           </div>
 
-          {/* ===== ROL VE BECERİLER ===== */}
+
+          {/* ===== ÖZEL NOTLAR & GÖZLEMLER ===== */}
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(46,204,113,0.3)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}>🎯 Rol ve Beceriler — Tekstil Kapasitesi</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '6px' }}>Bu kişinin tekstilde hangi becerileri var? Neyi iyi yapıyor? Hangi ürünlerde tecrübeli?</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}> Özel Notlar & Gözlemler</div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">🧵 Tekstil Becerileri & Kapasitesi</label>
-                <textarea className="form-input" rows={3} placeholder="Örn: Gömlek dikiminde çok iyi, fermuar takma konusunda tecrübeli, yaka dikiminde usta seviyesinde. Elbise ve ceket dikebiliyor. Overlok ve düz makinede hızlı çalışır..." value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} style={{ resize: 'vertical' }} />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">📝 Özel Notlar (güçlü/zayıf yönleri)</label>
-                <textarea className="form-input" rows={2} placeholder="Örn: İnce kumaşlarda dikkatli, kalın kumaşta zorlanır. Hızlı ama bazen dikişi kaçırır..." value={form.capable_operations} onChange={e => setForm({ ...form, capable_operations: e.target.value })} style={{ resize: 'vertical' }} />
-              </div>
+              <div className="form-group"><label className="form-label">🧵 Güçlü Yönleri, Zayıf Yönleri, Sevdiği İşlemler</label>
+                <textarea className="form-input" rows={3} placeholder="Örn: Gömlek dikiminde çok iyi, fermuar takmada tecrübeli. İnce kumaşlarda dikkatli, kalın kumaşta zorlanır. Overlok'ta çalışmayı seviyor..." value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} style={{ resize: 'vertical' }} /></div>
             </div>
           </div>
-
-          <div className="form-row">
-
-            <div className="form-group"><label className="form-label">Dil</label>
-
-              <select className="form-select" value={form.language} onChange={e => setForm({ ...form, language: e.target.value })}>
-
-                <option value="tr">Türkçe</option><option value="ar">Arapça</option>
-
-              </select>
-
+          {/* ===== P5: MAKİNE AYAR BECERİLERİ ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(155,89,182,0.3)' }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', marginBottom: '8px' }}>⚙️ Makine Ayar Becerileri</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Her makine için ayar becerilerini işaretleyin. ✅ = Yapabilir</div>
+            {(() => {
+              let adj = {};
+              try { adj = JSON.parse(form.machine_adjustments || '{}'); } catch { }
+              const machines = {
+                'Singer Düz Makina': ['İplik ayarı', 'Konpile ayarı', 'Dişli ayarı', 'Çıtlama', 'Esneme ayarı', 'Toplama', 'Büzgü', 'Lastik esneme çıtlama'],
+                'Overlok': ['İplik ayarı', 'Çıtlama', 'Bıçak ayarı', 'Loper ayarı', 'Esneme ayarı', 'Toplama', 'Büzgü'],
+                'Reçme': ['İplik ayarı', 'Çıtlama', 'Bıçak ayarı', 'Loper ayarı', 'Esneme ayarı', 'Toplama', 'Büzgü']
+              };
+              return Object.entries(machines).map(([machine, skills]) => (
+                <div key={machine} style={{ marginBottom: '8px', padding: '8px', borderRadius: '6px', background: 'rgba(155,89,182,0.04)', border: '1px solid rgba(155,89,182,0.1)' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#8e44ad', marginBottom: '4px' }}>{machine}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {skills.map(skill => {
+                      const key = `${machine}_${skill}`;
+                      const checked = adj[key] || false;
+                      return <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '4px 8px', borderRadius: '4px', background: checked ? 'rgba(46,204,113,0.1)' : 'transparent', border: `1px solid ${checked ? '#27ae60' : 'var(--border-color)'}`, cursor: 'pointer' }}>
+                        <input type="checkbox" checked={checked} onChange={() => {
+                          const updated = { ...adj, [key]: !checked };
+                          if (!updated[key]) delete updated[key];
+                          setForm({ ...form, machine_adjustments: JSON.stringify(updated) });
+                        }} style={{ width: '12px', height: '12px', accentColor: '#27ae60' }} />{skill}
+                      </label>;
+                    })}
+                  </div>
+                </div>
+              ));
+            })()}
+            <div className="form-row" style={{ marginTop: '8px' }}>
+              <div className="form-group"><label className="form-label">Genel Ayar Özeni</label>
+                <select className="form-select" value={form.machine_adjustment_care} onChange={e => setForm({ ...form, machine_adjustment_care: e.target.value })}><option value="ozenli">Özenli</option><option value="normal">Normal</option><option value="ozensiz">Özensiz</option></select></div>
+              <div className="form-group"><label className="form-label">Bakım Becerisi</label>
+                <select className="form-select" value={form.maintenance_skill} onChange={e => setForm({ ...form, maintenance_skill: e.target.value })}><option value="tam">Tam bakım yapabilir</option><option value="basit">Basit bakım yapabilir</option><option value="sadece_temizlik">Sadece temizlik</option><option value="yapamaz">Yapamaz</option></select></div>
             </div>
-
-          </div>
-
-          {/* ===== KİŞİSEL BİLGİLER ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '700', color: '#3498db', marginBottom: '8px' }}>📱 Kişisel Bilgiler</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">📞 Telefon</label><input className="form-input" type="tel" placeholder="05xx xxx xx xx" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">🆔 TC Kimlik No</label><input className="form-input" placeholder="xxxxxxxxxxx" maxLength={11} value={form.national_id} onChange={e => setForm({ ...form, national_id: e.target.value })} /></div>
+            <div className="form-row" style={{ marginTop: '8px' }}>
+              <div className="form-group"><label className="form-label">💚 Tercih Ettiği Makine</label>
+                <select className="form-select" value={form.preferred_machine} onChange={e => setForm({ ...form, preferred_machine: e.target.value })}><option value="">— Seçiniz —</option>{['Düz Dikiş', 'Overlok', 'Reçme', 'Flatlock', 'Çift İğne', 'Zigzag', 'Ütü', 'Kesim'].map(m => <option key={m} value={m}>{m}</option>)}</select></div>
+              <div className="form-group"><label className="form-label">⭐ En Verimli Olduğu Makine</label>
+                <select className="form-select" value={form.most_efficient_machine} onChange={e => setForm({ ...form, most_efficient_machine: e.target.value })}><option value="">— Seçiniz —</option>{['Düz Dikiş', 'Overlok', 'Reçme', 'Flatlock', 'Çift İğne', 'Zigzag', 'Ütü', 'Kesim'].map(m => <option key={m} value={m}>{m}</option>)}</select></div>
             </div>
           </div>
 
           {/* ===== ÜRETİM KAPASİTESİ ===== */}
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(46,204,113,0.3)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}>📊 Üretim Kapasitesi</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Günlük Ort. Adet</label><input className="form-input" type="number" placeholder="Standart işlemde günde kaç parça?" value={form.daily_avg_output} onChange={e => setForm({ ...form, daily_avg_output: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">Hata Oranı (%)</label><input className="form-input" type="number" step="0.1" placeholder="Örn: 2.5" value={form.error_rate} onChange={e => setForm({ ...form, error_rate: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">Verimlilik Skoru (%)</label><input className="form-input" type="number" step="0.1" placeholder="SAM bazlı %" value={form.efficiency_score} onChange={e => setForm({ ...form, efficiency_score: e.target.value })} /></div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}>📊 Üretim Kapasitesi</div>
+            <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(46,204,113,0.06)', border: '1px dashed rgba(46,204,113,0.3)', fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+              ℹ️ Bu bölüm her ürün/model için farklılık gösterir.<br />
+              Üretim modülü devreye girdiğinde <strong>günlük adet, hata oranı ve verimlilik skoru</strong> sistem tarafından otomatik hesaplanacaktır.
             </div>
           </div>
 
           {/* ===== BECERİ DETAYLARI ===== */}
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(155,89,182,0.3)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '700', color: '#8e44ad', marginBottom: '8px' }}>🎯 Beceri Detayları</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Yapabildiği İşlemler (Detay)</label><textarea className="form-input" rows={2} placeholder="Omuz dikimi, fermuar takma, yaka dikimi, kol takma vb." value={form.capable_operations} onChange={e => setForm({ ...form, capable_operations: e.target.value })} /></div>
-            </div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', marginBottom: '8px' }}>🎯 Beceri Detayları</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">📚 Öğrenme Hızı</label>
                 <select className="form-select" value={form.learning_speed} onChange={e => setForm({ ...form, learning_speed: e.target.value })}>
-                  <option value="cok_hizli">Çok Hızlı — 1-2 günde kavrar</option>
-                  <option value="hizli">Hızlı — 3-5 günde öğrenir</option>
-                  <option value="normal">Normal — 1-2 haftada alışır</option>
-                  <option value="yavas">Yavaş — Uzun süre ister</option>
+                  <option value="cok_hizli">Çok Hızlı</option>
+                  <option value="hizli">Hızlı</option>
+                  <option value="normal">Normal</option>
+                  <option value="yavas">Yavaş</option>
                 </select>
               </div>
               <div className="form-group"><label className="form-label">🔓 Bağımsız Çalışma</label>
                 <select className="form-select" value={form.independence_level} onChange={e => setForm({ ...form, independence_level: e.target.value })}>
-                  <option value="tam">Tam Bağımsız — Gösterilmeden yapar</option>
-                  <option value="kismen">Kısmen — Ara sıra sorar</option>
-                  <option value="bagli">Bağımlı — Sürekli yönlendirme ister</option>
+                  <option value="tam">Tam Bağımsız</option>
+                  <option value="kismen">Kısmen</option>
+                  <option value="bagli">Bağımlı</option>
                 </select>
               </div>
             </div>
@@ -3253,11 +3264,11 @@ function NewPersonnelModal({ onClose, onSave }) {
 
           {/* ===== ÇALIŞMA DİSİPLİNİ VE DAVRANIŞ ===== */}
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(241,196,15,0.3)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '700', color: '#f39c12', marginBottom: '8px' }}>⭐ Çalışma Disiplini & Davranış</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#f39c12', marginBottom: '8px' }}>⭐ Çalışma Disiplini & Davranış</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">📅 Aylık Devamsızlık</label>
                 <select className="form-select" value={form.attendance} onChange={e => setForm({ ...form, attendance: e.target.value })}>
-                  <option value="yok">Yok — Hiç devamsızlık yapmaz</option>
+                  <option value="yok">Yok</option>
                   <option value="ayda_yarim">Ayda yarım gün (çok nadir)</option>
                   <option value="ayda_1">Ayda 1 gün</option>
                   <option value="ayda_2">Ayda 2 gün</option>
@@ -3268,10 +3279,10 @@ function NewPersonnelModal({ onClose, onSave }) {
               <div className="form-group"><label className="form-label">⏰ Sabah Geç Kalma</label>
                 <select className="form-select" value={form.punctuality} onChange={e => setForm({ ...form, punctuality: e.target.value })}>
                   <option value="herzaman">Asla geç kalmaz</option>
-                  <option value="genelde">Nadiren — Ayda 1-2 kez</option>
-                  <option value="bazen">Bazen — Haftada 1 kez</option>
-                  <option value="sik">Sık — Haftada 2-3 kez</option>
-                  <option value="surekli">Sürekli — Her gün geç</option>
+                  <option value="genelde">Nadiren</option>
+                  <option value="bazen">Bazen</option>
+                  <option value="sik">Sık</option>
+                  <option value="surekli">Sürekli</option>
                 </select>
               </div>
             </div>
@@ -3301,65 +3312,143 @@ function NewPersonnelModal({ onClose, onSave }) {
             <div className="form-row">
               <div className="form-group"><label className="form-label">💡 İnisiyatif Alma</label>
                 <select className="form-select" value={form.initiative_level} onChange={e => setForm({ ...form, initiative_level: e.target.value })}>
-                  <option value="yuksek">Yüksek — Sorun görünce hemen müdahale</option>
-                  <option value="orta">Orta — Söylenince yapar</option>
-                  <option value="dusuk">Düşük — Bekler, pasif kalır</option>
+                  <option value="yuksek">Yüksek</option>
+                  <option value="orta">Orta</option>
+                  <option value="dusuk">Düşük</option>
                 </select>
               </div>
               <div className="form-group"><label className="form-label">🤝 Takım Çalışması</label>
                 <select className="form-select" value={form.teamwork_level} onChange={e => setForm({ ...form, teamwork_level: e.target.value })}>
-                  <option value="cok_iyi">Çok İyi — Yardımcı, uyumlu</option>
-                  <option value="iyi">İyi — Normal uyum</option>
-                  <option value="orta">Orta — Bazen çatışma</option>
-                  <option value="zayif">Zayıf — Ekiple uyum sorunu</option>
+                  <option value="cok_iyi">Çok İyi</option>
+                  <option value="iyi">İyi</option>
+                  <option value="orta">Orta</option>
+                  <option value="zayif">Zayıf</option>
                 </select>
               </div>
               <div className="form-group"><label className="form-label">🧩 Problem Çözme</label>
                 <select className="form-select" value={form.problem_solving} onChange={e => setForm({ ...form, problem_solving: e.target.value })}>
-                  <option value="cozer">Çözer — Kendi başına çözüm bulur</option>
-                  <option value="sorar">Sorar — Onay alarak çözer</option>
-                  <option value="bekler">Bekler — Biri gelip çözene kadar durur</option>
+                  <option value="cozer">Çözer</option>
+                  <option value="sorar">Sorar</option>
+                  <option value="bekler">Bekler</option>
                 </select>
               </div>
             </div>
           </div>
 
-          {/* ===== FİZİKSEL VE ERGONOMİK ===== */}
+          {/* ===== P2: İŞ GEÇMİŞİ ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(142,68,173,0.2)' }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', marginBottom: '8px' }}>📂 İş Geçmişi</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Sözleşme Tipi</label>
+                <select className="form-select" value={form.contract_type} onChange={e => setForm({ ...form, contract_type: e.target.value })}><option value="belirsiz">Belirsiz süreli</option><option value="belirli">Belirli süreli</option><option value="mevsimlik">Mevsimlik</option></select></div>
+              <div className="form-group"><label className="form-label">SGK Giriş Tarihi</label><input className="form-input" type="date" value={form.sgk_entry_date} onChange={e => setForm({ ...form, sgk_entry_date: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Önceki İş Yeri</label>
+                <select className="form-select" value={form.previous_workplaces} onChange={e => setForm({ ...form, previous_workplaces: e.target.value })}><option value="ilk_isi">İlk işi</option><option value="1-2">1-2 iş yeri</option><option value="3-5">3-5 iş yeri</option><option value="5+">5+ iş yeri</option></select></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Son İş Yeri Ayrılma Nedeni</label>
+                <select className="form-select" value={form.leave_reason} onChange={e => setForm({ ...form, leave_reason: e.target.value })}><option value="">— Seçiniz —</option><option value="maas">Maaş</option><option value="is_ortami">İş ortamı</option><option value="ailevi">Ailevi nedenler</option><option value="tasinma">Taşınma</option><option value="karsilikli">Karşılıklı ayrıldı</option><option value="ilk_isi">İlk işi</option><option value="belirtmek_istemiyor">Belirtmek istemiyor</option><option value="diger">Diğer</option></select></div>
+            </div>
+          </div>
+
+          {/* ===== P6: FİZİKSEL & İŞ KAPASİTESİ (Sadeleştirildi) ===== */}
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(231,76,60,0.2)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '700', color: '#e74c3c', marginBottom: '8px' }}>🏋️ Fiziksel & Ergonomik</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#e74c3c', marginBottom: '8px' }}>🏋️ Fiziksel & İş Kapasitesi</div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">💪 Fiziksel Dayanıklılık</label>
-                <select className="form-select" value={form.physical_endurance} onChange={e => setForm({ ...form, physical_endurance: e.target.value })}>
-                  <option value="iyi">İyi — Uzun süreli çalışmaya uygun</option>
-                  <option value="orta">Orta — Mola gerektirir</option>
-                  <option value="dikkat">Dikkat — Özel koşullar gerekli</option>
-                </select>
-              </div>
-              <div className="form-group"><label className="form-label">👁️ Göz Sağlığı</label>
-                <select className="form-select" value={form.eye_health} onChange={e => setForm({ ...form, eye_health: e.target.value })}>
-                  <option value="iyi">İyi — İnce detay işleri yapabilir</option>
-                  <option value="orta">Orta — Normal işler OK</option>
-                  <option value="dikkat">Dikkat — İnce iş vermekten kaçın</option>
-                </select>
-              </div>
+              <div className="form-group"><label className="form-label">Vücut Yapısı (iş ataması)</label>
+                <select className="form-select" value={form.body_type} onChange={e => setForm({ ...form, body_type: e.target.value })}><option value="guclu_iri">Güçlü/İri</option><option value="normal">Normal</option><option value="ince_narin">İnce/Narin</option><option value="kilolu">Kilolu</option><option value="kisa_boylu">Kısa boylu</option></select></div>
+              <div className="form-group"><label className="form-label">İş Kapasitesi</label>
+                <select className="form-select" value={form.work_capacity} onChange={e => setForm({ ...form, work_capacity: e.target.value })}><option value="her_turlu">Her türlü işi yapar</option><option value="agir_yarim">Ağır işleri yapar</option><option value="agir_kisa">Ağır işleri kısa süre</option><option value="normal_rahat">Normal işleri rahat yapar</option><option value="normal_mola">Normal işler</option><option value="hafif">Hafif işlere uygun</option><option value="sadece_hafif">Sadece hafif işler</option></select></div>
             </div>
             <div className="form-row">
-              <div className="form-group"><label className="form-label">🏥 Sağlık Kısıtlaması</label><input className="form-input" placeholder="Varsa özel koşullar (isteğe bağlı)" value={form.health_restrictions} onChange={e => setForm({ ...form, health_restrictions: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">İSG Eğitimi Tarihi</label><input className="form-input" type="date" value={form.isg_training_date} onChange={e => setForm({ ...form, isg_training_date: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Son Sağlık Kontrolü</label><input className="form-input" type="date" value={form.last_health_check} onChange={e => setForm({ ...form, last_health_check: e.target.value })} /></div>
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>💡 Herkes kendi sağlığından sorumludur. Önce insan, sonra iş.</div>
+          </div>
+
+          {/* ===== P7: KARAKTERİSTİK ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(241,196,15,0.3)' }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#f1c40f', marginBottom: '8px' }}>🧠 Karakteristik & İnsan İlişkileri</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Güvenilirlik</label>
+                <select className="form-select" value={form.reliability} onChange={e => setForm({ ...form, reliability: e.target.value })}><option value="cok_guvenilir">Çok güvenilir</option><option value="guvenilir">Güvenilir</option><option value="normal">Normal</option><option value="degisken">Değişken</option></select></div>
+              <div className="form-group"><label className="form-label">Temizlik/Hijyen</label>
+                <select className="form-select" value={form.hygiene} onChange={e => setForm({ ...form, hygiene: e.target.value })}><option value="cok_ozenli">Çok özenli</option><option value="normal">Normal</option><option value="dikkat">Dikkat gerekir</option></select></div>
+              <div className="form-group"><label className="form-label">Değişime Açıklık</label>
+                <select className="form-select" value={form.change_openness} onChange={e => setForm({ ...form, change_openness: e.target.value })}><option value="cok_acik">Çok açık</option><option value="acik">Açık</option><option value="direncli">Dirençli</option></select></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Sorumluluğunu Kabul Etme</label>
+                <select className="form-select" value={form.responsibility_acceptance} onChange={e => setForm({ ...form, responsibility_acceptance: e.target.value })}><option value="kabul_eder">Kabul eder</option><option value="kismen">Kısmen kabul eder</option><option value="reddeder">Başkasına atar</option></select></div>
+              <div className="form-group"><label className="form-label">Hata Görünce Duruş</label>
+                <select className="form-select" value={form.error_stance} onChange={e => setForm({ ...form, error_stance: e.target.value })}><option value="soyler_gosterir">Söyler ve gösterir</option><option value="soyler">Söyler ama çekinir</option><option value="susar">Susar</option><option value="fark_etmez">Fark etmez</option></select></div>
             </div>
           </div>
 
-          {/* ===== KARİYER VE GELİŞİM ===== */}
+          {/* ===== P9: İŞLEMLER & KUMAŞ DENEYİMİ ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(46,204,113,0.2)' }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}>🎯 İşlem Becerileri & Kumaş Deneyimi</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Renk Tonu Eşleştirme</label>
+                <select className="form-select" value={form.color_tone_matching} onChange={e => setForm({ ...form, color_tone_matching: e.target.value })}><option value="fark_eder">Fark eder</option><option value="fark_eder_devam">Fark eder ama devam eder</option><option value="fark_etmez">Fark etmez</option></select></div>
+              <div className="form-group"><label className="form-label">Kritik Eşleşme Sorumluluğu</label>
+                <select className="form-select" value={form.critical_matching_responsibility} onChange={e => setForm({ ...form, critical_matching_responsibility: e.target.value })}><option value="sorumluluk_alir">Sorumluluk alır</option><option value="sorulursa">Sorulursa söyler</option><option value="almaz">Sorumluluk almaz</option></select></div>
+            </div>
+            <div style={{ fontSize: '11px', fontWeight: '700', color: '#27ae60', marginTop: '10px', marginBottom: '6px' }}>🧵 Kumaş Tipi Deneyimi</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+              {(() => {
+                let fabExp = {};
+                try { fabExp = JSON.parse(form.fabric_experience || '{}'); } catch { }
+                return ['Penye', 'Esnek / Likralı', 'İnce Kumaş', 'Dokuma', 'Denim / Kot', 'Kadife', 'Astar / Tül', 'Triko'].map(fabric => (
+                  <div key={fabric} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '600', minWidth: '100px' }}>{fabric}</span>
+                    <select style={{ width: '100%', fontSize: '12px', padding: '4px 6px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
+                      value={fabExp[fabric] || ''} onChange={e => {
+                        const updated = { ...fabExp };
+                        if (e.target.value) updated[fabric] = e.target.value; else delete updated[fabric];
+                        setForm({ ...form, fabric_experience: JSON.stringify(updated) });
+                      }}>
+                      <option value="">— Deneyimi yok</option>
+                      <option value="uzman">Uzman</option>
+                      <option value="iyi">İyi</option>
+                      <option value="orta">Orta</option>
+                      <option value="zayif">Zayıf</option>
+                    </select>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+
+          {/* ===== P10: GELİŞİM ===== */}
           <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(52,152,219,0.3)' }}>
-            <div style={{ fontSize: '12px', fontWeight: '700', color: '#2980b9', marginBottom: '8px' }}>🚀 Kariyer & Gelişim</div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#2980b9', marginBottom: '8px' }}>🚀 Gelişim & Kariyer</div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">👑 Liderlik Potansiyeli</label>
-                <select className="form-select" value={form.leadership_potential} onChange={e => setForm({ ...form, leadership_potential: e.target.value })}>
-                  <option value="yuksek">Yüksek — Usta başı/şef olabilir</option>
-                  <option value="potansiyel">Potansiyel — Geliştirilirse olur</option>
-                  <option value="hayir">Hayır — Şu an uygun değil</option>
-                </select>
-              </div>
-              <div className="form-group"><label className="form-label">📚 Eğitim İhtiyacı</label><input className="form-input" placeholder="Hangi konularda eğitim gerekli?" value={form.training_needs} onChange={e => setForm({ ...form, training_needs: e.target.value })} /></div>
+                <select className="form-select" value={form.leadership_potential} onChange={e => setForm({ ...form, leadership_potential: e.target.value })}><option value="yuksek">Yüksek</option><option value="potansiyel">Potansiyel</option><option value="hayir">Şu an uygun değil</option></select></div>
+              <div className="form-group"><label className="form-label">🔧 Yeni Makina Öğrenme</label>
+                <select className="form-select" value={form.new_machine_learning} onChange={e => setForm({ ...form, new_machine_learning: e.target.value })}><option value="aktif">Aktif öğreniyor</option><option value="istekli">İstekli</option><option value="destege_ihtiyac">Desteğe ihtiyacı var</option></select></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">💪 Zor İşten Kaçma</label>
+                <select className="form-select" value={form.hard_work_avoidance} onChange={e => setForm({ ...form, hard_work_avoidance: e.target.value })}><option value="kacmaz">Kaçmaz</option><option value="isteksiz">İsteksiz</option><option value="kacar">Kaçar</option><option value="baskasinayikar">Başkasına yıkar</option></select></div>
+              <div className="form-group"><label className="form-label">📈 Kendini Geliştirme</label>
+                <select className="form-select" value={form.self_improvement} onChange={e => setForm({ ...form, self_improvement: e.target.value })}><option value="surekli">Sürekli gelişir</option><option value="gelisir">Gelişir</option><option value="yerinde">Yerinde sayar</option><option value="geriler">Geriler</option></select></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">📚 Eğitim İhtiyacı</label><input className="form-input" placeholder="Hangi konularda?" value={form.training_needs} onChange={e => setForm({ ...form, training_needs: e.target.value })} /></div>
+            </div>
+          </div>
+
+          {/* ===== P11: PERFORMANS ===== */}
+          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(212,168,71,0.3)' }}>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#D4A847', marginBottom: '8px' }}>⭐ Performans & Değerlendirme</div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Operatör Sınıfı</label>
+                <select className="form-select" value={form.operator_class} onChange={e => setForm({ ...form, operator_class: e.target.value })}><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div>
+              <div className="form-group"><label className="form-label">Tavsiye</label>
+                <select className="form-select" value={form.recommend} onChange={e => setForm({ ...form, recommend: e.target.value })}><option value="kesinlikle">Kesinlikle evet</option><option value="evet">Evet</option><option value="degerlendirmeli">Değerlendirmeli</option><option value="hayir">Hayır</option></select></div>
             </div>
             <div className="form-row">
               <div className="form-group"><label className="form-label">📝 Genel Değerlendirme</label><textarea className="form-input" rows={2} placeholder="Yöneticinin kısa değerlendirmesi..." value={form.general_evaluation} onChange={e => setForm({ ...form, general_evaluation: e.target.value })} /></div>
@@ -3368,7 +3457,7 @@ function NewPersonnelModal({ onClose, onSave }) {
 
           <div className="modal-footer">
 
-            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
+            <button type="button" className="btn btn-secondary" onClick={handleClose}>İptal</button>
 
             <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}</button>
 
@@ -3376,9 +3465,9 @@ function NewPersonnelModal({ onClose, onSave }) {
 
         </form>
 
-      </div>
+      </div >
 
-    </div>
+    </div >
 
   );
 
@@ -4516,14 +4605,14 @@ function ModelsPage({ models, loadModels, addToast }) {
                         <h4 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '16px' }}>✂️ Kesim & Ön İşlem — {model.name}</h4>
 
                         <div style={{ marginBottom: '20px', padding: '16px', background: 'rgba(142,68,173,0.05)', borderRadius: '12px', border: '1px solid rgba(142,68,173,0.15)' }}>
-                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#8e44ad', marginBottom: '10px' }}>🔄 1. KESİMDEN ÖNCE YAPILACAK İŞLEMLER</h5>
+                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#8e44ad', marginBottom: '14px' }}>🔄 1. KESİMDEN ÖNCE YAPILACAK İŞLEMLER</h5>
                           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>Kumaş kesime girmeden önce yapılması gereken işlemler (plise, ön yıkama, boyama, sanfor vb.)</div>
                           <textarea className="form-textarea" rows={3} placeholder={"İşlem sırası ile yazın:\n1. Kumaş kontrolü\n2. Plise işlemi (varsa)\n3. Ön yıkama / sanfor (varsa)"} style={{ fontSize: '13px' }} />
                         </div>
 
                         <div style={{ marginBottom: '20px', padding: '16px', background: 'rgba(41,128,185,0.05)', borderRadius: '12px', border: '1px solid rgba(41,128,185,0.15)' }}>
-                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#2980b9', marginBottom: '10px' }}>✂️ 2. KESİM İŞLEMLERİ</h5>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#2980b9', marginBottom: '14px' }}>✂️ 2. KESİM İŞLEMLERİ</h5>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px' }}>
                             <div><label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)' }}>Kesim Tipi</label>
                               <select className="form-select" style={{ fontSize: '12px' }}><option>Serileme (Elle)</option><option>Otomatik Kesim</option><option>Lazer Kesim</option><option>Kalıp Kesim</option></select></div>
                             <div><label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)' }}>Pastal Katman Sayısı</label>
@@ -4533,9 +4622,9 @@ function ModelsPage({ models, loadModels, addToast }) {
                         </div>
 
                         <div style={{ padding: '16px', background: 'rgba(230,126,34,0.05)', borderRadius: '12px', border: '1px solid rgba(230,126,34,0.15)' }}>
-                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#e67e22', marginBottom: '10px' }}>⚡ 3. KESİM SONRASI — DİKİM ÖNCESİ İŞLEMLER</h5>
+                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#e67e22', marginBottom: '14px' }}>⚡ 3. KESİM SONRASI — DİKİM ÖNCESİ İŞLEMLER</h5>
                           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>Parçalar kesildikten sonra, dikime girmeden önce yapılması gereken işlemler</div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '10px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '14px' }}>
                             {['İlik', 'Nakış', 'Baskı', 'Tela Yapıştırma', 'Plise', 'Taş Yapış.', 'Transfer Baskı', 'Lazer İşlem', 'Diğer'].map(item => (
                               <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', padding: '5px 8px', background: 'var(--bg-input)', borderRadius: '6px', cursor: 'pointer' }}>
                                 <input type="checkbox" /> {item}
@@ -4558,8 +4647,8 @@ function ModelsPage({ models, loadModels, addToast }) {
                         <h4 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '16px' }}>🔧 Aksesuar & Son İşlem — {model.name}</h4>
 
                         <div style={{ marginBottom: '20px', padding: '16px', background: 'rgba(192,57,43,0.05)', borderRadius: '12px', border: '1px solid rgba(192,57,43,0.15)' }}>
-                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#c0392b', marginBottom: '10px' }}>🔧 AKSESUAR MONTAJ</h5>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#c0392b', marginBottom: '14px' }}>🔧 AKSESUAR MONTAJ</h5>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px' }}>
                             {[
                               { name: 'Düğme', ph: 'Adet, boyut, renk, konum' },
                               { name: 'İlik', ph: 'Adet, tip (düz/gözlü), konum' },
@@ -4580,8 +4669,8 @@ function ModelsPage({ models, loadModels, addToast }) {
                         </div>
 
                         <div style={{ marginBottom: '20px', padding: '16px', background: 'rgba(22,160,133,0.05)', borderRadius: '12px', border: '1px solid rgba(22,160,133,0.15)' }}>
-                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#16a085', marginBottom: '10px' }}>🌊 YIKAMA İŞLEMİ</h5>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '10px' }}>
+                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#16a085', marginBottom: '14px' }}>🌊 YIKAMA İŞLEMİ</h5>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '14px' }}>
                             {['Yıkama Yok', 'Normal Yıkama', 'Taş Yıkama', 'Enzim Yıkama', 'Silikon Yıkama', 'Ağartma', 'Boyama', 'Softener', 'Diğer'].map(w => (
                               <label key={w} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', padding: '5px 8px', background: 'var(--bg-input)', borderRadius: '6px', cursor: 'pointer' }}>
                                 <input type="checkbox" /> {w}
@@ -4592,12 +4681,12 @@ function ModelsPage({ models, loadModels, addToast }) {
                         </div>
 
                         <div style={{ marginBottom: '20px', padding: '16px', background: 'rgba(211,84,0,0.05)', borderRadius: '12px', border: '1px solid rgba(211,84,0,0.15)' }}>
-                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#d35400', marginBottom: '10px' }}>♨️ ÜTÜ & KALİTE KONTROL</h5>
+                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#d35400', marginBottom: '14px' }}>♨️ ÜTÜ & KALİTE KONTROL</h5>
                           <textarea className="form-textarea" rows={3} placeholder={"1. Ara ütü talimatları\n2. Son ütü — sıcaklık, buharlı/kuru\n3. Kalite kontrol noktaları\n4. AQL seviyesi"} style={{ fontSize: '13px' }} />
                         </div>
 
                         <div style={{ padding: '16px', background: 'rgba(44,62,80,0.05)', borderRadius: '12px', border: '1px solid rgba(44,62,80,0.15)' }}>
-                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#2c3e50', marginBottom: '10px' }}>📦 PAKETLEME</h5>
+                          <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#2c3e50', marginBottom: '14px' }}>📦 PAKETLEME</h5>
                           <textarea className="form-textarea" rows={3} placeholder={"1. Katlama şekli (standart/hadamlı)\n2. Poşetleme (tekli/çoklu)\n3. Koli düzeni (S:2, M:4, L:4, XL:2 = 12'li)\n4. Etiket yapıştırma konumu"} style={{ fontSize: '13px' }} />
                         </div>
                       </div>
@@ -4697,7 +4786,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ padding: '12px 16px', background: 'rgba(231,76,60,0.1)', borderRadius: '8px', border: '1px solid rgba(231,76,60,0.2)', marginBottom: '12px' }}>
 
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--danger)', marginBottom: '4px' }}>⚠️ Zorluk Noktaları</div>
+                            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--danger)', marginBottom: '4px' }}>⚠️ Zorluk Noktaları</div>
 
                             <div style={{ fontSize: '13px' }}>{model.difficult_points}</div>
 
@@ -4709,7 +4798,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ padding: '12px 16px', background: 'rgba(243,156,18,0.1)', borderRadius: '8px', border: '1px solid rgba(243,156,18,0.2)', marginBottom: '12px' }}>
 
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: '#e67e22', marginBottom: '4px' }}>📋” Kritik Noktalar</div>
+                            <div style={{ fontSize: '14px', fontWeight: '700', color: '#e67e22', marginBottom: '4px' }}>📋” Kritik Noktalar</div>
 
                             <div style={{ fontSize: '13px' }}>{model.critical_points}</div>
 
@@ -4721,7 +4810,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ padding: '12px 16px', background: 'rgba(52,152,219,0.1)', borderRadius: '8px', border: '1px solid rgba(52,152,219,0.2)' }}>
 
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '4px' }}>📏 Müşteri İstekleri</div>
+                            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', marginBottom: '4px' }}>📏 Müşteri İstekleri</div>
 
                             <div style={{ fontSize: '13px' }}>{model.customer_requests}</div>
 
@@ -4747,7 +4836,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
 
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📋️ MARKA ETİKETİ</div>
+                            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📋️ MARKA ETİKETİ</div>
 
                             <input className="form-input" placeholder="Etiket açıklaması (örn: Dokuma etiket, 3x1 cm)" style={{ marginBottom: '8px', fontSize: '12px' }} value={labelInfo.brand_label} onChange={e => setLabelInfo({ ...labelInfo, brand_label: e.target.value })} />
 
@@ -4757,7 +4846,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
 
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📏 BEDEN ETİKETİ</div>
+                            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📏 BEDEN ETİKETİ</div>
 
                             <input className="form-input" placeholder="Beden etiketi bilgisi" style={{ marginBottom: '8px', fontSize: '12px' }} value={labelInfo.size_label} onChange={e => setLabelInfo({ ...labelInfo, size_label: e.target.value })} />
 
@@ -4767,7 +4856,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
 
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📋 YIKAMA TALİMATI ETİKETİ</div>
+                            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📋 YIKAMA TALİMATI ETİKETİ</div>
 
                             <input className="form-input" placeholder="Yıkama talimatı etiketi bilgisi" style={{ marginBottom: '8px', fontSize: '12px' }} value={labelInfo.care_label} onChange={e => setLabelInfo({ ...labelInfo, care_label: e.target.value })} />
 
@@ -4777,7 +4866,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
 
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📏 İÇERİK / MENŞE ETİKETİ</div>
+                            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📏 İÇERİK / MENŞE ETİKETİ</div>
 
                             <input className="form-input" placeholder="İçerik etiket bilgisi (örn: %100 Pamuk)" style={{ marginBottom: '8px', fontSize: '12px' }} value={labelInfo.content_label} onChange={e => setLabelInfo({ ...labelInfo, content_label: e.target.value })} />
 
@@ -4905,7 +4994,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                                         {op.video_path && (
 
-                                          <div style={{ marginBottom: '10px' }}>
+                                          <div style={{ marginBottom: '14px' }}>
 
                                             <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>📋 İşlem Videosu</div>
 
@@ -4921,7 +5010,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                                         {op.audio_path && (
 
-                                          <div style={{ marginBottom: '10px' }}>
+                                          <div style={{ marginBottom: '14px' }}>
 
                                             <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>📋”Š Sesli Anlatım</div>
 
@@ -5297,7 +5386,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
     etiketci: '🏷️ Etiketçi', katlama_operatoru: '📦 Katlama Op.', paketci: '📦 Paketçi', kolileme_operatoru: '📦 Kolileme Op.',
 
-    baski_operatoru: '🖨️ Baskı Op.', inline_kalite: '👁️ Inline Kalite', son_kontrolcu: '✅ Son Kontrol',
+    baski_operatoru: '🖨️ Baskı Op.', inline_kalite: '👁️ Ara Kalite Kontrol', son_kontrolcu: '✅ Son Kontrol',
 
     olcum_kontrol: '📐 Ölçüm Kontrol', aql_kalite: '🏆 AQL Kalite', hat_sefi: '👔 Hat Şefi', ustabasi: '👔 Ustabaşı',
 
@@ -5439,7 +5528,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
     <>
 
-      <div className="topbar"><h1 className="topbar-title">📋‘ Personel</h1><div className="topbar-actions"><button className="btn btn-primary" onClick={() => setShowModal(true)}>➕ Yeni Personel</button></div></div>
+      <div className="topbar"><h1 className="topbar-title">📋‘ Personel</h1><div className="topbar-actions"><button className="btn btn-primary" onClick={() => { setEditPerson(null); setShowModal(true); }}>➕ Yeni Personel</button></div></div>
 
       <div className="page-content">
 
@@ -5449,12 +5538,13 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
         ) : (
 
-          <div className="table-wrapper"><table className="table"><thead><tr><th>Ad Soyad</th><th>Pozisyon</th><th>Ustalık</th><th>Hız</th><th>Kalite</th><th>Günlük Ücret</th><th>Mesai</th><th>Durum</th><th style={{ width: '80px' }}>İşlem</th></tr></thead><tbody>
+          <div className="table-wrapper"><table className="table"><thead><tr><th>#</th><th>Ad Soyad</th><th>Pozisyon</th><th>Ustalık</th><th>Hız</th><th>Kalite</th><th>Sınıf</th><th>Devamsızlık</th><th>Günlük Ücret</th><th>Mesai</th><th>Durum</th><th style={{ width: '80px' }}>İşlem</th></tr></thead><tbody>
 
-            {personnel.map(p => (
+            {personnel.map((p, idx) => (
 
               <tr key={p.id}>
 
+                <td style={{ fontWeight: '600', color: 'var(--text-muted)', textAlign: 'center', minWidth: '30px' }}>{idx + 1}</td>
                 <td style={{ fontWeight: '600' }}>{p.name}</td>
 
                 <td><span className="badge badge-info">{roleLabels[p.role] || p.role}</span></td>
@@ -5465,6 +5555,8 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
                 <td>{qualityLabels[p.quality_level] || qualityLabels.standart}</td>
 
+                <td style={{ textAlign: 'center', fontWeight: '700' }}>{p.operator_class === 'A' ? ' A' : p.operator_class === 'C' ? ' C' : ' B'}</td>
+                <td style={{ textAlign: 'center' }}>{p.attendance === 'yok' ? '' : p.attendance === 'ayda_5_ustu' ? ' 5+' : p.attendance === 'ayda_3_4' ? ' 3-4' : p.attendance === 'ayda_2' ? '🟠 2' : '✅'}</td>
                 <td style={{ fontWeight: '600' }}>{(p.daily_wage || 0).toFixed(0)} ₺</td>
 
                 <td style={{ fontSize: '13px' }}>{p.work_start || '08:00'} - {p.work_end || '18:00'}</td>
@@ -5473,7 +5565,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
                 <td style={{ display: 'flex', gap: '4px' }}>
 
-                  <button onClick={() => openEditPerson(p)} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
+                  <button onClick={() => { setEditPerson(p); setShowModal(true); }} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
 
                   <button onClick={() => openPersonAuditHistory(p.id)} title="DeĞişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
 
@@ -5491,115 +5583,23 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
       </div>
 
-      {showModal && <NewPersonnelModal onClose={() => setShowModal(false)} onSave={handleSave} />}
-
-
-
-      {/* ===== PERSONEL DÜZENLEME MODALI ===== */}
-
-      {editPerson && (
-
-        <div className="modal-overlay" onClick={() => setEditPerson(null)}>
-
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px', maxHeight: '90vh', overflow: 'auto' }}>
-
-            <div className="modal-header">
-
-              <h2 className="modal-title">✏️ Personel Düzenle — {editPerson.name}</h2>
-
-              <button className="modal-close" onClick={() => setEditPerson(null)}>✕</button>
-
-            </div>
-
-            <div style={{ padding: '8px 16px', background: 'rgba(243,156,18,0.1)', borderBottom: '1px solid rgba(243,156,18,0.3)', fontSize: '12px', color: '#f39c12', fontWeight: '600' }}>
-
-              ⚠️ Tüm deĞişiklikler tarih/saat ile kalıcı olarak kayıt altına alınır ve silinemez.
-
-            </div>
-
-            <form onSubmit={handleUpdatePerson}>
-
-              <div style={{ padding: '20px', display: 'grid', gap: '14px' }}>
-
-                <div className="form-row">
-
-                  <div className="form-group"><label className="form-label">Ad Soyad *</label><input className="form-input" value={editPersonForm.name} onChange={e => setEditPersonForm({ ...editPersonForm, name: e.target.value })} required /></div>
-
-                  <div className="form-group"><label className="form-label">Rol</label><input className="form-input" value={editPersonForm.role} onChange={e => setEditPersonForm({ ...editPersonForm, role: e.target.value })} /></div>
-
-                </div>
-
-                <div className="form-row">
-
-                  <div className="form-group"><label className="form-label">Günlük Ücret (₺)</label><input className="form-input" type="number" step="0.01" value={editPersonForm.daily_wage} onChange={e => setEditPersonForm({ ...editPersonForm, daily_wage: parseFloat(e.target.value) || 0 })} /></div>
-
-                  <div className="form-group"><label className="form-label">Dil</label><select className="form-select" value={editPersonForm.language} onChange={e => setEditPersonForm({ ...editPersonForm, language: e.target.value })}><option value="tr">Türkçe</option><option value="ar">Arapça</option><option value="en">İngilizce</option></select></div>
-
-                </div>
-
-                <div className="form-row">
-
-                  <div className="form-group"><label className="form-label">Mesai Başlangıç</label><input className="form-input" type="time" value={editPersonForm.work_start} onChange={e => setEditPersonForm({ ...editPersonForm, work_start: e.target.value })} /></div>
-
-                  <div className="form-group"><label className="form-label">Mesai Bitiş</label><input className="form-input" type="time" value={editPersonForm.work_end} onChange={e => setEditPersonForm({ ...editPersonForm, work_end: e.target.value })} /></div>
-
-                </div>
-
-                <div className="form-row">
-
-                  <div className="form-group"><label className="form-label">Teknik Ustalık</label><select className="form-select" value={editPersonForm.technical_mastery} onChange={e => setEditPersonForm({ ...editPersonForm, technical_mastery: e.target.value })}><option value="usta">🞣 Usta</option><option value="kalfa">🔵 Kalfa</option><option value="operator">🞢 Operatör</option><option value="cirak">🞡 Çırak</option></select></div>
-
-                  <div className="form-group"><label className="form-label">Hız Seviyesi</label><select className="form-select" value={editPersonForm.speed_level} onChange={e => setEditPersonForm({ ...editPersonForm, speed_level: e.target.value })}><option value="cok_seri">⚡⚡ Çok Seri</option><option value="seri">⚡ Seri</option><option value="normal">▶️ Normal</option><option value="yavas">🐢 Yavaş</option></select></div>
-
-                </div>
-
-                <div className="form-row">
-
-                  <div className="form-group"><label className="form-label">Kalite Seviyesi</label><select className="form-select" value={editPersonForm.quality_level} onChange={e => setEditPersonForm({ ...editPersonForm, quality_level: e.target.value })}><option value="premium">💎 Premium</option><option value="kaliteli">✨ Kaliteli</option><option value="standart">✅ Standart</option><option value="dusuk">⚠️ Düşük</option></select></div>
-
-                  <div className="form-group"><label className="form-label">Makineler</label><input className="form-input" value={editPersonForm.machines} onChange={e => setEditPersonForm({ ...editPersonForm, machines: e.target.value })} placeholder="Virgülle ayırın" /></div>
-
-                </div>
-
-                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px', marginTop: '4px' }}>
-
-                  <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase' }}>💰 Maaş Bileşenleri</div>
-
-                  <div className="form-row">
-
-                    <div className="form-group"><label className="form-label">Taban Maaş</label><input className="form-input" type="number" value={editPersonForm.base_salary} onChange={e => setEditPersonForm({ ...editPersonForm, base_salary: parseFloat(e.target.value) || 0 })} /></div>
-
-                    <div className="form-group"><label className="form-label">Yol Ücreti</label><input className="form-input" type="number" value={editPersonForm.transport_allowance} onChange={e => setEditPersonForm({ ...editPersonForm, transport_allowance: parseFloat(e.target.value) || 0 })} /></div>
-
-                  </div>
-
-                  <div className="form-row">
-
-                    <div className="form-group"><label className="form-label">SSK Maliyeti</label><input className="form-input" type="number" value={editPersonForm.ssk_cost} onChange={e => setEditPersonForm({ ...editPersonForm, ssk_cost: parseFloat(e.target.value) || 0 })} /></div>
-
-                    <div className="form-group"><label className="form-label">Yemek Ücreti</label><input className="form-input" type="number" value={editPersonForm.food_allowance} onChange={e => setEditPersonForm({ ...editPersonForm, food_allowance: parseFloat(e.target.value) || 0 })} /></div>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              <div className="modal-footer">
-
-                <button type="button" className="btn btn-secondary" onClick={() => setEditPerson(null)}>İptal</button>
-
-                <button type="submit" className="btn btn-primary">💾 Kaydet & DeĞişiklikleri Logla</button>
-
-              </div>
-
-            </form>
-
-          </div>
-
-        </div>
-
-      )}
+      {showModal && <NewPersonnelModal onClose={() => { setShowModal(false); setEditPerson(null); }} onSave={handleSave} editData={editPerson} onUpdate={async (data) => {
+        try {
+          const changes = [];
+          for (const key of Object.keys(data)) {
+            const oldVal = String(editPerson[key] ?? '');
+            const newVal = String(data[key] ?? '');
+            if (oldVal !== newVal) changes.push({ field_name: key, old_value: oldVal, new_value: newVal });
+          }
+          if (changes.length > 0) {
+            await fetch('/api/audit-trail', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ table_name: 'personnel', record_id: editPerson.id, changes, changed_by: 'admin' }) });
+          }
+          const res = await fetch(`/api/personnel/${editPerson.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, changed_by: 'admin' }) });
+          if (!res.ok) throw new Error('G\u00fcncelleme hatas\u0131');
+          await loadPersonnel(); setEditPerson(null); setShowModal(false);
+          addToast('success', 'Personel g\u00fcncellendi!');
+        } catch (err) { addToast('error', err.message); }
+      }} />}
 
 
 
@@ -6376,6 +6376,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
                   <tr key={i}>
 
+                    <td style={{ fontWeight: '600', color: 'var(--text-muted)', textAlign: 'center', minWidth: '30px' }}>{idx + 1}</td>
                     <td style={{ fontWeight: '600' }}>{p.name}</td>
 
                     <td style={{ fontWeight: '700' }}>{p.total_produced}</td>
@@ -6446,7 +6447,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
                   {Object.entries(fireByReason).sort((a, b) => b[1] - a[1]).map(([reason, count]) => (
 
-                    <div key={reason} style={{ marginBottom: '10px' }}>
+                    <div key={reason} style={{ marginBottom: '14px' }}>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}><span>{reason}</span><strong>{count} ({(count / totalFire * 100).toFixed(0)}%)</strong></div>
 
@@ -6468,7 +6469,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
                   {Object.entries(fireByPerson).sort((a, b) => b[1] - a[1]).map(([name, count]) => (
 
-                    <div key={name} style={{ marginBottom: '10px' }}>
+                    <div key={name} style={{ marginBottom: '14px' }}>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}><span>{name}</span><strong>{count} adet</strong></div>
 
@@ -6498,7 +6499,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
           <div style={{ padding: '14px' }}>
 
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>Model seçerek işlem listesiyle birlikte model kartını yazdırabilirsiniz.</p>
+            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>Model seçerek işlem listesiyle birlikte model kartını yazdırabilirsiniz.</p>
 
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
 
@@ -7382,7 +7383,7 @@ function PrimPage({ models, personnel, addToast }) {
 
                       <div style={{ marginTop: '12px', padding: '12px 14px', background: 'rgba(231,76,60,0.05)', borderRadius: '8px', border: '1px solid rgba(231,76,60,0.15)' }}>
 
-                        <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--danger)', marginBottom: '8px' }}>📏Š Adaptasyon Takip Süreci</div>
+                        <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--danger)', marginBottom: '8px' }}>📏Š Adaptasyon Takip Süreci</div>
 
                         <div style={{ display: 'flex', gap: '8px' }}>
 
@@ -7780,7 +7781,7 @@ function OrdersPage({ models, addToast }) {
 
     <div style={{ background: 'rgba(52,152,219,0.08)', borderRadius: '8px', padding: '12px 14px', marginBottom: '12px', borderLeft: '3px solid #3498db' }}>
 
-      <div style={{ fontSize: '13px', fontWeight: '700', color: '#3498db', marginBottom: '10px' }}>📋 1. Temel Bilgiler</div>
+      <div style={{ fontSize: '13px', fontWeight: '700', color: '#3498db', marginBottom: '14px' }}>📋 1. Temel Bilgiler</div>
 
       <div className="form-row">
 
@@ -7818,7 +7819,7 @@ function OrdersPage({ models, addToast }) {
 
     <div style={{ background: 'rgba(212,168,71,0.08)', borderRadius: '8px', padding: '12px 14px', marginBottom: '12px', borderLeft: '3px solid #D4A847' }}>
 
-      <div style={{ fontSize: '13px', fontWeight: '700', color: '#D4A847', marginBottom: '10px' }}>👗 2. Ürün & Kumaş Detayları</div>
+      <div style={{ fontSize: '13px', fontWeight: '700', color: '#D4A847', marginBottom: '14px' }}>👗 2. Ürün & Kumaş Detayları</div>
 
       <VF label="Model Açıklaması / Tarifi" fk="model_description" ta ph="Modelin kesimi, şekli, yaka tipi, kol boyu, detaylar..." fs={f} setFs={setF} vh={v} />
 
@@ -7856,7 +7857,7 @@ function OrdersPage({ models, addToast }) {
 
     <div style={{ background: 'rgba(46,204,113,0.08)', borderRadius: '8px', padding: '12px 14px', marginBottom: '12px', borderLeft: '3px solid #2ecc71' }}>
 
-      <div style={{ fontSize: '13px', fontWeight: '700', color: '#2ecc71', marginBottom: '10px' }}>✅ 3. Kalite & Üretim Kriterleri</div>
+      <div style={{ fontSize: '13px', fontWeight: '700', color: '#2ecc71', marginBottom: '14px' }}>✅ 3. Kalite & Üretim Kriterleri</div>
 
       <VF label="Kalite Kriterleri" fk="quality_criteria" ta ph="AQL seviyesi, tolerans değerleri, kabul/ret kriteri, fire oranı..." fs={f} setFs={setF} vh={v} />
 
@@ -7878,7 +7879,7 @@ function OrdersPage({ models, addToast }) {
 
     <div style={{ background: 'rgba(142,68,173,0.08)', borderRadius: '8px', padding: '12px 14px', marginBottom: '12px', borderLeft: '3px solid #8e44ad' }}>
 
-      <div style={{ fontSize: '13px', fontWeight: '700', color: '#8e44ad', marginBottom: '10px' }}>📦 4. Teslimat & Paketleme</div>
+      <div style={{ fontSize: '13px', fontWeight: '700', color: '#8e44ad', marginBottom: '14px' }}>📦 4. Teslimat & Paketleme</div>
 
       <div className="form-row">
 
