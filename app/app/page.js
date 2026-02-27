@@ -3820,7 +3820,7 @@ function DashboardPage({ models, personnel }) {
 
         <div className="stats-grid">
 
-          <div className="stat-card"><div className="stat-icon">🗑️</div><div className="stat-value">{models.length}</div><div className="stat-label">Toplam Model</div></div>
+          <div className="stat-card"><div className="stat-icon">👗</div><div className="stat-value">{models.length}</div><div className="stat-label">Toplam Model</div></div>
 
           <div className="stat-card"><div className="stat-icon">⚙️</div><div className="stat-value">{totalOperations}</div><div className="stat-label">Toplam İşlem</div></div>
 
