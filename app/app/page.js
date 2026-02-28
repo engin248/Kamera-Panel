@@ -2,7 +2,7 @@
 
 
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { EditModal, AuditTrailModal, EditButtons, EDIT_FIELDS } from '@/lib/edit-system';
 
 
@@ -6103,7 +6103,7 @@ function ProductionPage({ models, personnel, addToast }) {
       if (changes.length > 0) {
         await fetch('/api/audit-trail', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ table_name: 'production_logs', record_id: editProduction.id, changes, changed_by: 'admin' })
+          body: JSON.stringify({ table_name: 'production_logs', record_id: editProduction.id, changes, changed_by: 'koordinator' })
         });
       }
       const res = await fetch(`/api/production/${editProduction.id}`, {
@@ -6185,11 +6185,18 @@ function ProductionPage({ models, personnel, addToast }) {
 
   useEffect(() => { loadLogs(); }, [loadLogs]);
 
-  // Timer ve session'ı sessionStorage'a yedekle
+  // Timer ve session'ı sessionStorage'a yedekle (5 sn debounce — performans optimizasyonu)
+  const lastSaveRef = useRef(0);
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      if (activeSession) { sessionStorage.setItem('activeSession', JSON.stringify(activeSession)); sessionStorage.setItem('prodTimer', String(timer)); }
-      else { sessionStorage.removeItem('activeSession'); sessionStorage.removeItem('prodTimer'); }
+      if (activeSession) {
+        const now = Date.now();
+        if (now - lastSaveRef.current > 5000) {
+          sessionStorage.setItem('activeSession', JSON.stringify(activeSession));
+          sessionStorage.setItem('prodTimer', String(timer));
+          lastSaveRef.current = now;
+        }
+      } else { sessionStorage.removeItem('activeSession'); sessionStorage.removeItem('prodTimer'); }
     }
   }, [activeSession, timer]);
 
@@ -6327,12 +6334,12 @@ function ProductionPage({ models, personnel, addToast }) {
     return { color: '#e74c3c', bg: 'rgba(231,76,60,0.12)' };
   };
 
-  // #12 Filtrelenmiş loglar
-  const filteredLogs = logs.filter(l => {
+  // #5 Filtrelenmiş loglar (useMemo ile optimize)
+  const filteredLogs = useMemo(() => logs.filter(l => {
     if (tableFilter.personnel && l.personnel_id !== parseInt(tableFilter.personnel)) return false;
     if (tableFilter.model && l.model_id !== parseInt(tableFilter.model)) return false;
     return true;
-  });
+  }), [logs, tableFilter]);
 
   const handleStart = () => {
     if (!selectedModel || !selectedOperation || !selectedPerson) return;
@@ -6351,13 +6358,18 @@ function ProductionPage({ models, personnel, addToast }) {
   const handleStop = async () => {
     if (!activeSession) return;
     const produced = parseInt(form.total_produced) || 0;
+    // #1 Hatalı Adet > Yapılan Adet kontrol
+    if (dc > produced) { addToast('error', '❌ Hatalı adet, yapılan adetten fazla olamaz!'); return; }
     if (produced === 0 && timer < 120) {
       if (!confirm('2 dakikadan kısa ve 0 adet — emin misiniz?')) return;
     }
     if (produced === 0) { addToast('error', 'Yapılan adet giriniz'); return; }
     try {
+      // #7 Fetch timeout (30sn)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       const res = await fetch('/api/production', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal,
         body: JSON.stringify({
           ...activeSession, end_time: new Date().toISOString(),
           total_produced: produced, defective_count: dc,
@@ -6366,9 +6378,10 @@ function ProductionPage({ models, personnel, addToast }) {
           material_wait_min: mat, passive_time_min: pas,
           quality_score: parseFloat(form.quality_score) || 100,
           lot_change: form.lot_change, defect_classification: form.defect_classification,
-          notes: form.notes
+          notes: form.notes, changed_by: 'koordinator'
         })
       });
+      clearTimeout(timeoutId);
       if (!res.ok) throw new Error('Kayıt hatası');
       setActiveSession(null); setTimer(0);
       setForm({ total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator', machine_down_min: '0', material_wait_min: '0', break_duration_min: '0', passive_time_min: '0', lot_change: '', quality_score: '100', defect_classification: '', notes: '' });
