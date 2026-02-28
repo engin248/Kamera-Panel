@@ -55,6 +55,29 @@ export async function PUT(request, { params }) {
         values.push(id);
         db.prepare(`UPDATE production_logs SET ${updates.join(', ')} WHERE id = ?`).run(...values);
 
+        // Otomatik alanları yeniden hesapla
+        try {
+            const record = db.prepare('SELECT * FROM production_logs WHERE id = ?').get(id);
+            if (record) {
+                const tp = record.total_produced || 0;
+                const dc = record.defective_count || 0;
+                const fpy = tp > 0 ? ((tp - dc) / tp) * 100 : 100;
+                const brk = record.break_duration_min || 0;
+                const mch = record.machine_down_min || 0;
+                const mat = record.material_wait_min || 0;
+                const pas = record.passive_time_min || 0;
+                let netWork = 0;
+                if (record.end_time && record.start_time) {
+                    const totalMin = (new Date(record.end_time) - new Date(record.start_time)) / 60000;
+                    netWork = Math.max(0, totalMin - brk - mch - mat - pas);
+                }
+                const op = db.prepare('SELECT unit_price FROM operations WHERE id = ?').get(record.operation_id);
+                const unitVal = (op?.unit_price || 0) * tp;
+                db.prepare('UPDATE production_logs SET first_pass_yield = ?, net_work_minutes = ?, unit_value = ? WHERE id = ?')
+                    .run(Math.round(fpy * 10) / 10, Math.round(netWork * 10) / 10, unitVal, id);
+            }
+        } catch (e) { /* otomatik hesaplama hatası kritik değil */ }
+
         const updated = db.prepare(`
             SELECT pl.*, m.name as model_name, o.name as operation_name, p.name as personnel_name
             FROM production_logs pl

@@ -92,6 +92,16 @@ export async function POST(request) {
             const op = db.prepare('SELECT unit_price FROM operations WHERE id = ?').get(operation_id);
             if (op) unitVal = (op.unit_price || 0) * tp;
         } catch (e) { }
+        // OEE Hesaplama: Kullanılabilirlik × Performans × Kalite
+        let oeeScore = 0;
+        if (end_time && start_time && tp > 0) {
+            const totalMin = (new Date(end_time) - new Date(start_time)) / 60000;
+            const availability = totalMin > 0 ? Math.max(0, (totalMin - brk - mch - mat - pas) / totalMin) : 0;
+            // Performans: standart süre vs gerçek süre (basitleştirilmiş)
+            const performance = netWork > 0 ? Math.min(1, tp / (netWork * 2)) : 0; // dakika başına 2 adet varsayılan
+            const quality = tp > 0 ? (tp - dc) / tp : 1;
+            oeeScore = Math.round(availability * performance * quality * 10000) / 100;
+        }
 
         const result = db.prepare(`
       INSERT INTO production_logs (
@@ -110,7 +120,7 @@ export async function POST(request) {
             brk, mch, mat, pas,
             quality_score || 100, lot_change || '', status || 'completed',
             defect_photo || '', defect_classification || '', Math.round(fpy * 10) / 10,
-            0, unitVal, Math.round(netWork * 10) / 10, notes || ''
+            oeeScore, unitVal, Math.round(netWork * 10) / 10, notes || ''
         );
 
         const log = db.prepare(`
@@ -130,11 +140,11 @@ export async function POST(request) {
             const avgResult = db.prepare(`
                 SELECT AVG(
                     CASE WHEN total_produced > 0 THEN
-                        ((julianday(end_time) - julianday(start_time)) * 86400 - COALESCE(break_duration_min,0)*60 - COALESCE(machine_down_min,0)*60 - COALESCE(material_wait_min,0)*60) / total_produced
+                        ((julianday(end_time) - julianday(start_time)) * 86400 - COALESCE(break_duration_min,0)*60 - COALESCE(machine_down_min,0)*60 - COALESCE(material_wait_min,0)*60 - COALESCE(passive_time_min,0)*60) / total_produced
                     ELSE NULL END
                 ) as avg_time
                 FROM production_logs
-                WHERE operation_id = ? AND total_produced > 0 AND end_time IS NOT NULL
+                WHERE operation_id = ? AND total_produced > 0 AND end_time IS NOT NULL AND deleted_at IS NULL
             `).get(operation_id);
             if (avgResult && avgResult.avg_time) {
                 db.prepare('UPDATE operations SET avg_unit_time = ? WHERE id = ?').run(

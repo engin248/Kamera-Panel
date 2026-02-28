@@ -3995,6 +3995,8 @@ function ModelsPage({ models, loadModels, addToast }) {
   const [showNewModal, setShowNewModal] = useState(false);
 
   const [expandedModel, setExpandedModel] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const [showOperationModal, setShowOperationModal] = useState(null);
 
@@ -4080,7 +4082,8 @@ function ModelsPage({ models, loadModels, addToast }) {
 
   const handleDeleteModel = async (id) => {
 
-    if (!confirm('Bu modeli silmek istediĞinize emin misiniz?')) return;
+    const model = models.find(m => m.id === id);
+    if (!confirm(`"${model?.name || ''}" (${model?.code || ''}) modelini silmek istediğinize emin misiniz?`)) return;
 
     try { await fetch(`/api/models/${id}`, { method: 'DELETE' }); await loadModels(); addToast('success', 'Model silindi'); } catch { addToast('error', 'Silinemedi'); }
 
@@ -4091,35 +4094,30 @@ function ModelsPage({ models, loadModels, addToast }) {
   // ===== DÜZENLEME =====
 
   const openEditModal = (model) => {
-
     setEditForm({
-
       name: model.name || '', code: model.code || '', order_no: model.order_no || '',
-
       modelist: model.modelist || '', customer: model.customer || '', description: model.description || '',
-
-      fabric_type: model.fabric_type || '', total_order: model.total_order || 0,
-
-      fason_price: model.fason_price || 0, model_difficulty: model.model_difficulty || 5,
-
+      fabric_type: model.fabric_type || '', sizes: model.sizes || '', size_range: model.size_range || '',
+      total_order: model.total_order || 0, total_order_text: model.total_order_text || '',
+      completed_count: model.completed_count || 0,
+      fason_price: model.fason_price || 0, fason_price_text: model.fason_price_text || '',
+      model_difficulty: model.model_difficulty || 5,
       delivery_date: model.delivery_date || '', work_start_date: model.work_start_date || '',
-
-      garni: model.garni || '', color_count: model.color_count || 0, size_count: model.size_count || 0,
-
+      garni: model.garni || '', color_count: model.color_count || 0, color_details: model.color_details || '',
+      size_count: model.size_count || 0, size_distribution: model.size_distribution || '',
       asorti: model.asorti || '', total_operations: model.total_operations || 0,
-
-      piece_count: model.piece_count || 0, has_lining: model.has_lining || 0,
-
-      lining_pieces: model.lining_pieces || 0, has_interlining: model.has_interlining || 0,
-
+      piece_count: model.piece_count || 0, piece_count_details: model.piece_count_details || '',
+      op_kesim_count: model.op_kesim_count || 0, op_kesim_details: model.op_kesim_details || '',
+      op_dikim_count: model.op_dikim_count || 0, op_dikim_details: model.op_dikim_details || '',
+      op_utu_paket_count: model.op_utu_paket_count || 0, op_utu_paket_details: model.op_utu_paket_details || '',
+      op_nakis_count: model.op_nakis_count || 0, op_nakis_details: model.op_nakis_details || '',
+      op_yikama_count: model.op_yikama_count || 0, op_yikama_details: model.op_yikama_details || '',
+      has_lining: model.has_lining || 0, lining_pieces: model.lining_pieces || 0,
+      has_interlining: model.has_interlining || 0, interlining_parts: model.interlining_parts || '', interlining_count: model.interlining_count || 0,
       difficult_points: model.difficult_points || '', critical_points: model.critical_points || '',
-
       customer_requests: model.customer_requests || '', post_sewing: model.post_sewing || ''
-
     });
-
     setEditModel(model);
-
   };
 
 
@@ -4127,21 +4125,7 @@ function ModelsPage({ models, loadModels, addToast }) {
   const handleUpdateModel = async (e) => {
     e.preventDefault();
     try {
-      // Audit trail: değişen alanları bul ve logla
-      const changes = [];
-      Object.keys(editForm).forEach(key => {
-        const oldVal = String(editModel[key] ?? '');
-        const newVal = String(editForm[key] ?? '');
-        if (oldVal !== newVal) {
-          changes.push({ field_name: key, old_value: oldVal, new_value: newVal });
-        }
-      });
-      if (changes.length > 0) {
-        await fetch('/api/audit-trail', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ table_name: 'models', record_id: editModel.id, changes, changed_by: 'admin' })
-        });
-      }
+      // Audit trail backend API tarafında otomatik kaydediliyor (çifte kayıt düzeltmesi)
       const res = await fetch(`/api/models/${editModel.id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...editForm, changed_by: 'admin' })
@@ -4337,10 +4321,19 @@ function ModelsPage({ models, loadModels, addToast }) {
     <>
 
       <div className="topbar">
-
         <h1 className="topbar-title">📋 Modeller</h1>
-
-        <div className="topbar-actions"><button className="btn btn-primary" onClick={() => setShowNewModal(true)}>➕ Yeni Model</button></div>
+        <div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input className="form-input" placeholder="🔍 Model ara..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ width: '200px', fontSize: '13px', padding: '8px 12px' }} />
+          <select className="form-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ width: '150px', fontSize: '13px', padding: '8px' }}>
+            <option value="">Tüm Durumlar</option>
+            <option value="prototip">🔵 Prototip</option>
+            <option value="orijinal_numune">🟢 Orijinal Numune</option>
+            <option value="uretimde">🟠 Üretimde</option>
+            <option value="uretim_tamamlandi">🏁 Tamamlandı</option>
+            <option value="sevk_edildi">🚚 Sevk Edildi</option>
+          </select>
+          <button className="btn btn-primary" onClick={() => setShowNewModal(true)}>➕ Yeni Model</button>
+        </div>
 
       </div>
 
@@ -4354,7 +4347,12 @@ function ModelsPage({ models, loadModels, addToast }) {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-            {models.map(model => (
+            {models.filter(m => {
+              const q = searchQuery.toLowerCase();
+              const matchSearch = !q || m.name?.toLowerCase().includes(q) || m.code?.toLowerCase().includes(q) || m.customer?.toLowerCase().includes(q) || m.order_no?.toLowerCase().includes(q);
+              const matchStatus = !statusFilter || m.status === statusFilter;
+              return matchSearch && matchStatus;
+            }).map(model => (
 
               <div key={model.id} className="card" style={{ cursor: 'pointer' }}>
 
@@ -4394,7 +4392,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                         e.stopPropagation();
 
-                        const statusOrder = ['orijinal_numune', 'ilk_uretim_numunesi', 'uretim_numunesi', 'numune_onaylandi', 'uretimde', 'uretim_tamamlandi', 'sayi_seti', 'sevk_edildi'];
+                        const statusOrder = ['prototip', 'orijinal_numune', 'ilk_uretim_numunesi', 'uretim_numunesi', 'numune_onaylandi', 'uretimde', 'uretim_tamamlandi', 'sayi_seti', 'sevk_edildi'];
                         const currentIdx = statusOrder.indexOf(model.status);
                         const nextIdx = (currentIdx + 1) % statusOrder.length;
                         const newStatus = statusOrder[nextIdx];
@@ -4906,6 +4904,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <button className="btn btn-secondary btn-sm" onClick={() => {
 
+                            const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');
                             const w = window.open('', '_blank');
 
                             w.document.write(`<html><head><title>Teknik Föy — ${model.name}</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#222}h1{font-size:20px;border-bottom:2px solid #333;padding-bottom:8px}table{width:100%;border-collapse:collapse;margin:10px 0}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left;font-size:12px}th{background:#f5f5f5;font-weight:700}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.box{padding:10px;border:1px solid #ddd;border-radius:4px}.label{font-size:10px;color:#999;text-transform:uppercase}.val{font-size:13px;font-weight:600}@media print{button{display:none}}</style></head><body>
@@ -5989,9 +5988,14 @@ function ProductionPage({ models, personnel, addToast }) {
   const [selectedOperation, setSelectedOperation] = useState('');
   const [selectedPerson, setSelectedPerson] = useState('');
   const [operations, setOperations] = useState([]);
-  const [activeSession, setActiveSession] = useState(null);
-  const [timer, setTimer] = useState(0);
+  const [activeSession, setActiveSession] = useState(() => {
+    try { const s = typeof window !== 'undefined' && sessionStorage.getItem('activeSession'); return s ? JSON.parse(s) : null; } catch { return null; }
+  });
+  const [timer, setTimer] = useState(() => {
+    try { const t = typeof window !== 'undefined' && sessionStorage.getItem('prodTimer'); return t ? parseInt(t) : 0; } catch { return 0; }
+  });
   const [logs, setLogs] = useState([]);
+  const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
 
   const [form, setForm] = useState({
     total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator',
@@ -6014,18 +6018,26 @@ function ProductionPage({ models, personnel, addToast }) {
   const formatTimer = (s) => `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   const loadLogs = useCallback(async () => {
-    const today = new Date().toISOString().split('T')[0];
     try {
-      const res = await fetch(`/api/production?date=${today}`);
+      const res = await fetch(`/api/production?date=${filterDate}`);
       const d = await res.json();
       setLogs(Array.isArray(d) ? d : []);
     } catch { setLogs([]); }
-  }, []);
+  }, [filterDate]);
 
   useEffect(() => { loadLogs(); }, [loadLogs]);
 
+  // Timer ve session'ı sessionStorage'a yedekle
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (activeSession) { sessionStorage.setItem('activeSession', JSON.stringify(activeSession)); sessionStorage.setItem('prodTimer', String(timer)); }
+      else { sessionStorage.removeItem('activeSession'); sessionStorage.removeItem('prodTimer'); }
+    }
+  }, [activeSession, timer]);
+
   useEffect(() => {
     if (selectedModel) {
+      setSelectedOperation(''); // Önce sıfırla, sonra yeni işlemleri yükle
       fetch(`/api/models/${selectedModel}/operations`).then(r => r.json()).then(d => {
         const ops = Array.isArray(d) ? d.sort((a, b) => a.order_number - b.order_number) : [];
         setOperations(ops);
@@ -6034,8 +6046,7 @@ function ProductionPage({ models, personnel, addToast }) {
           setSelectedOperation(String(ops[0].id));
         }
       });
-    } else { setOperations([]); }
-    setSelectedOperation('');
+    } else { setOperations([]); setSelectedOperation(''); }
   }, [selectedModel]);
 
   // İşlemi yapabilecek personelleri bul
@@ -6208,7 +6219,7 @@ function ProductionPage({ models, personnel, addToast }) {
 
   return (
     <>
-      <div className="topbar"><h1 className="topbar-title">🏭 Üretim Takip</h1><div className="topbar-actions"><span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div></div>
+      <div className="topbar"><h1 className="topbar-title">🏭 Üretim Takip</h1><div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><input type="date" className="form-input" value={filterDate} onChange={e => { setFilterDate(e.target.value); }} style={{ fontSize: '13px', padding: '6px 10px' }} /><button className="btn btn-sm" onClick={() => setFilterDate(new Date().toISOString().split('T')[0])} style={{ fontSize: '12px', padding: '6px 10px' }}>Bugün</button><span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date(filterDate).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div></div>
 
       <div className="page-content">
 
@@ -6417,7 +6428,7 @@ function ProductionPage({ models, personnel, addToast }) {
             </tr></thead><tbody>
                 {logs.map(log => {
                   const duration = log.end_time ? Math.floor((new Date(log.end_time) - new Date(log.start_time)) / 60000) : 0;
-                  const value = (log.total_produced || 0) * (log.unit_price || 0);
+                  const value = log.unit_value || ((log.total_produced || 0) * (log.unit_price || 0));
                   const logFpy = log.total_produced > 0 ? ((log.total_produced - (log.defective_count || 0)) / log.total_produced * 100) : 100;
                   return (
                     <tr key={log.id}>

@@ -8,7 +8,8 @@ export async function GET() {
         const models = db.prepare(`
       SELECT m.*, 
         (SELECT COUNT(*) FROM operations WHERE model_id = m.id) as operation_count
-      FROM models m 
+      FROM models m
+      WHERE m.deleted_at IS NULL
       ORDER BY m.created_at DESC
     `).all();
         return NextResponse.json(models);
