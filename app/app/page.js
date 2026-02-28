@@ -3688,6 +3688,10 @@ function DashboardPage({ models, personnel }) {
 
   const [lowPerformers, setLowPerformers] = useState([]);
 
+  const [weeklyData, setWeeklyData] = useState([]);
+
+  const [personnelPerf, setPersonnelPerf] = useState([]);
+
   const totalOperations = models.reduce((sum, m) => sum + (m.operation_count || 0), 0);
 
   const totalOrders = models.reduce((sum, m) => sum + (m.total_order || 0), 0);
@@ -3766,11 +3770,47 @@ function DashboardPage({ models, personnel }) {
 
         setLowPerformers(lowPerf);
 
+        // Personel performans tablosu (tüm personel)
+        const allPerf = Object.entries(byPerson).map(([id, p]) => {
+          const person = personnel.find(pr => pr.id == id);
+          const totalCost = person ? ((person.base_salary || 0) + (person.ssk_cost || 0) + (person.transport_allowance || 0) + (person.food_allowance || 0) + (person.compensation || 0)) : 0;
+          const daysCount = Math.max(1, p.days.size);
+          const dailyWage = person?.daily_wage || 0;
+          const wageCost = dailyWage * daysCount;
+          const coverage = wageCost > 0 ? Math.round((p.totalValue / wageCost) * 100) : 0;
+          return { id, name: p.name, days: daysCount, totalValue: Math.round(p.totalValue), wageCost: Math.round(wageCost), monthlyCost: totalCost, coverage };
+        }).sort((a, b) => b.coverage - a.coverage);
+        setPersonnelPerf(allPerf);
+
       }
 
     } catch (e) { }
 
-  }, []);
+    // Son 7 gün trend verisi
+    try {
+      const d7 = new Date(); d7.setDate(d7.getDate() - 7);
+      const weekRes = await fetch(`/api/production?from=${d7.toISOString().split('T')[0]}`);
+      const weekLogs = await weekRes.json();
+      if (Array.isArray(weekLogs)) {
+        const byDay = {};
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(); d.setDate(d.getDate() - i);
+          const key = d.toISOString().split('T')[0];
+          byDay[key] = { date: key, label: d.toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric' }), produced: 0, defective: 0, value: 0 };
+        }
+        weekLogs.forEach(log => {
+          const day = log.start_time?.split('T')[0];
+          if (byDay[day]) {
+            byDay[day].produced += log.total_produced || 0;
+            byDay[day].defective += log.defective_count || 0;
+            byDay[day].value += (log.total_produced || 0) * (log.unit_price || 0);
+          }
+        });
+        setWeeklyData(Object.values(byDay));
+      }
+    } catch (e) { }
+
+  }, [personnel]);
 
 
 
@@ -3978,6 +4018,115 @@ function DashboardPage({ models, personnel }) {
 
         )}
 
+        {/* SON 7 GÜN TREND GRAFİĞİ */}
+        {weeklyData.length > 0 && (() => {
+          const maxProd = Math.max(1, ...weeklyData.map(d => d.produced));
+          return (
+            <div className="card" style={{ marginBottom: '16px' }}>
+              <div className="card-header"><h3 className="card-title">📊 Son 7 Gün Üretim Trendi</h3></div>
+              <div style={{ padding: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '180px' }}>
+                  {weeklyData.map((d, i) => {
+                    const barH = Math.max(4, (d.produced / maxProd) * 150);
+                    const isToday = d.date === new Date().toISOString().split('T')[0];
+                    return (
+                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '700', color: d.produced > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>
+                          {d.produced > 0 ? d.produced : ''}
+                        </div>
+                        <div style={{ width: '100%', maxWidth: '60px', height: `${barH}px`, borderRadius: '6px 6px 2px 2px', background: isToday ? 'linear-gradient(180deg, #3498db, rgba(52,152,219,0.4))' : d.produced > 0 ? 'linear-gradient(180deg, rgba(46,204,113,0.8), rgba(46,204,113,0.4))' : 'var(--bg-input)', transition: 'height 0.5s ease', position: 'relative' }}>
+                          {d.defective > 0 && (
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${Math.max(2, (d.defective / maxProd) * 150)}px`, background: 'rgba(231,76,60,0.7)', borderRadius: '0 0 2px 2px' }} />
+                          )}
+                        </div>
+                        <div style={{ fontSize: '10px', color: isToday ? '#3498db' : 'var(--text-muted)', fontWeight: isToday ? '700' : '400', textAlign: 'center' }}>{d.label}</div>
+                        {d.value > 0 && <div style={{ fontSize: '9px', color: 'var(--success)' }}>{d.value.toFixed(0)}₺</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ display: 'flex', gap: '16px', marginTop: '12px', justifyContent: 'center', fontSize: '11px', color: 'var(--text-muted)' }}>
+                  <span>🟢 Üretim</span>
+                  <span>🔴 Hatalı</span>
+                  <span>🔵 Bugün</span>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* PERSONEL PERFORMANS TABLOSU */}
+        {personnelPerf.length > 0 && (
+          <div className="card" style={{ marginBottom: '16px' }}>
+            <div className="card-header"><h3 className="card-title">🏆 Personel Performans Sıralaması (Son 30 Gün)</h3></div>
+            <div className="table-wrapper" style={{ border: 'none' }}>
+              <table className="table">
+                <thead><tr><th>#</th><th>Personel</th><th>Gün</th><th>Üretim Değeri</th><th>Ücret</th><th>Karşılama</th><th>Durum</th></tr></thead>
+                <tbody>
+                  {personnelPerf.map((p, i) => (
+                    <tr key={p.id}>
+                      <td style={{ fontWeight: '700', textAlign: 'center' }}>
+                        {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                      </td>
+                      <td style={{ fontWeight: '600' }}>{p.name}</td>
+                      <td style={{ textAlign: 'center' }}>{p.days}</td>
+                      <td style={{ fontWeight: '600', color: 'var(--success)' }}>{p.totalValue.toLocaleString('tr-TR')} ₺</td>
+                      <td style={{ color: 'var(--text-muted)' }}>{p.wageCost.toLocaleString('tr-TR')} ₺</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div style={{ flex: 1, height: '8px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ width: `${Math.min(100, p.coverage)}%`, height: '100%', borderRadius: '4px', background: p.coverage >= 100 ? 'var(--success)' : p.coverage >= 80 ? '#f39c12' : 'var(--danger)', transition: 'width 0.5s ease' }} />
+                          </div>
+                          <span style={{ fontSize: '12px', fontWeight: '700', color: p.coverage >= 100 ? 'var(--success)' : p.coverage >= 80 ? '#f39c12' : 'var(--danger)', minWidth: '36px' }}>%{p.coverage}</span>
+                        </div>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span className={`badge ${p.coverage >= 100 ? 'badge-success' : p.coverage >= 80 ? 'badge-warning' : 'badge-danger'}`}>
+                          {p.coverage >= 120 ? '⭐ Yıldız' : p.coverage >= 100 ? '✅ İyi' : p.coverage >= 80 ? '⚠️ Takip' : '🔴 Düşük'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* PERSONEL MALİYET ÖZETİ */}
+        {personnelPerf.length > 0 && (
+          <div className="card" style={{ marginBottom: '16px' }}>
+            <div className="card-header"><h3 className="card-title">💰 Aylık Personel Maliyet Özeti</h3></div>
+            <div className="table-wrapper" style={{ border: 'none' }}>
+              <table className="table">
+                <thead><tr><th>Personel</th><th>Maaş</th><th>SSK</th><th>Ulaşım</th><th>Yemek</th><th>Toplam Maliyet</th><th>Üretim Değeri</th><th>Fark</th></tr></thead>
+                <tbody>
+                  {personnel.filter(p => p.status === 'active').map(p => {
+                    const total = (p.base_salary || 0) + (p.ssk_cost || 0) + (p.transport_allowance || 0) + (p.food_allowance || 0) + (p.compensation || 0);
+                    const perf = personnelPerf.find(pp => pp.id == p.id);
+                    const prodVal = perf?.totalValue || 0;
+                    const diff = prodVal - total;
+                    return (
+                      <tr key={p.id}>
+                        <td style={{ fontWeight: '600' }}>{p.name}</td>
+                        <td>{(p.base_salary || 0).toLocaleString('tr-TR')} ₺</td>
+                        <td>{(p.ssk_cost || 0).toLocaleString('tr-TR')} ₺</td>
+                        <td>{(p.transport_allowance || 0).toLocaleString('tr-TR')} ₺</td>
+                        <td>{(p.food_allowance || 0).toLocaleString('tr-TR')} ₺</td>
+                        <td style={{ fontWeight: '700', color: '#8e44ad' }}>{total.toLocaleString('tr-TR')} ₺</td>
+                        <td style={{ fontWeight: '600', color: 'var(--success)' }}>{prodVal.toLocaleString('tr-TR')} ₺</td>
+                        <td style={{ fontWeight: '700', color: diff >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                          {diff >= 0 ? '+' : ''}{diff.toLocaleString('tr-TR')} ₺
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
       </div>
 
     </>
@@ -4025,6 +4174,39 @@ function ModelsPage({ models, loadModels, addToast }) {
       await loadOperations(modelId);
       setEditingOp(null);
       addToast('success', '✅ İşlem güncellendi');
+    } catch (err) { addToast('error', err.message); }
+  };
+
+  // === MEDYA YÜKLEME FONKSİYONU ===
+  const handleUploadMedia = async (modelId, opId, file, mediaType) => {
+    if (!file) return;
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('type', mediaType); // videos | audios | correct_photos | incorrect_photos
+      const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+      if (!uploadRes.ok) throw new Error('Dosya yükleme hatası');
+      const { url } = await uploadRes.json();
+      // İşleme kaydet
+      const fieldMap = { videos: 'video_path', audios: 'audio_path', correct_photos: 'correct_photo_path', incorrect_photos: 'incorrect_photo_path' };
+      await fetch(`/api/models/${modelId}/operations`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operation_id: opId, [fieldMap[mediaType]]: url })
+      });
+      await loadOperations(modelId);
+      addToast('success', `✅ ${mediaType === 'videos' ? 'Video' : mediaType === 'audios' ? 'Ses' : 'Fotoğraf'} yüklendi`);
+    } catch (err) { addToast('error', err.message); }
+  };
+
+  // Yazılı talimat kaydetme
+  const handleSaveOpDetails = async (modelId, opId, data) => {
+    try {
+      await fetch(`/api/models/${modelId}/operations`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operation_id: opId, ...data })
+      });
+      await loadOperations(modelId);
+      addToast('success', '✅ Detaylar kaydedildi');
     } catch (err) { addToast('error', err.message); }
   };
 
@@ -5277,76 +5459,99 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                                 </div>
 
-                                {expandedOp === op.id && (op.how_to_do || op.written_instructions || op.thread_material || op.needle_type || op.stitch_per_cm || op.quality_notes || op.video_path || op.audio_path) && (
+                                {expandedOp === op.id && (
 
-                                  <div style={{ padding: '12px 16px' }}>
+                                  <div style={{ padding: '16px', borderTop: '1px solid var(--border-color)' }}>
 
-                                    {/* VIDEO & SES KAYDI GÖSTERİMİ */}
+                                    {/* ── MEDYA YÖNETİMİ ── */}
+                                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', marginBottom: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>🎬 İlk Ürün Medya Kayıtları</div>
 
-                                    {(op.video_path || op.audio_path) && (
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
 
-                                      <div style={{ marginBottom: '14px' }}>
-
-                                        {op.video_path && (
-
-                                          <div style={{ marginBottom: '14px' }}>
-
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>📋 İşlem Videosu</div>
-
-                                            <video controls style={{ width: '100%', maxHeight: '280px', borderRadius: 'var(--radius-md)', background: '#000' }}>
-
-                                              <source src={op.video_path} />
-
-                                            </video>
-
+                                      {/* VIDEO */}
+                                      <div style={{ padding: '12px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                                        <div style={{ fontSize: '12px', fontWeight: '700', marginBottom: '8px' }}>📹 İşlem Videosu</div>
+                                        {op.video_path ? (
+                                          <div>
+                                            <video controls style={{ width: '100%', maxHeight: '200px', borderRadius: '8px', background: '#000', marginBottom: '6px' }}><source src={op.video_path} /></video>
+                                            <button onClick={() => handleSaveOpDetails(model.id, op.id, { video_path: null })} className="btn btn-sm" style={{ fontSize: '10px', color: 'var(--danger)' }}>🗑️ Videoyu Kaldır</button>
                                           </div>
-
-                                        )}
-
-                                        {op.audio_path && (
-
-                                          <div style={{ marginBottom: '14px' }}>
-
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>🔊 Sesli Anlatım</div>
-
-                                            <audio controls style={{ width: '100%' }}>
-
-                                              <source src={op.audio_path} />
-
-                                            </audio>
-
+                                        ) : (
+                                          <div>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>İşlemin nasıl yapıldığını gösteren video yükleyin</div>
+                                            <input type="file" accept="video/*" onChange={e => handleUploadMedia(model.id, op.id, e.target.files[0], 'videos')} style={{ fontSize: '11px', width: '100%' }} />
                                           </div>
-
                                         )}
-
                                       </div>
 
-                                    )}
-
-                                    {(op.thread_material || op.needle_type || op.stitch_per_cm) && (
-
-                                      <div style={{ display: 'flex', gap: '24px', marginBottom: '10px', fontSize: '12px', flexWrap: 'wrap' }}>
-
-                                        {op.thread_material && <div><span style={{ color: 'var(--text-muted)' }}>🧵 İplik:</span> <strong>{op.thread_material}</strong></div>}
-
-                                        {op.needle_type && <div><span style={{ color: 'var(--text-muted)' }}>🪡 İĞne:</span> <strong>{op.needle_type}</strong></div>}
-
-                                        {op.stitch_per_cm && <div><span style={{ color: 'var(--text-muted)' }}>📏 Adım:</span> <strong>{op.stitch_per_cm} vuruş/cm</strong></div>}
-
+                                      {/* SES */}
+                                      <div style={{ padding: '12px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                                        <div style={{ fontSize: '12px', fontWeight: '700', marginBottom: '8px' }}>🎤 Sesli Anlatım</div>
+                                        {op.audio_path ? (
+                                          <div>
+                                            <audio controls style={{ width: '100%', marginBottom: '6px' }}><source src={op.audio_path} /></audio>
+                                            <button onClick={() => handleSaveOpDetails(model.id, op.id, { audio_path: null })} className="btn btn-sm" style={{ fontSize: '10px', color: 'var(--danger)' }}>🗑️ Sesi Kaldır</button>
+                                          </div>
+                                        ) : (
+                                          <div>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>İşlemin sesli anlatımını yükleyin</div>
+                                            <input type="file" accept="audio/*" onChange={e => handleUploadMedia(model.id, op.id, e.target.files[0], 'audios')} style={{ fontSize: '11px', width: '100%' }} />
+                                          </div>
+                                        )}
                                       </div>
 
-                                    )}
+                                      {/* DOĞRU FOTOĞRAF */}
+                                      <div style={{ padding: '12px', background: 'rgba(39,174,96,0.05)', borderRadius: 'var(--radius-md)', border: '2px solid rgba(39,174,96,0.3)' }}>
+                                        <div style={{ fontSize: '12px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}>✅ Doğru Görünüş</div>
+                                        {op.correct_photo_path ? (
+                                          <div>
+                                            <img src={op.correct_photo_path} alt="Doğru" style={{ width: '100%', maxHeight: '180px', objectFit: 'contain', borderRadius: '6px', marginBottom: '6px', background: '#fff' }} />
+                                            <button onClick={() => handleSaveOpDetails(model.id, op.id, { correct_photo_path: null })} className="btn btn-sm" style={{ fontSize: '10px', color: 'var(--danger)' }}>🗑️ Kaldır</button>
+                                          </div>
+                                        ) : (
+                                          <div>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>İşlemin DOĞRU yapılmış halinin fotoğrafı</div>
+                                            <input type="file" accept="image/*" onChange={e => handleUploadMedia(model.id, op.id, e.target.files[0], 'correct_photos')} style={{ fontSize: '11px', width: '100%' }} />
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* YANLIŞ FOTOĞRAF */}
+                                      <div style={{ padding: '12px', background: 'rgba(231,76,60,0.05)', borderRadius: 'var(--radius-md)', border: '2px solid rgba(231,76,60,0.3)' }}>
+                                        <div style={{ fontSize: '12px', fontWeight: '700', color: '#e74c3c', marginBottom: '8px' }}>❌ Yanlış Görünüş</div>
+                                        {op.incorrect_photo_path ? (
+                                          <div>
+                                            <img src={op.incorrect_photo_path} alt="Yanlış" style={{ width: '100%', maxHeight: '180px', objectFit: 'contain', borderRadius: '6px', marginBottom: '6px', background: '#fff' }} />
+                                            <button onClick={() => handleSaveOpDetails(model.id, op.id, { incorrect_photo_path: null })} className="btn btn-sm" style={{ fontSize: '10px', color: 'var(--danger)' }}>🗑️ Kaldır</button>
+                                          </div>
+                                        ) : (
+                                          <div>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>İşlemin YANLIŞ yapılmış halinin fotoğrafı</div>
+                                            <input type="file" accept="image/*" onChange={e => handleUploadMedia(model.id, op.id, e.target.files[0], 'incorrect_photos')} style={{ fontSize: '11px', width: '100%' }} />
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* ── YAZILI TALİMATLAR ── */}
+                                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>📝 Yazılı Talimatlar & Detaylar</div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+                                      <div style={{ fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>🧵 İplik:</span> <strong>{op.thread_material || '—'}</strong></div>
+                                      <div style={{ fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>🪡 İğne:</span> <strong>{op.needle_type || '—'}</strong></div>
+                                      <div style={{ fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>📏 Adım:</span> <strong>{op.stitch_per_cm || '—'} vuruş/cm</strong></div>
+                                    </div>
 
                                     {op.how_to_do && (
+                                      <div style={{ fontSize: '13px', lineHeight: '1.7', whiteSpace: 'pre-wrap', color: 'var(--text-primary)', padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)', marginBottom: '8px' }}>{op.how_to_do}</div>
+                                    )}
 
-                                      <div style={{ fontSize: '13px', lineHeight: '1.7', whiteSpace: 'pre-wrap', color: 'var(--text-primary)', padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent)' }}>{op.how_to_do}</div>
-
+                                    {op.optical_appearance && (
+                                      <div style={{ fontSize: '12px', padding: '8px 12px', background: 'rgba(52,152,219,0.1)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid #3498db', marginBottom: '8px' }}><strong>👁️ Optik Görünüş:</strong> {op.optical_appearance}</div>
                                     )}
 
                                     {op.quality_notes && (
-
-                                      <div style={{ marginTop: '8px', fontSize: '12px', padding: '8px 12px', background: 'rgba(255,193,7,0.1)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--warning)' }}><strong>⚠️ Kalite:</strong> {op.quality_notes}</div>
-
+                                      <div style={{ fontSize: '12px', padding: '8px 12px', background: 'rgba(255,193,7,0.1)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--warning)' }}><strong>⚠️ Kalite:</strong> {op.quality_notes}</div>
                                     )}
 
                                   </div>
@@ -5903,7 +6108,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
         ) : (
 
-          <div className="table-wrapper"><table className="table"><thead><tr><th>#</th><th>Ad Soyad</th><th>Pozisyon</th><th>Ustalık</th><th>Hız</th><th>Kalite</th><th>Sınıf</th><th>Devamsızlık</th><th>Günlük Ücret</th><th>Mesai</th><th>Durum</th><th style={{ width: '80px' }}>İşlem</th></tr></thead><tbody>
+          <div className="table-wrapper"><table className="table"><thead><tr><th>#</th><th>Ad Soyad</th><th>Pozisyon</th><th>Ustalık</th><th>Hız</th><th>Kalite</th><th>Sınıf</th><th>Devamsızlık</th><th>Günlük Ücret</th><th>Mesai</th><th title="Son 30 gün ortalaması">Ort.Üretim</th><th title="Son 30 gün hata oranı">Hata%</th><th title="Son 30 gün OEE verimlilik">Verimlilik</th><th>Durum</th><th style={{ width: '80px' }}>İşlem</th></tr></thead><tbody>
 
             {personnel.map((p, idx) => (
 
@@ -5925,6 +6130,10 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
                 <td style={{ fontWeight: '600' }}>{(p.daily_wage || 0).toFixed(0)} ₺</td>
 
                 <td style={{ fontSize: '13px' }}>{p.work_start || '08:00'} - {p.work_end || '18:00'}</td>
+
+                <td style={{ textAlign: 'center', fontWeight: '700', color: (p.daily_avg_output || 0) > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>{(p.daily_avg_output || 0) > 0 ? p.daily_avg_output : '—'}</td>
+                <td style={{ textAlign: 'center' }}>{(p.error_rate || 0) > 0 ? <span className={`badge ${p.error_rate <= 2 ? 'badge-success' : p.error_rate <= 5 ? 'badge-warning' : 'badge-danger'}`}>%{p.error_rate}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                <td style={{ textAlign: 'center' }}>{(p.efficiency_score || 0) > 0 ? <span className={`badge ${p.efficiency_score >= 70 ? 'badge-success' : p.efficiency_score >= 50 ? 'badge-warning' : 'badge-danger'}`}>%{p.efficiency_score}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
 
                 <td><span onClick={() => handleToggleStatus(p.id, p.status)} style={{ cursor: 'pointer' }} className={`badge ${p.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{p.status === 'active' ? '✅ Aktif' : '🔴 Pasif'}</span></td>
 
@@ -6078,6 +6287,7 @@ function ProductionPage({ models, personnel, addToast }) {
   const [editProductionForm, setEditProductionForm] = useState({});
   const [prodAuditHistory, setProdAuditHistory] = useState(null);
   const [prodAuditData, setProdAuditData] = useState([]);
+  const [showMediaModal, setShowMediaModal] = useState(null); // { type: 'video'|'audio'|'image', src, title }
 
   const openEditProduction = (log) => {
     setEditProductionForm({
@@ -6477,6 +6687,7 @@ function ProductionPage({ models, personnel, addToast }) {
                             <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
                               <span style={{ fontSize: '9px', background: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--bg-card)', padding: '1px 5px', borderRadius: '6px' }}>⚡{o.difficulty}/10</span>
                               <span style={{ fontSize: '9px', background: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--bg-card)', padding: '1px 5px', borderRadius: '6px' }}>👥{capable.length}</span>
+                              {(o.video_path || o.audio_path || o.correct_photo_path) && <span style={{ fontSize: '9px', background: isSelected ? 'rgba(255,255,255,0.25)' : 'rgba(46,204,113,0.15)', padding: '1px 5px', borderRadius: '6px', color: isSelected ? '#fff' : '#2ecc71' }}>{o.video_path ? '📹' : ''}{o.audio_path ? '🎤' : ''}{o.correct_photo_path ? '📸' : ''}</span>}
                             </div>
 
                           </div>
@@ -6499,7 +6710,16 @@ function ProductionPage({ models, personnel, addToast }) {
                   </select>
                 </div>
               </div>
-              {selectedOp && (<div style={{ padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}><strong>Seçilen İşlem:</strong> {selectedOp.name}  Makine: {selectedOp.machine_type || '—'}  Zorluk: {selectedOp.difficulty}/10{selectedOp.unit_price > 0 && <>  Birim: {selectedOp.unit_price.toFixed(2)} ₺</>}  <strong>Yapabilecek:</strong> {getCapablePersonnel(selectedOp).map(p => p.name).join(', ') || 'Belirsiz'}</div>)}
+              {selectedOp && (<div style={{ padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}><strong>Seçilen İşlem:</strong> {selectedOp.name}  Makine: {selectedOp.machine_type || '—'}  Zorluk: {selectedOp.difficulty}/10{selectedOp.unit_price > 0 && <>  Birim: {selectedOp.unit_price.toFixed(2)} ₺</>}  <strong>Yapabilecek:</strong> {getCapablePersonnel(selectedOp).map(p => p.name).join(', ') || 'Belirsiz'}
+                {(selectedOp.video_path || selectedOp.audio_path || selectedOp.correct_photo_path) && (
+                  <div style={{ marginTop: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {selectedOp.video_path && <button onClick={() => setShowMediaModal({ type: 'video', src: selectedOp.video_path, title: selectedOp.name })} className="btn btn-sm" style={{ fontSize: '11px', padding: '4px 10px', background: 'rgba(52,152,219,0.15)', color: '#3498db', border: '1px solid rgba(52,152,219,0.3)' }}>📹 Videoyu İzle</button>}
+                    {selectedOp.audio_path && <button onClick={() => setShowMediaModal({ type: 'audio', src: selectedOp.audio_path, title: selectedOp.name })} className="btn btn-sm" style={{ fontSize: '11px', padding: '4px 10px', background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: '1px solid rgba(155,89,182,0.3)' }}>🎤 Sesli Anlatım</button>}
+                    {selectedOp.correct_photo_path && <button onClick={() => setShowMediaModal({ type: 'image', src: selectedOp.correct_photo_path, title: selectedOp.name + ' — Doğru Görünüş' })} className="btn btn-sm" style={{ fontSize: '11px', padding: '4px 10px', background: 'rgba(39,174,96,0.15)', color: '#27ae60', border: '1px solid rgba(39,174,96,0.3)' }}>📸 Doğru Görünüş</button>}
+                    {selectedOp.incorrect_photo_path && <button onClick={() => setShowMediaModal({ type: 'image', src: selectedOp.incorrect_photo_path, title: selectedOp.name + ' — Yanlış Görünüş' })} className="btn btn-sm" style={{ fontSize: '11px', padding: '4px 10px', background: 'rgba(231,76,60,0.15)', color: '#e74c3c', border: '1px solid rgba(231,76,60,0.3)' }}>❌ Yanlış Görünüş</button>}
+                  </div>
+                )}
+              </div>)}
               <button className="btn btn-primary btn-lg" onClick={handleStart} disabled={!selectedModel || !selectedOperation || !selectedPerson} style={{ width: '100%', padding: '16px', fontSize: '18px' }}>🏭 İŞLEMİ BAŞLAT</button>
             </div>
           ) : (
@@ -6698,6 +6918,36 @@ function ProductionPage({ models, personnel, addToast }) {
           { key: 'passive_time_min', label: 'Pasif (dk)', type: 'number' },
           { key: 'notes', label: 'Not' },
         ]} />
+      )}
+
+      {/* ── MEDYA MODAL ── */}
+      {showMediaModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }} onClick={() => setShowMediaModal(null)}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: '16px', maxWidth: '700px', width: '100%', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 48px rgba(0,0,0,0.4)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--border-color)' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>{showMediaModal.type === 'video' ? '📹' : showMediaModal.type === 'audio' ? '🎤' : '📸'} {showMediaModal.title}</h3>
+              <button onClick={() => setShowMediaModal(null)} style={{ background: 'rgba(231,76,60,0.15)', border: 'none', color: '#e74c3c', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', fontSize: '16px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            </div>
+            <div style={{ padding: '20px' }}>
+              {showMediaModal.type === 'video' && (
+                <video controls autoPlay style={{ width: '100%', maxHeight: '500px', borderRadius: '12px', background: '#000' }}>
+                  <source src={showMediaModal.src} />
+                </video>
+              )}
+              {showMediaModal.type === 'audio' && (
+                <div style={{ textAlign: 'center', padding: '30px 0' }}>
+                  <div style={{ fontSize: '64px', marginBottom: '16px' }}>🎤</div>
+                  <audio controls autoPlay style={{ width: '100%' }}>
+                    <source src={showMediaModal.src} />
+                  </audio>
+                </div>
+              )}
+              {showMediaModal.type === 'image' && (
+                <img src={showMediaModal.src} alt={showMediaModal.title} style={{ width: '100%', maxHeight: '500px', objectFit: 'contain', borderRadius: '12px' }} />
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {prodAuditHistory && (
@@ -9866,11 +10116,26 @@ function CostsPage({ models, personnel, addToast }) {
 
   const totalPieces = Object.values(modelCosts).reduce((s, m) => s + m.totalProduced, 0);
 
+  const totalDefective = Object.values(modelCosts).reduce((s, m) => s + m.totalDefective, 0);
+
   const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+
+  // Entegrasyon 2a: Personel toplam maliyet (maaş + SSK + ulaşım + yemek + tazminat)
+  const personnelFullCost = personnel.filter(p => p.status === 'active').reduce((s, p) => {
+    return s + (p.base_salary || 0) + (p.ssk_cost || 0) + (p.transport_allowance || 0) + (p.food_allowance || 0) + (p.compensation || 0);
+  }, 0);
+
+  // Entegrasyon 2c: Fire maliyeti = hatalı adet × ortalama birim fiyat
+  const avgUnitPrice = totalPieces > 0 ? totalProduction / totalPieces : 0;
+  const fireCost = totalDefective * avgUnitPrice;
 
   const totalCost = totalLabor + totalExpenses;
 
   const netProfit = totalProduction - totalCost;
+
+  // Entegrasyon 2b: Birim maliyet ve kar marjı
+  const unitCost = totalPieces > 0 ? totalCost / totalPieces : 0;
+  const unitProfit = totalPieces > 0 ? netProfit / totalPieces : 0;
 
 
 
@@ -10003,6 +10268,38 @@ function CostsPage({ models, personnel, addToast }) {
             </div>
 
           </div>
+
+          {personnelFullCost > 0 && (
+            <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>👤 Personel Tam Maliyet</div>
+              <div style={{ fontSize: '22px', fontWeight: '800', color: '#8e44ad' }}>{personnelFullCost.toLocaleString('tr-TR')} ₺</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Maaş+SSK+Ulaşım+Yemek</div>
+            </div>
+          )}
+
+          {totalDefective > 0 && (
+            <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>🔥 Fire Maliyeti</div>
+              <div style={{ fontSize: '22px', fontWeight: '800', color: '#e74c3c' }}>{fireCost.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{totalDefective} hatalı adet</div>
+            </div>
+          )}
+
+          {totalPieces > 0 && (
+            <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📐 Birim Maliyet</div>
+              <div style={{ fontSize: '22px', fontWeight: '800', color: '#3498db' }}>{unitCost.toFixed(2)} ₺</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{totalPieces} adet üretim</div>
+            </div>
+          )}
+
+          {totalPieces > 0 && (
+            <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>💎 Birim Kar</div>
+              <div style={{ fontSize: '22px', fontWeight: '800', color: unitProfit >= 0 ? '#27ae60' : '#e74c3c' }}>{unitProfit >= 0 ? '+' : ''}{unitProfit.toFixed(2)} ₺</div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>adet başına</div>
+            </div>
+          )}
 
         </div>
 

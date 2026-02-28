@@ -153,6 +153,41 @@ export async function POST(request) {
             }
         } catch (e) { /* ortalama hesaplama hatası kritik değil */ }
 
+        // Entegrasyon 1a: Modelin toplam üretim sayısını güncelle (completed_count)
+        try {
+            const totalProduced = db.prepare(
+                'SELECT COALESCE(SUM(total_produced), 0) as total FROM production_logs WHERE model_id = ? AND deleted_at IS NULL'
+            ).get(model_id);
+            db.prepare('UPDATE models SET completed_count = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+                .run(totalProduced?.total || 0, model_id);
+        } catch (e) { /* completed_count güncelleme hatası kritik değil */ }
+
+        // Entegrasyon 1b: Personel performans istatistiklerini güncelle (son 30 gün)
+        try {
+            const perfStats = db.prepare(`
+                SELECT 
+                    COALESCE(AVG(total_produced), 0) as avg_output,
+                    CASE WHEN SUM(total_produced) > 0 
+                        THEN CAST(SUM(defective_count) AS REAL) * 100.0 / SUM(total_produced) 
+                        ELSE 0 END as err_rate,
+                    COALESCE(AVG(oee_score), 0) as eff_score
+                FROM production_logs 
+                WHERE personnel_id = ? AND deleted_at IS NULL
+                    AND start_time >= datetime('now', '-30 days')
+            `).get(personnel_id);
+
+            if (perfStats) {
+                db.prepare(
+                    'UPDATE personnel SET daily_avg_output = ?, error_rate = ?, efficiency_score = ? WHERE id = ?'
+                ).run(
+                    Math.round(perfStats.avg_output || 0),
+                    Math.round((perfStats.err_rate || 0) * 10) / 10,
+                    Math.round((perfStats.eff_score || 0) * 10) / 10,
+                    personnel_id
+                );
+            }
+        } catch (e) { /* personel performans güncelleme hatası kritik değil */ }
+
         return NextResponse.json(log, { status: 201 });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
