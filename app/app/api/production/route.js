@@ -21,7 +21,7 @@ export async function GET(request) {
       JOIN operations o ON pl.operation_id = o.id
       JOIN personnel p ON pl.personnel_id = p.id
     `;
-        const conditions = [];
+        const conditions = ['pl.deleted_at IS NULL'];
         const params = [];
 
         if (date) {

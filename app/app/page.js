@@ -1222,7 +1222,7 @@ function NewModelModal({ onClose, onSave }) {
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={handleClose}>İptal</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
             <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}
             </button>
@@ -2799,7 +2799,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
           <div className="modal-footer">
 
-            <button type="button" className="btn btn-secondary" onClick={handleClose}>İptal</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
 
             <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}</button>
 
@@ -2980,7 +2980,7 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
 
           <h2 className="modal-title">{editData ? `✏️ Düzenle — ${form.name}` : `📋 Yeni Personel ${form.name ? `— ${form.name}` : ''}`}</h2>
 
-          <button className="modal-close" onClick={handleClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>✕</button>
 
         </div>
 
@@ -3622,7 +3622,7 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
 
           <div className="modal-footer">
 
-            <button type="button" className="btn btn-secondary" onClick={handleClose}>İptal</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
 
             <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}</button>
 
