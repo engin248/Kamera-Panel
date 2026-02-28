@@ -1865,7 +1865,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
         </div>
 
-        <div style={{ display: 'flex', borderBottom: '2px solid var(--border-color)', background: 'var(--bg-input)' }}>
+        <div style={{ display: 'none' }}>
 
           {tabs.map(tab => (
 
@@ -1877,9 +1877,9 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
         </div>
 
-        <form onSubmit={handleSubmit} style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+        <form onSubmit={handleSubmit} style={{ maxHeight: '78vh', overflowY: 'auto', padding: '0 4px' }}>
 
-          {activeTab === 'temel' && (
+          {(
 
             <div style={{ padding: '16px 24px' }}>
 
@@ -1983,7 +1983,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
           )}
 
-          {activeTab === 'medya' && (
+          {(
 
             <div style={{ padding: '16px 24px' }}>
 
@@ -2480,7 +2480,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
           )}
 
-          {activeTab === 'yapilis' && (
+          {(
 
             <div style={{ padding: '16px 24px' }}>
 
@@ -2710,7 +2710,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
           )}
 
-          {activeTab === 'makine' && (
+          {(
 
             <div style={{ padding: '16px 24px' }}>
 
@@ -2740,7 +2740,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
           )}
 
-          {activeTab === 'kalite' && (
+          {(
 
             <div style={{ padding: '16px 24px' }}>
 
@@ -2782,7 +2782,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
           )}
 
-          {activeTab === 'sure' && (
+          {(
 
             <div style={{ padding: '16px 24px' }}>
 
