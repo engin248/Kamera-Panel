@@ -3105,6 +3105,12 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
               <div className="form-group"><label className="form-label">Engel Durumu</label>
                 <EditableSelect fieldKey="disability_status" label="Engel" value={form.disability_status} onChange={v => setForm({ ...form, disability_status: v })} defaultOptions={[['yok', 'Yok'], ['hafif', 'Hafif'], ['var', 'Var']]} /></div>
             </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">🚬 Sigara İçiyor mu?</label>
+                <EditableSelect fieldKey="smokes" label="Sigara" value={form.smokes} onChange={v => setForm({ ...form, smokes: v })} defaultOptions={[['hayir', 'Hayır'], ['evet', 'Evet']]} /></div>
+              <div className="form-group"><label className="form-label">🕌 Namaz Molası İhtiyacı</label>
+                <EditableSelect fieldKey="prays" label="Namaz" value={form.prays} onChange={v => setForm({ ...form, prays: v })} defaultOptions={[['hayir', 'Hayır'], ['evet', 'Evet']]} /></div>
+            </div>
             <div style={{ marginTop: '8px', padding: '8px 10px', background: 'rgba(231,76,60,0.05)', borderRadius: '8px', border: '1px solid rgba(231,76,60,0.15)' }}>
               <div style={{ fontSize: '11px', fontWeight: '700', color: '#e74c3c', marginBottom: '6px' }}>🆘 Acil Durumda Ulaşılacak Kişi</div>
               <div className="form-row">
