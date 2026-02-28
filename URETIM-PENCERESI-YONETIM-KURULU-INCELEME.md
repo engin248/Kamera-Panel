@@ -1,7 +1,8 @@
-# 🏭 ÜRETİM PENCERESİ — YÖNETİM KURULU İNCELEME DOKÜMANI
+# 🏭 ÜRETİM PENCERESİ — YÖNETİM KURULU İNCELEME
 
-> 📅 Tarih: 28 Şubat 2026 | Hazırlayan: Yazılım Geliştirme Ekibi  
-> 🎯 Amaç: Üretim (Üretim Takip) penceresinin tüm işlevlerinin, kriterlerinin ve alt bileşenlerinin kapsamlı incelemesi
+**Tarih:** 28 Şubat 2026
+
+Bu dokümanda Üretim Takip penceresinin tüm işlevlerini, hesaplamalarını, veri giriş alanlarını ve güvenlik yapısını A'dan Z'ye analiz ettik. Yönetim kurulunun incelemesini, eksik/yanlış gördüğü noktaları belirtmesini, ilave özellik önerilerini ve farklı bakış açılarını sunmasını bekliyoruz.
 
 ---
 
@@ -247,21 +248,24 @@ OEE               = Kullanılabilirlik × Performans × Kalite × 100
 
 ---
 
-## 📣 YÖNETİM KURULUNDAN RİCA EDİLEN GERİ BİLDİRİMLER
+## 📣 YÖNETİM KURULUNDAN BEKLENEN
 
-> Aşağıdaki soruları farklı bakış açısıyla değerlendirmenizi rica ediyoruz:
+Aşağıdaki konuları değerlendirip görüşünüzü belirtin:
 
-1. **İstatistik kartlarına** OEE ve toplam ₺ değer eklenmeli mi?
-2. **Hedef adet** belirleme (günlük üretim hedefi) sistemi istiyor musunuz?
-3. **Birden fazla kişi** aynı işlemi aynı anda yapabilmeli mi?
-4. **Makine seçimi** (hangi makinede yapıldı) kaydedilmeli mi?
-5. **Başlangıç saati düzeltme** (başlatmayı unutma durumu) gerekli mi?
-6. **Hatalı ürün fotoğrafı** yükleme aktif edilmeli mi?
-7. **Tablo filtreleme** (personel, model, işlem bazlı) eklenmeli mi?
-8. **Excel/CSV dışa aktarma** günlük/haftalık/aylık raporlama için gerekli mi?
-9. **Performans grafiği** (günlük üretim trendi) gösterilmeli mi?
-10. **OEE hedef değer** (örn: %85) tanımlanabilir mi olmalı?
-11. **Lot değişikliği** daha yapılandırılmış mı olmalı? (Eski → Yeni format)
-12. **Sesli/görsel uyarı** (düşük FPY, uzun mola, vb.) istiyor musunuz?
+| # | Konu | Değerlendirmeniz |
+|---|------|-------------------|
+| 1 | İstatistik kartlarına OEE ve toplam ₺ eklensin mi? | |
+| 2 | Günlük üretim hedefi belirleme sistemi? | |
+| 3 | Birden fazla kişi aynı işlemi aynı anda yapabilmeli mi? | |
+| 4 | Makine seçimi (hangi makinede yapıldı) kaydedilsin mi? | |
+| 5 | Başlangıç saati düzeltme (başlatmayı unutma durumu)? | |
+| 6 | Hatalı ürün fotoğrafı yükleme? | |
+| 7 | Tablo filtreleme (personel, model, işlem bazında)? | |
+| 8 | Excel/CSV dışa aktarma? | |
+| 9 | Performans grafiği (günlük üretim trendi)? | |
+| 10 | OEE hedef değer tanımlama (örn: %85)? | |
+| 11 | Lot değişikliği daha yapılandırılmış mı olmalı? | |
+| 12 | Düşük FPY / uzun mola için uyarı sistemi? | |
+| 13 | Başka eksik gördüğünüz veya eklemek istediğiniz bir şey? | |
 
-> ⚠️ Bu doküman üzerindeki yorumlarınızı, önerilerinizi ve öncelik sıralamanızı belirtmenizi rica ediyoruz. Her madde için "Şart", "Olursa İyi Olur" veya "Şimdi Gerekli Değil" şeklinde cevap vermeniz yeterlidir.
+Bunların dışında kendi bakış açınızdan (operasyonel verimlilik, mali analiz, kalite kontrol, çalışan yönetimi) farklı görüş ve önerilerinizi de ekleyin.

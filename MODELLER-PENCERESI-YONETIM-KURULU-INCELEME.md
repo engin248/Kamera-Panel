@@ -1,7 +1,8 @@
-# 📋 MODELLER PENCERESİ — YÖNETİM KURULU İNCELEME DOKÜMANI
+# 📋 MODELLER PENCERESİ — YÖNETİM KURULU İNCELEME
 
-> 📅 Tarih: 28 Şubat 2026 | Hazırlayan: Yazılım Geliştirme Ekibi  
-> 🎯 Amaç: Modeller penceresinin tüm işlevlerinin, kriterlerinin ve alt pencerelerinin kapsamlı incelemesi
+**Tarih:** 28 Şubat 2026
+
+Bu dokümanda Modeller penceresinin tüm işlevlerini, alt pencerelerini, artılarını ve eksilerini A'dan Z'ye analiz ettik. Yönetim kurulunun incelemesini, eksik/yanlış gördüğü noktaları belirtmesini, ilave özellik önerilerini ve farklı bakış açılarını sunmasını bekliyoruz.
 
 ---
 
@@ -266,19 +267,23 @@ Model kartına tıklandığında açılan detay bölümünde **7 sekme** bulunur
 
 ---
 
-## 📣 YÖNETİM KURULUNDAN RİCA EDİLEN GERİ BİLDİRİMLER
+---
 
-> Aşağıdaki soruları farklı bakış açısıyla değerlendirmenizi rica ediyoruz:
+## 📣 YÖNETİM KURULUNDAN BEKLENEN
 
-1. **Durum akışındaki 9 aşama yeterli mi?** Fazla veya eksik aşama var mı?
-2. **İşlem düzenleme** şu anda sadece isim değişikliğine izin veriyor — tüm alanlar düzenlenebilir mi olmalı?
-3. **Ölçü tablosunda tolerans** (+/- cm) bilgisi gerekli mi?
-4. **Aksesuar stok kontrolü** entegrasyonu yapılmalı mı?
-5. **Etiket şablonları** müşteriye özel otomatik oluşturulmalı mı?
-6. **Teknik Föy PDF olarak** mı yoksa mevcut web yazdırma yeterli mi?
-7. **Teslim tarihi yaklaşan modeller** için otomatik uyarı/bildirim istiyor musunuz?
-8. **Model görselleri** (ön/arka fotoğraf) detay kartında gösterilmeli mi?
-9. **Toplu model aktarma** (Excel import/export) gerekli mi?
-10. **Ek bir sekme veya alan** düşündüğünüz bir konu var mı?
+Aşağıdaki konuları değerlendirip görüşünüzü belirtin:
 
-> ⚠️ Bu doküman üzerindeki yorumlarınızı, önerilerinizi ve öncelik sıralamanızı belirtmenizi rica ediyoruz.
+| # | Konu | Değerlendirmeniz |
+|---|------|-------------------|
+| 1 | Durum akışı 9 aşama — yeterli mi, fazla/eksik var mı? | |
+| 2 | İşlem düzenleme — makine, zorluk, fiyat de düzenlenebilsin mi? | |
+| 3 | Ölçü tablosuna tolerans (+/- cm) eklensin mi? | |
+| 4 | Aksesuar stok kontrolüyle entegrasyon? | |
+| 5 | Müşteriye özel etiket şablonları? | |
+| 6 | Teknik Föy PDF olarak dışa aktarma? | |
+| 7 | Teslim tarihi uyarı sistemi? | |
+| 8 | Model fotoğrafları kart üzerinde görünsün mü? | |
+| 9 | Excel import/export? | |
+| 10 | Başka eksik gördüğünüz veya eklemek istediğiniz bir şey? | |
+
+Bunların dışında kendi bakış açınızdan (operasyonel, mali, kalite, müşteri memnuniyeti) farklı görüş ve önerilerinizi de ekleyin.
