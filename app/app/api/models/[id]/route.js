@@ -44,6 +44,7 @@ export async function PUT(request, { params }) {
             op_yikama_count, op_yikama_details,
             has_lining, lining_pieces, has_interlining, interlining_parts, interlining_count,
             difficult_points, critical_points, customer_requests,
+            cutting_info, accessory_info, label_info,
             changed_by
         } = body;
 
@@ -97,6 +98,9 @@ export async function PUT(request, { params }) {
         difficult_points = COALESCE(?, difficult_points),
         critical_points = COALESCE(?, critical_points),
         customer_requests = COALESCE(?, customer_requests),
+        cutting_info = COALESCE(?, cutting_info),
+        accessory_info = COALESCE(?, accessory_info),
+        label_info = COALESCE(?, label_info),
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
@@ -111,6 +115,7 @@ export async function PUT(request, { params }) {
             op_yikama_count, op_yikama_details,
             has_lining, lining_pieces, has_interlining, interlining_parts, interlining_count,
             difficult_points, critical_points, customer_requests,
+            cutting_info, accessory_info, label_info,
             id
         );
 
@@ -142,7 +147,10 @@ export async function PUT(request, { params }) {
             has_lining: 'Astar', lining_pieces: 'Astar Parça',
             has_interlining: 'Tela', interlining_parts: 'Tela Parçaları', interlining_count: 'Tela Parça Sayısı',
             difficult_points: 'Zor Noktalar', critical_points: 'Kritik Noktalar',
-            customer_requests: 'Müşteri Talepleri'
+            customer_requests: 'Müşteri Talepleri',
+            cutting_info: 'Kesim Bilgileri',
+            accessory_info: 'Aksesuar Bilgileri',
+            label_info: 'Etiket Bilgileri'
         };
 
         // Her değişen alanı kaydet

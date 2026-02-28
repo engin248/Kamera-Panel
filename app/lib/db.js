@@ -709,6 +709,9 @@ function initTables() {
     "ALTER TABLE models ADD COLUMN op_yikama_details TEXT DEFAULT ''",
     "ALTER TABLE models ADD COLUMN interlining_parts TEXT DEFAULT ''",
     "ALTER TABLE models ADD COLUMN interlining_count INTEGER DEFAULT 0",
+    "ALTER TABLE models ADD COLUMN cutting_info TEXT DEFAULT ''",
+    "ALTER TABLE models ADD COLUMN accessory_info TEXT DEFAULT ''",
+    "ALTER TABLE models ADD COLUMN label_info TEXT DEFAULT ''",
   ];
   for (const sql of modelMigrations) {
     try { db.exec(sql); } catch { /* sütun zaten varsa hata verir, sorun yok */ }

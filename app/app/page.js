@@ -4062,6 +4062,30 @@ function ModelsPage({ models, loadModels, addToast }) {
 
   });
 
+  // Kesim & Aksesuar state
+  const [cuttingInfo, setCuttingInfo] = useState({
+    pre_cutting: '', cutting_type: 'Serileme (Elle)', pastal_count: '',
+    cutting_steps: '', post_cutting_checks: [], post_cutting_notes: ''
+  });
+
+  const [accessoryInfo, setAccessoryInfo] = useState({
+    accessories: {}, accessory_notes: '', wash_types: [], wash_notes: '',
+    ironing_notes: '', packaging_notes: ''
+  });
+
+  // Tab bilgilerini kaydetme
+  const handleSaveTabInfo = async (modelId, field, data) => {
+    try {
+      const res = await fetch(`/api/models/${modelId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: JSON.stringify(data), changed_by: 'admin' })
+      });
+      if (!res.ok) throw new Error('Kaydetme hatası');
+      await loadModels();
+      addToast('success', '✅ Bilgiler kaydedildi!');
+    } catch (err) { addToast('error', err.message); }
+  };
+
 
 
   const handleSaveModel = async (formData) => {
@@ -4166,31 +4190,36 @@ function ModelsPage({ models, loadModels, addToast }) {
 
 
 
-  const handleToggleModel = async (modelId) => {
-    if (expandedModel === modelId) { setExpandedModel(null); } else {
-      setExpandedModel(modelId); setDetailTab('genel'); await loadOperations(modelId);
-      // Ölçü tablosu verilerini yükle
-      const model = models.find(m => m.id === modelId);
-      if (model && model.measurement_table) {
-        try {
-          const saved = JSON.parse(model.measurement_table);
-          if (saved.points) setMeasurePoints(saved.points);
-          if (saved.sizes) setMeasureSizes(saved.sizes);
-          if (saved.data) setMeasureData(saved.data);
-        } catch (e) { /* eski format veya boş */ }
-      } else {
-        setMeasurePoints([
-          { name: 'G\u00f6\u011f\u00fcs', description: 'Koltuk alt\u0131ndan yatay \u00f6l\u00e7\u00fc' },
-          { name: 'Bel', description: 'Bel hizas\u0131ndan yatay \u00f6l\u00e7\u00fc' },
-          { name: 'Basen', description: 'Kal\u00e7a hizas\u0131ndan yatay \u00f6l\u00e7\u00fc' },
-          { name: 'Boy', description: 'Omuzdan eteğe dikey \u00f6l\u00e7\u00fc' },
-          { name: 'Kol Boyu', description: 'Omuzdan bileğe' },
-          { name: 'Omuz', description: 'Omuz genişliği' }
-        ]);
-        setMeasureSizes(['S', 'M', 'L', 'XL']);
-        setMeasureData({});
-      }
+  const handleToggleModel = async (id) => {
+    if (expandedModel === id) { setExpandedModel(null); return; }
+    setExpandedModel(id);
+    setDetailTab('genel');
+    loadOperations(id);
+    // Ölçü tablosu verilerini yükle
+    const m = models.find(x => x.id === id);
+    if (m?.measurement_table) {
+      try {
+        const mt = JSON.parse(m.measurement_table);
+        setMeasurePoints(mt.points || measurePoints);
+        setMeasureSizes(mt.sizes || measureSizes);
+        setMeasureData(mt.data || {});
+      } catch { }
+    } else {
+      setMeasurePoints([{ name: 'Göğüs', description: 'Koltuk altından yatay ölçü' }, { name: 'Bel', description: 'Bel hizasından yatay ölçü' }, { name: 'Basen', description: 'Kalça hizasından yatay ölçü' }, { name: 'Boy', description: 'Omuzdan eteğe dikey ölçü' }, { name: 'Kol Boyu', description: 'Omuzdan bileğe' }, { name: 'Omuz', description: 'Omuz genişliği' }]);
+      setMeasureSizes(['S', 'M', 'L', 'XL']); setMeasureData({});
     }
+    // Kesim bilgilerini yükle
+    if (m?.cutting_info) {
+      try { setCuttingInfo(JSON.parse(m.cutting_info)); } catch { }
+    } else { setCuttingInfo({ pre_cutting: '', cutting_type: 'Serileme (Elle)', pastal_count: '', cutting_steps: '', post_cutting_checks: [], post_cutting_notes: '' }); }
+    // Aksesuar bilgilerini yükle
+    if (m?.accessory_info) {
+      try { setAccessoryInfo(JSON.parse(m.accessory_info)); } catch { }
+    } else { setAccessoryInfo({ accessories: {}, accessory_notes: '', wash_types: [], wash_notes: '', ironing_notes: '', packaging_notes: '' }); }
+    // Etiket bilgilerini yükle
+    if (m?.label_info) {
+      try { setLabelInfo(JSON.parse(m.label_info)); } catch { }
+    } else { setLabelInfo({ brand_label: '', brand_label_pos: 'Arka Yaka Ortası', size_label: '', size_label_pos: 'Arka Yaka Sol', care_label: '', care_label_pos: 'Sol Yan Dikiş', content_label: '', content_label_pos: 'Sol Yan Dikiş', hangtag: '', barcode: '', wash_icons: [], special_label_notes: '' }); }
   };
 
 
@@ -4805,34 +4834,45 @@ function ModelsPage({ models, loadModels, addToast }) {
                         <div style={{ marginBottom: '20px', padding: '16px', background: 'rgba(142,68,173,0.05)', borderRadius: '12px', border: '1px solid rgba(142,68,173,0.15)' }}>
                           <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#8e44ad', marginBottom: '14px' }}>🔄 1. KESİMDEN ÖNCE YAPILACAK İŞLEMLER</h5>
                           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>Kumaş kesime girmeden önce yapılması gereken işlemler (plise, ön yıkama, boyama, sanfor vb.)</div>
-                          <textarea className="form-textarea" rows={3} placeholder={"İşlem sırası ile yazın:\n1. Kumaş kontrolü\n2. Plise işlemi (varsa)\n3. Ön yıkama / sanfor (varsa)"} style={{ fontSize: '13px' }} />
+                          <textarea className="form-textarea" rows={3} placeholder={"İşlem sırası ile yazın:\n1. Kumaş kontrolü\n2. Plise işlemi (varsa)\n3. Ön yıkama / sanfor (varsa)"} style={{ fontSize: '13px' }} value={cuttingInfo.pre_cutting || ''} onChange={e => setCuttingInfo({ ...cuttingInfo, pre_cutting: e.target.value })} />
                         </div>
 
                         <div style={{ marginBottom: '20px', padding: '16px', background: 'rgba(41,128,185,0.05)', borderRadius: '12px', border: '1px solid rgba(41,128,185,0.15)' }}>
                           <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#2980b9', marginBottom: '14px' }}>✂️ 2. KESİM İŞLEMLERİ</h5>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px' }}>
                             <div><label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)' }}>Kesim Tipi</label>
-                              <select className="form-select" style={{ fontSize: '12px' }}><option>Serileme (Elle)</option><option>Otomatik Kesim</option><option>Lazer Kesim</option><option>Kalıp Kesim</option></select></div>
+                              <select className="form-select" style={{ fontSize: '12px' }} value={cuttingInfo.cutting_type || 'Serileme (Elle)'} onChange={e => setCuttingInfo({ ...cuttingInfo, cutting_type: e.target.value })}><option>Serileme (Elle)</option><option>Otomatik Kesim</option><option>Lazer Kesim</option><option>Kalıp Kesim</option></select></div>
                             <div><label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-muted)' }}>Pastal Katman Sayısı</label>
-                              <input className="form-input" type="text" placeholder="örn: 40 kat" style={{ fontSize: '12px' }} /></div>
+                              <input className="form-input" type="text" placeholder="örn: 40 kat" style={{ fontSize: '12px' }} value={cuttingInfo.pastal_count || ''} onChange={e => setCuttingInfo({ ...cuttingInfo, pastal_count: e.target.value })} /></div>
                           </div>
-                          <textarea className="form-textarea" rows={4} placeholder={"Kesim işlem sırası:\n1. Beden kesimi — ana parçalar\n2. Garni kesimi — yaka, manşet, pat\n3. Tela kesimi — yaka tela, manşet tela\n4. Taş/Astar kesimi (varsa)\n5. Kontrol & eşleştirme"} style={{ fontSize: '13px' }} />
+                          <textarea className="form-textarea" rows={4} placeholder={"Kesim işlem sırası:\n1. Beden kesimi — ana parçalar\n2. Garni kesimi — yaka, manşet, pat\n3. Tela kesimi — yaka tela, manşet tela\n4. Taş/Astar kesimi (varsa)\n5. Kontrol & eşleştirme"} style={{ fontSize: '13px' }} value={cuttingInfo.cutting_steps || ''} onChange={e => setCuttingInfo({ ...cuttingInfo, cutting_steps: e.target.value })} />
                         </div>
 
                         <div style={{ padding: '16px', background: 'rgba(230,126,34,0.05)', borderRadius: '12px', border: '1px solid rgba(230,126,34,0.15)' }}>
                           <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#e67e22', marginBottom: '14px' }}>⚡ 3. KESİM SONRASI — DİKİM ÖNCESİ İŞLEMLER</h5>
                           <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px' }}>Parçalar kesildikten sonra, dikime girmeden önce yapılması gereken işlemler</div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '14px' }}>
-                            {['İlik', 'Nakış', 'Baskı', 'Tela Yapıştırma', 'Plise', 'Taş Yapış.', 'Transfer Baskı', 'Lazer İşlem', 'Diğer'].map(item => (
-                              <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', padding: '5px 8px', background: 'var(--bg-input)', borderRadius: '6px', cursor: 'pointer' }}>
-                                <input type="checkbox" /> {item}
-                              </label>
-                            ))}
+                            {['İlik', 'Nakış', 'Baskı', 'Tela Yapıştırma', 'Plise', 'Taş Yapış.', 'Transfer Baskı', 'Lazer İşlem', 'Diğer'].map(item => {
+                              const checks = cuttingInfo.post_cutting_checks || [];
+                              const isChecked = checks.includes(item);
+                              return (
+                                <label key={item} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', padding: '5px 8px', background: isChecked ? 'rgba(230,126,34,0.15)' : 'var(--bg-input)', borderRadius: '6px', cursor: 'pointer', border: isChecked ? '1px solid #e67e22' : '1px solid transparent' }}>
+                                  <input type="checkbox" checked={isChecked} onChange={() => {
+                                    const next = isChecked ? checks.filter(x => x !== item) : [...checks, item];
+                                    setCuttingInfo({ ...cuttingInfo, post_cutting_checks: next });
+                                  }} /> {item}
+                                </label>
+                              );
+                            })}
                           </div>
-                          <textarea className="form-textarea" rows={4} placeholder={"İşlem sırası ve detayları:\n1. Tela yapıştırma — Yaka ve manşet, 160C, 15sn\n2. Nakış — Logo, ön göğüs sol, 8x3cm\n3. Baskı — Arka DTF, 40x30cm\n4. İlik — Ön pat, 7 adet düz ilik"} style={{ fontSize: '13px' }} />
+                          <textarea className="form-textarea" rows={4} placeholder={"İşlem sırası ve detayları:\n1. Tela yapıştırma — Yaka ve manşet, 160C, 15sn\n2. Nakış — Logo, ön göğüs sol, 8x3cm\n3. Baskı — Arka DTF, 40x30cm\n4. İlik — Ön pat, 7 adet düz ilik"} style={{ fontSize: '13px' }} value={cuttingInfo.post_cutting_notes || ''} onChange={e => setCuttingInfo({ ...cuttingInfo, post_cutting_notes: e.target.value })} />
                           <div style={{ marginTop: '10px', padding: '8px', background: 'rgba(231,76,60,0.06)', borderRadius: '6px', fontSize: '11px', color: '#e74c3c' }}>
                             ⚠️ Bu işlemler dikime girmeden ÖNCE tamamlanmalıdır. Eksik işlemle dikime giren ürün hatalı üretilir.
                           </div>
+                        </div>
+
+                        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                          <button className="btn btn-primary" onClick={() => handleSaveTabInfo(model.id, 'cutting_info', cuttingInfo)} style={{ padding: '12px 32px', fontSize: '15px', fontWeight: '700', borderRadius: '10px' }}>💾 Kesim Bilgilerini Kaydet</button>
                         </div>
                       </div>
                     )}
@@ -4859,33 +4899,44 @@ function ModelsPage({ models, loadModels, addToast }) {
                             ].map(acc => (
                               <div key={acc.name} style={{ padding: '8px', background: 'var(--bg-input)', borderRadius: '6px' }}>
                                 <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--accent)', display: 'block', marginBottom: '4px' }}>{acc.name}</label>
-                                <input className="form-input" type="text" placeholder={acc.ph} style={{ fontSize: '12px' }} />
+                                <input className="form-input" type="text" placeholder={acc.ph} style={{ fontSize: '12px' }} value={(accessoryInfo.accessories || {})[acc.name] || ''} onChange={e => setAccessoryInfo({ ...accessoryInfo, accessories: { ...(accessoryInfo.accessories || {}), [acc.name]: e.target.value } })} />
                               </div>
                             ))}
                           </div>
-                          <textarea className="form-textarea" rows={3} placeholder={"Aksesuar montaj sırası:\n1. Koç gözü — ön cep köşeleri, 4 adet\n2. Düğme — ön pat, 7 adet, 18mm\n3. Kemer — 3.5cm, metal toka"} style={{ fontSize: '13px' }} />
+                          <textarea className="form-textarea" rows={3} placeholder={"Aksesuar montaj sırası:\n1. Koç gözü — ön cep köşeleri, 4 adet\n2. Düğme — ön pat, 7 adet, 18mm\n3. Kemer — 3.5cm, metal toka"} style={{ fontSize: '13px' }} value={accessoryInfo.accessory_notes || ''} onChange={e => setAccessoryInfo({ ...accessoryInfo, accessory_notes: e.target.value })} />
                         </div>
 
                         <div style={{ marginBottom: '20px', padding: '16px', background: 'rgba(22,160,133,0.05)', borderRadius: '12px', border: '1px solid rgba(22,160,133,0.15)' }}>
                           <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#16a085', marginBottom: '14px' }}>🌊 YIKAMA İŞLEMİ</h5>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '14px' }}>
-                            {['Yıkama Yok', 'Normal Yıkama', 'Taş Yıkama', 'Enzim Yıkama', 'Silikon Yıkama', 'Ağartma', 'Boyama', 'Softener', 'Diğer'].map(w => (
-                              <label key={w} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', padding: '5px 8px', background: 'var(--bg-input)', borderRadius: '6px', cursor: 'pointer' }}>
-                                <input type="checkbox" /> {w}
-                              </label>
-                            ))}
+                            {['Yıkama Yok', 'Normal Yıkama', 'Taş Yıkama', 'Enzim Yıkama', 'Silikon Yıkama', 'Ağartma', 'Boyama', 'Softener', 'Diğer'].map(w => {
+                              const wt = accessoryInfo.wash_types || [];
+                              const isC = wt.includes(w);
+                              return (
+                                <label key={w} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', padding: '5px 8px', background: isC ? 'rgba(22,160,133,0.15)' : 'var(--bg-input)', borderRadius: '6px', cursor: 'pointer', border: isC ? '1px solid #16a085' : '1px solid transparent' }}>
+                                  <input type="checkbox" checked={isC} onChange={() => {
+                                    const next = isC ? wt.filter(x => x !== w) : [...wt, w];
+                                    setAccessoryInfo({ ...accessoryInfo, wash_types: next });
+                                  }} /> {w}
+                                </label>
+                              );
+                            })}
                           </div>
-                          <textarea className="form-textarea" rows={2} placeholder="Yıkama detayları: sıcaklık, süre, reçete..." style={{ fontSize: '13px' }} />
+                          <textarea className="form-textarea" rows={2} placeholder="Yıkama detayları: sıcaklık, süre, reçete..." style={{ fontSize: '13px' }} value={accessoryInfo.wash_notes || ''} onChange={e => setAccessoryInfo({ ...accessoryInfo, wash_notes: e.target.value })} />
                         </div>
 
                         <div style={{ marginBottom: '20px', padding: '16px', background: 'rgba(211,84,0,0.05)', borderRadius: '12px', border: '1px solid rgba(211,84,0,0.15)' }}>
                           <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#d35400', marginBottom: '14px' }}>♨️ ÜTÜ & KALİTE KONTROL</h5>
-                          <textarea className="form-textarea" rows={3} placeholder={"1. Ara ütü talimatları\n2. Son ütü — sıcaklık, buharlı/kuru\n3. Kalite kontrol noktaları\n4. AQL seviyesi"} style={{ fontSize: '13px' }} />
+                          <textarea className="form-textarea" rows={3} placeholder={"1. Ara ütü talimatları\n2. Son ütü — sıcaklık, buharlı/kuru\n3. Kalite kontrol noktaları\n4. AQL seviyesi"} style={{ fontSize: '13px' }} value={accessoryInfo.ironing_notes || ''} onChange={e => setAccessoryInfo({ ...accessoryInfo, ironing_notes: e.target.value })} />
                         </div>
 
                         <div style={{ padding: '16px', background: 'rgba(44,62,80,0.05)', borderRadius: '12px', border: '1px solid rgba(44,62,80,0.15)' }}>
                           <h5 style={{ fontSize: '13px', fontWeight: '700', color: '#2c3e50', marginBottom: '14px' }}>📦 PAKETLEME</h5>
-                          <textarea className="form-textarea" rows={3} placeholder={"1. Katlama şekli (standart/hadamlı)\n2. Poşetleme (tekli/çoklu)\n3. Koli düzeni (S:2, M:4, L:4, XL:2 = 12'li)\n4. Etiket yapıştırma konumu"} style={{ fontSize: '13px' }} />
+                          <textarea className="form-textarea" rows={3} placeholder={"1. Katlama şekli (standart/hadamlı)\n2. Poşetleme (tekli/çoklu)\n3. Koli düzeni (S:2, M:4, L:4, XL:2 = 12'li)\n4. Etiket yapıştırma konumu"} style={{ fontSize: '13px' }} value={accessoryInfo.packaging_notes || ''} onChange={e => setAccessoryInfo({ ...accessoryInfo, packaging_notes: e.target.value })} />
+                        </div>
+
+                        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                          <button className="btn btn-primary" onClick={() => handleSaveTabInfo(model.id, 'accessory_info', accessoryInfo)} style={{ padding: '12px 32px', fontSize: '15px', fontWeight: '700', borderRadius: '10px' }}>💾 Aksesuar Bilgilerini Kaydet</button>
                         </div>
                       </div>
                     )}
@@ -5106,6 +5157,10 @@ function ModelsPage({ models, loadModels, addToast }) {
                         </div>
 
                         <div className="form-group"><label className="form-label">Etiket ile İlgili Özel Notlar</label><textarea className="form-textarea" placeholder="Etiketleme ile ilgili özel talimatlar..." value={labelInfo.special_label_notes} onChange={e => setLabelInfo({ ...labelInfo, special_label_notes: e.target.value })} /></div>
+
+                        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                          <button className="btn btn-primary" onClick={() => handleSaveTabInfo(model.id, 'label_info', labelInfo)} style={{ padding: '12px 32px', fontSize: '15px', fontWeight: '700', borderRadius: '10px' }}>💾 Etiket Bilgilerini Kaydet</button>
+                        </div>
 
                       </div>
 
