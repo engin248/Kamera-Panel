@@ -5888,8 +5888,11 @@ function ProductionPage({ models, personnel, addToast }) {
   const openEditProduction = (log) => {
     setEditProductionForm({
       total_produced: log.total_produced || 0, defective_count: log.defective_count || 0,
-      defect_reason: log.defect_reason || '', lot_change: log.lot_change || '',
-      quality_score: log.quality_score || 100
+      defect_reason: log.defect_reason || '', defect_source: log.defect_source || 'operator',
+      lot_change: log.lot_change || '', quality_score: log.quality_score || 100,
+      break_duration_min: log.break_duration_min || 0, machine_down_min: log.machine_down_min || 0,
+      material_wait_min: log.material_wait_min || 0, passive_time_min: log.passive_time_min || 0,
+      defect_classification: log.defect_classification || '', notes: log.notes || ''
     });
     setEditProduction(log);
   };
@@ -5913,9 +5916,10 @@ function ProductionPage({ models, personnel, addToast }) {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editProductionForm)
       });
-      if (!res.ok) throw new Error('Guncelleme hatasi');
+      if (!res.ok) throw new Error('Güncelleme hatası');
       setEditProduction(null);
-      addToast('success', 'Uretim kaydi guncellendi!');
+      await loadLogs();
+      addToast('success', 'Üretim kaydı güncellendi!');
     } catch (err) { addToast('error', err.message); }
   };
 
@@ -5928,286 +5932,371 @@ function ProductionPage({ models, personnel, addToast }) {
     } catch { setProdAuditData([]); setProdAuditHistory(logId); }
   };
 
+  const handleDeleteLog = async (logId) => {
+    if (!confirm('Bu üretim kaydını silmek istediğinize emin misiniz?')) return;
+    try {
+      const res = await fetch(`/api/production/${logId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Silme hatası');
+      await loadLogs();
+      addToast('success', 'Kayıt silindi (geri alınabilir)');
+    } catch (err) { addToast('error', err.message); }
+  };
 
   const [selectedModel, setSelectedModel] = useState('');
-
   const [selectedOperation, setSelectedOperation] = useState('');
-
   const [selectedPerson, setSelectedPerson] = useState('');
-
   const [operations, setOperations] = useState([]);
-
   const [activeSession, setActiveSession] = useState(null);
-
   const [timer, setTimer] = useState(0);
-
   const [logs, setLogs] = useState([]);
 
-  const [form, setForm] = useState({ total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator', machine_down_min: '0', material_wait_min: '0' });
+  const [form, setForm] = useState({
+    total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator',
+    machine_down_min: '0', material_wait_min: '0', break_duration_min: '0', passive_time_min: '0',
+    lot_change: '', quality_score: '100', defect_classification: '', notes: ''
+  });
 
-  const defectSources = [{ value: 'operator', label: '📋 Operatör Hatası' }, { value: 'machine', label: '📋 Makine Hatası' }, { value: 'material', label: '🧵 Malzeme Hatası' }, { value: 'design', label: '📏 Tasarım Hatası' }];
+  const defectSources = [
+    { value: 'operator', label: '👷 Operatör Hatası' },
+    { value: 'machine', label: '⚙️ Makine Hatası' },
+    { value: 'material', label: '🧵 Malzeme Hatası' },
+    { value: 'design', label: '📐 Tasarım Hatası' }
+  ];
 
-
+  const defectTypes = [
+    'Atlanmış dikiş', 'Eğri dikiş', 'İplik kopması', 'Kumaş hatası',
+    'Ölçü hatası', 'Leke/iz', 'Diğer'
+  ];
 
   const formatTimer = (s) => `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
-
-
   const loadLogs = useCallback(async () => {
-
     const today = new Date().toISOString().split('T')[0];
-
-    const res = await fetch(`/api/production?date=${today}`); const d = await res.json(); setLogs(Array.isArray(d) ? d : []);
-
+    try {
+      const res = await fetch(`/api/production?date=${today}`);
+      const d = await res.json();
+      setLogs(Array.isArray(d) ? d : []);
+    } catch { setLogs([]); }
   }, []);
-
-
 
   useEffect(() => { loadLogs(); }, [loadLogs]);
 
   useEffect(() => {
-
-    if (selectedModel) { fetch(`/api/models/${selectedModel}/operations`).then(r => r.json()).then(d => setOperations(Array.isArray(d) ? d : [])); }
-
-    else { setOperations([]); }
-
+    if (selectedModel) {
+      fetch(`/api/models/${selectedModel}/operations`).then(r => r.json()).then(d => setOperations(Array.isArray(d) ? d : []));
+    } else { setOperations([]); }
     setSelectedOperation('');
-
   }, [selectedModel]);
 
   useEffect(() => { let iv; if (activeSession) { iv = setInterval(() => setTimer(t => t + 1), 1000); } return () => clearInterval(iv); }, [activeSession]);
 
+  // Otomatik hesaplamalar
+  const tp = parseInt(form.total_produced) || 0;
+  const dc = parseInt(form.defective_count) || 0;
+  const fpy = tp > 0 ? ((tp - dc) / tp) * 100 : 100;
+  const brk = parseFloat(form.break_duration_min) || 0;
+  const mch = parseFloat(form.machine_down_min) || 0;
+  const mat = parseFloat(form.material_wait_min) || 0;
+  const pas = parseFloat(form.passive_time_min) || 0;
+  const netWorkMin = timer > 0 ? Math.max(0, (timer / 60) - brk - mch - mat - pas) : 0;
+  const unitTimeSec = tp > 0 && netWorkMin > 0 ? (netWorkMin * 60) / tp : 0;
+  const selectedOp = operations.find(o => o.id === parseInt(selectedOperation));
+  const unitValue = tp * (selectedOp?.unit_price || 0);
 
+  // Stat kartları hesaplamaları
+  const todayProduced = logs.reduce((s, l) => s + (l.total_produced || 0), 0);
+  const todayDefects = logs.reduce((s, l) => s + (l.defective_count || 0), 0);
+  const todayFPY = todayProduced > 0 ? ((todayProduced - todayDefects) / todayProduced * 100) : 100;
 
   const handleStart = () => {
-
     if (!selectedModel || !selectedOperation || !selectedPerson) return;
-
     const model = models.find(m => m.id === parseInt(selectedModel));
-
     const op = operations.find(o => o.id === parseInt(selectedOperation));
-
     const person = personnel.find(p => p.id === parseInt(selectedPerson));
-
-    setActiveSession({ model_id: parseInt(selectedModel), operation_id: parseInt(selectedOperation), personnel_id: parseInt(selectedPerson), model_name: model?.name, model_code: model?.code, operation_name: op?.name, personnel_name: person?.name, unit_price: op?.unit_price || 0, start_time: new Date().toISOString() });
-
+    setActiveSession({
+      model_id: parseInt(selectedModel), operation_id: parseInt(selectedOperation),
+      personnel_id: parseInt(selectedPerson), model_name: model?.name, model_code: model?.code,
+      operation_name: op?.name, personnel_name: person?.name, unit_price: op?.unit_price || 0,
+      start_time: new Date().toISOString()
+    });
     setTimer(0);
-
   };
-
-
 
   const handleStop = async () => {
-
     if (!activeSession) return;
-
     const produced = parseInt(form.total_produced) || 0;
-
+    if (produced === 0 && timer < 120) {
+      if (!confirm('2 dakikadan kısa ve 0 adet — emin misiniz?')) return;
+    }
     if (produced === 0) { addToast('error', 'Yapılan adet giriniz'); return; }
-
     try {
-
-      const passiveTotal = (parseFloat(form.machine_down_min) || 0) + (parseFloat(form.material_wait_min) || 0);
-
-      const res = await fetch('/api/production', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...activeSession, end_time: new Date().toISOString(), total_produced: produced, defective_count: parseInt(form.defective_count) || 0, defect_reason: form.defect_reason, defect_source: form.defect_source, machine_down_min: parseFloat(form.machine_down_min) || 0, material_wait_min: parseFloat(form.material_wait_min) || 0, passive_time_min: passiveTotal, quality_score: produced > 0 ? Math.max(0, 100 - ((parseInt(form.defective_count) || 0) / produced * 100)) : 100 }) });
-
+      const res = await fetch('/api/production', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...activeSession, end_time: new Date().toISOString(),
+          total_produced: produced, defective_count: dc,
+          defect_reason: form.defect_reason, defect_source: form.defect_source,
+          break_duration_min: brk, machine_down_min: mch,
+          material_wait_min: mat, passive_time_min: pas,
+          quality_score: parseFloat(form.quality_score) || 100,
+          lot_change: form.lot_change, defect_classification: form.defect_classification,
+          notes: form.notes
+        })
+      });
       if (!res.ok) throw new Error('Kayıt hatası');
-
-      setActiveSession(null); setTimer(0); setForm({ total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator', machine_down_min: '0', material_wait_min: '0' });
-
+      setActiveSession(null); setTimer(0);
+      setForm({ total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator', machine_down_min: '0', material_wait_min: '0', break_duration_min: '0', passive_time_min: '0', lot_change: '', quality_score: '100', defect_classification: '', notes: '' });
       await loadLogs(); addToast('success', '✅ Üretim kaydı oluşturuldu');
-
     } catch (err) { addToast('error', err.message); }
-
   };
 
+  // Clear input helper
+  const ClearBtn = ({ field, defaultVal = '' }) => (
+    <button type="button" onClick={() => setForm(p => ({ ...p, [field]: defaultVal }))}
+      title="Temizle" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px 4px', opacity: 0.6 }}>❌</button>
+  );
 
-
-  const selectedOp = operations.find(o => o.id === parseInt(selectedOperation));
-
-
+  const InputField = ({ label, field, type = 'text', placeholder = '', defaultVal = '' }) => (
+    <div className="form-group" style={{ marginBottom: '8px' }}>
+      <label className="form-label" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {label} <ClearBtn field={field} defaultVal={defaultVal} />
+      </label>
+      <input className="form-input" type={type} placeholder={placeholder}
+        value={form[field]} onChange={e => setForm({ ...form, [field]: e.target.value })}
+        style={type === 'number' ? { textAlign: 'center', fontWeight: '600' } : {}} />
+    </div>
+  );
 
   return (
-
     <>
-
-      <div className="topbar"><h1 className="topbar-title">🏭️ Üretim Takip</h1><div className="topbar-actions"><span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div></div>
+      <div className="topbar"><h1 className="topbar-title">🏭 Üretim Takip</h1><div className="topbar-actions"><span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div></div>
 
       <div className="page-content">
 
-        <div className="card">
-
-          <div className="card-header"><h3 className="card-title">{activeSession ? '⏱️ Aktif Üretim' : '🏭️ Yeni Üretim Başlat'}</h3></div>
-
-          {!activeSession ? (
-
-            <div>
-
-              <div style={{ display: 'grid', gap: '12px', marginBottom: '16px' }}>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-
-                  <label className="form-label" style={{ fontSize: '13px' }}>① Model Seçin *</label>
-
-                  <select className="form-select" value={selectedModel} onChange={e => setSelectedModel(e.target.value)} style={{ fontSize: '15px', padding: '12px' }}>
-
-                    <option value="">— Model seçin —</option>
-
-                    {models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}
-
-                  </select>
-
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0, opacity: selectedModel ? 1 : 0.5 }}>
-
-                  <label className="form-label" style={{ fontSize: '13px' }}>② İşlem Seçin * {!selectedModel && <span style={{ color: 'var(--warning)', fontSize: '11px' }}>(önce model seçin)</span>}</label>
-
-                  <select className="form-select" value={selectedOperation} onChange={e => setSelectedOperation(e.target.value)} disabled={!selectedModel || operations.length === 0} style={{ fontSize: '15px', padding: '12px', borderColor: !selectedModel ? 'var(--border-color)' : selectedOperation ? 'var(--success)' : 'var(--warning)' }}>
-
-                    <option value="">{!selectedModel ? '— Önce model seçin —' : operations.length === 0 ? '— Bu modelde işlem yok —' : '— İşlem seçin —'}</option>
-
-                    {operations.map(o => <option key={o.id} value={o.id}>{o.order_number}. {o.name}{o.machine_type ? ` (${o.machine_type})` : ''}</option>)}
-
-                  </select>
-
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-
-                  <label className="form-label" style={{ fontSize: '13px' }}>③ Personel Seçin *</label>
-
-                  <select className="form-select" value={selectedPerson} onChange={e => setSelectedPerson(e.target.value)} style={{ fontSize: '15px', padding: '12px' }}>
-
-                    <option value="">— Personel seçin —</option>
-
-                    {personnel.filter(p => p.status === 'active').map(p => <option key={p.id} value={p.id}>{p.name} ({p.role})</option>)}
-
-                  </select>
-
-                </div>
-
-              </div>
-
-              {selectedOp && (<div style={{ padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}><strong>Seçilen İşlem:</strong> {selectedOp.name}  Makine: {selectedOp.machine_type || '—'}  Zorluk: {selectedOp.difficulty}/10{selectedOp.standard_time_min && selectedOp.standard_time_max && <>  Std. Süre: {selectedOp.standard_time_min}–{selectedOp.standard_time_max} sn</>}{selectedOp.unit_price > 0 && <>  Birim: {selectedOp.unit_price.toFixed(2)} ₺</>}</div>)}
-
-              <button className="btn btn-primary btn-lg" onClick={handleStart} disabled={!selectedModel || !selectedOperation || !selectedPerson} style={{ width: '100%', padding: '16px', fontSize: '18px' }}>🏭️ İŞLEMİ BAŞLAT</button>
-
-            </div>
-
-          ) : (
-
-            <div>
-
-              <div style={{ textAlign: 'center', padding: '24px 0' }}>
-
-                <div style={{ fontSize: '48px', fontWeight: '800', fontFamily: 'monospace', color: 'var(--accent)', letterSpacing: '4px' }}>{formatTimer(timer)}</div>
-
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Başlangıç: {new Date(activeSession.start_time).toLocaleTimeString('tr-TR')}</div>
-
-              </div>
-
-              <div className="form-row">
-
-                <div className="form-group"><label className="form-label">Yapılan Adet *</label><input className="form-input" type="number" min="0" placeholder="0" style={{ fontSize: '20px', fontWeight: '700', textAlign: 'center' }} value={form.total_produced} onChange={e => setForm({ ...form, total_produced: e.target.value })} /></div>
-
-                <div className="form-group"><label className="form-label">Hatalı Adet</label><input className="form-input" type="number" min="0" placeholder="0" style={{ fontSize: '20px', fontWeight: '700', textAlign: 'center' }} value={form.defective_count} onChange={e => setForm({ ...form, defective_count: e.target.value })} /></div>
-
-              </div>
-
-              {parseInt(form.defective_count) > 0 && (
-
-                <div className="form-row">
-
-                  <div className="form-group"><label className="form-label">Hata Nedeni Sınıflandırması</label><select className="form-select" value={form.defect_source} onChange={e => setForm({ ...form, defect_source: e.target.value })}>{defectSources.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}</select></div>
-
-                  <div className="form-group"><label className="form-label">Hata Açıklaması</label><input className="form-input" placeholder="Kısa açıklama..." value={form.defect_reason} onChange={e => setForm({ ...form, defect_reason: e.target.value })} /></div>
-
-                </div>
-
-              )}
-
-              <div style={{ padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
-
-                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>⏸️ Pasif Zaman (performansı etkilemez)</div>
-
-                <div className="form-row">
-
-                  <div className="form-group" style={{ marginBottom: 0 }}><label className="form-label" style={{ fontSize: '12px' }}>Makine Arızası (dk)</label><input className="form-input" type="number" min="0" step="1" value={form.machine_down_min} onChange={e => setForm({ ...form, machine_down_min: e.target.value })} /></div>
-
-                  <div className="form-group" style={{ marginBottom: 0 }}><label className="form-label" style={{ fontSize: '12px' }}>Malzeme/İş Bekleme (dk)</label><input className="form-input" type="number" min="0" step="1" value={form.material_wait_min} onChange={e => setForm({ ...form, material_wait_min: e.target.value })} /></div>
-
-                </div>
-
-              </div>
-
-              <button className="btn btn-danger btn-lg" onClick={handleStop} style={{ width: '100%', padding: '16px', fontSize: '18px' }}>⏹️ İŞLEMİ BİTİR & KAYDET</button>
-
-            </div>
-
-          )}
-
+        {/* ── STAT KARTLARI ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'rgba(52,152,219,0.15)', color: '#3498db' }}>📦</div>
+            <div><div className="stat-value">{todayProduced}</div><div className="stat-label">Bugün Üretilen</div></div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'rgba(46,204,113,0.15)', color: '#2ecc71' }}>✅</div>
+            <div><div className="stat-value">%{todayFPY.toFixed(1)}</div><div className="stat-label">Kalite (FPY)</div></div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'rgba(231,76,60,0.15)', color: '#e74c3c' }}>❌</div>
+            <div><div className="stat-value">{todayDefects}</div><div className="stat-label">Toplam Hata</div></div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6' }}>📊</div>
+            <div><div className="stat-value">{logs.length}</div><div className="stat-label">Kayıt Sayısı</div></div>
+          </div>
         </div>
 
-        <div className="card" style={{ marginTop: '16px' }}>
+        {/* ── AKTİF ÜRETİM / YENİ BAŞLAT ── */}
+        <div className="card">
+          <div className="card-header"><h3 className="card-title">{activeSession ? '⏱️ Aktif Üretim' : '🏭 Yeni Üretim Başlat'}</h3></div>
 
-          <div className="card-header"><h3 className="card-title">📋 Bugünün Üretim Kayıtları</h3></div>
+          {!activeSession ? (
+            <div>
+              <div style={{ display: 'grid', gap: '12px', marginBottom: '16px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '13px' }}>① Model Seçin *</label>
+                  <select className="form-select" value={selectedModel} onChange={e => setSelectedModel(e.target.value)} style={{ fontSize: '15px', padding: '12px' }}>
+                    <option value="">— Model seçin —</option>
+                    {models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0, opacity: selectedModel ? 1 : 0.5 }}>
+                  <label className="form-label" style={{ fontSize: '13px' }}>② İşlem Seçin * {!selectedModel && <span style={{ color: 'var(--warning)', fontSize: '11px' }}>(önce model seçin)</span>}</label>
+                  <select className="form-select" value={selectedOperation} onChange={e => setSelectedOperation(e.target.value)} disabled={!selectedModel || operations.length === 0} style={{ fontSize: '15px', padding: '12px' }}>
+                    <option value="">{!selectedModel ? '— Önce model seçin —' : operations.length === 0 ? '— Bu modelde işlem yok —' : '— İşlem seçin —'}</option>
+                    {operations.map(o => <option key={o.id} value={o.id}>{o.order_number}. {o.name}{o.machine_type ? ` (${o.machine_type})` : ''}</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '13px' }}>③ Personel Seçin *</label>
+                  <select className="form-select" value={selectedPerson} onChange={e => setSelectedPerson(e.target.value)} style={{ fontSize: '15px', padding: '12px' }}>
+                    <option value="">— Personel seçin —</option>
+                    {personnel.filter(p => p.status === 'active').map(p => <option key={p.id} value={p.id}>{p.name} ({p.role})</option>)}
+                  </select>
+                </div>
+              </div>
+              {selectedOp && (<div style={{ padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}><strong>Seçilen İşlem:</strong> {selectedOp.name}  Makine: {selectedOp.machine_type || '—'}  Zorluk: {selectedOp.difficulty}/10{selectedOp.unit_price > 0 && <>  Birim: {selectedOp.unit_price.toFixed(2)} ₺</>}</div>)}
+              <button className="btn btn-primary btn-lg" onClick={handleStart} disabled={!selectedModel || !selectedOperation || !selectedPerson} style={{ width: '100%', padding: '16px', fontSize: '18px' }}>🏭 İŞLEMİ BAŞLAT</button>
+            </div>
+          ) : (
+            <div>
+              {/* Timer */}
+              <div style={{ textAlign: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', marginBottom: '16px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{activeSession.model_name} → {activeSession.operation_name} → {activeSession.personnel_name}</div>
+                <div style={{ fontSize: '48px', fontWeight: '800', fontFamily: 'monospace', color: 'var(--accent)', letterSpacing: '4px' }}>{formatTimer(timer)}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Başlangıç: {new Date(activeSession.start_time).toLocaleTimeString('tr-TR')}</div>
+              </div>
+
+              {/* A. SÜREÇ KRİTERLERİ */}
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>📋 Süreç Kriterleri</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <InputField label="Yapılan Adet *" field="total_produced" type="number" placeholder="0" />
+                <InputField label="Hatalı Adet" field="defective_count" type="number" placeholder="0" defaultVal="0" />
+              </div>
+
+              {dc > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div className="form-group" style={{ marginBottom: '8px' }}>
+                    <label className="form-label" style={{ fontSize: '12px', display: 'flex', justifyContent: 'space-between' }}>Hata Kaynağı <ClearBtn field="defect_source" defaultVal="operator" /></label>
+                    <select className="form-select" value={form.defect_source} onChange={e => setForm({ ...form, defect_source: e.target.value })}>
+                      {defectSources.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                    </select>
+                  </div>
+                  <InputField label="Hata Açıklaması" field="defect_reason" placeholder="Kısa açıklama..." />
+                </div>
+              )}
+
+              {dc > 0 && (
+                <div className="form-group" style={{ marginBottom: '8px' }}>
+                  <label className="form-label" style={{ fontSize: '12px', display: 'flex', justifyContent: 'space-between' }}>Hata Tipi Sınıflandırma <ClearBtn field="defect_classification" /></label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {defectTypes.map(dt => {
+                      const selected = (form.defect_classification || '').split(',').map(s => s.trim()).includes(dt);
+                      return (
+                        <button key={dt} type="button" onClick={() => {
+                          const arr = (form.defect_classification || '').split(',').map(s => s.trim()).filter(Boolean);
+                          const next = selected ? arr.filter(x => x !== dt) : [...arr, dt];
+                          setForm({ ...form, defect_classification: next.join(', ') });
+                        }} style={{
+                          padding: '4px 10px', borderRadius: '12px', fontSize: '11px', border: '1px solid var(--border-color)',
+                          background: selected ? 'var(--accent)' : 'var(--bg-input)', color: selected ? '#fff' : 'var(--text-primary)',
+                          cursor: 'pointer', transition: 'all 0.2s'
+                        }}>{dt}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div className="form-group" style={{ marginBottom: '8px' }}>
+                  <label className="form-label" style={{ fontSize: '12px', display: 'flex', justifyContent: 'space-between' }}>İşlem Durumu <ClearBtn field="lot_change" /></label>
+                  <select className="form-select" value={form.lot_change || ''} onChange={e => setForm({ ...form, lot_change: e.target.value })}>
+                    <option value="">Lot değişimi yok</option>
+                    <option value="renk">Renk değişimi</option>
+                    <option value="beden">Beden değişimi</option>
+                    <option value="ikisi">İkisi birden</option>
+                  </select>
+                </div>
+                <InputField label="Kalite Puanı (0-100)" field="quality_score" type="number" placeholder="100" defaultVal="100" />
+              </div>
+
+              {/* B. ZAMAN KRİTERLERİ */}
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px', marginTop: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>⏱️ Zaman Kriterleri</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
+                <InputField label="Mola (dk)" field="break_duration_min" type="number" placeholder="0" defaultVal="0" />
+                <InputField label="Arıza (dk)" field="machine_down_min" type="number" placeholder="0" defaultVal="0" />
+                <InputField label="Bekleme (dk)" field="material_wait_min" type="number" placeholder="0" defaultVal="0" />
+                <InputField label="Pasif (dk)" field="passive_time_min" type="number" placeholder="0" defaultVal="0" />
+              </div>
+
+              {/* Not */}
+              <InputField label="📝 Not / Açıklama" field="notes" placeholder="İsteğe bağlı not..." />
+
+              {/* D. OTOMATİK HESAPLAMALAR */}
+              <div style={{ padding: '12px 16px', background: 'linear-gradient(135deg, rgba(13,124,102,0.08), rgba(52,152,219,0.08))', borderRadius: 'var(--radius-md)', marginTop: '12px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px', textTransform: 'uppercase' }}>📊 Otomatik Hesaplamalar</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: '800', color: fpy >= 95 ? '#2ecc71' : fpy >= 85 ? '#f39c12' : '#e74c3c' }}>%{fpy.toFixed(1)}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>FPY (İlk Geçiş)</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent)' }}>{netWorkMin.toFixed(1)} dk</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Net Çalışma</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent)' }}>{unitTimeSec.toFixed(1)} sn</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Birim Süre</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: '800', color: '#C5A038' }}>{unitValue.toFixed(2)} ₺</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>İşlem Değeri</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Butonlar */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '8px' }}>
+                <button className="btn btn-secondary" onClick={() => { setActiveSession(null); setTimer(0); setForm({ total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator', machine_down_min: '0', material_wait_min: '0', break_duration_min: '0', passive_time_min: '0', lot_change: '', quality_score: '100', defect_classification: '', notes: '' }); }} style={{ padding: '14px' }}>🗑️ İptal</button>
+                <button className="btn btn-danger btn-lg" onClick={handleStop} style={{ padding: '14px', fontSize: '16px' }}>✅ TAMAMLA & KAYDET</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── BUGÜNÜN KAYITLARI ── */}
+        <div className="card" style={{ marginTop: '16px' }}>
+          <div className="card-header"><h3 className="card-title">📋 Bugünün Üretim Kayıtları ({logs.length})</h3></div>
 
           {logs.length === 0 ? (
-
-            <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Bugün henüz üretim kaydı yok.</div>
-
+            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '40px', marginBottom: '8px' }}>🏭</div>
+              <div>Bugün henüz üretim kaydı yok.</div>
+              <div style={{ fontSize: '12px', marginTop: '4px' }}>Yukarıdan yeni üretim başlatabilirsiniz.</div>
+            </div>
           ) : (
-
-            <div className="table-wrapper"><table className="table"><thead><tr><th>Personel</th><th>Model</th><th>İşlem</th><th>Adet</th><th>Hata</th><th>Süre</th><th>Üretim ₺</th><th>Kalite</th></tr></thead><tbody>
-
-              {logs.map(log => {
-
-                const duration = log.end_time ? Math.floor((new Date(log.end_time) - new Date(log.start_time)) / 60000) : 0;
-
-                const value = (log.total_produced || 0) * (log.unit_price || 0);
-
-                return (
-
-                  <tr key={log.id}>
-
-                    <td style={{ fontWeight: '600' }}>{log.personnel_name}</td>
-
-                    <td><code style={{ background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>{log.model_code}</code></td>
-
-                    <td>{log.operation_name}</td>
-
-                    <td style={{ fontWeight: '700' }}>{log.total_produced}</td>
-
-                    <td>{log.defective_count > 0 ? (<span className="badge badge-danger" title={log.defect_reason}>{log.defective_count}</span>) : '✔'}</td>
-
-                    <td style={{ fontSize: '13px' }}>{duration} dk</td>
-
-                    <td style={{ fontWeight: '600', color: 'var(--accent)' }}>{value.toFixed(2)} ₺</td>
-
-                    <td><span className={`badge ${log.quality_score >= 95 ? 'badge-success' : log.quality_score >= 80 ? 'badge-warning' : 'badge-danger'}`}>%{Math.round(log.quality_score)}</span></td>
-
-                  </tr>
-
-                );
-
-              })}
-
-            </tbody></table></div>
-
+            <div className="table-wrapper"><table className="table"><thead><tr>
+              <th>Personel</th><th>Model</th><th>İşlem</th><th>Adet</th><th>Hata</th><th>FPY</th><th>Süre</th><th>Değer ₺</th><th>İşlemler</th>
+            </tr></thead><tbody>
+                {logs.map(log => {
+                  const duration = log.end_time ? Math.floor((new Date(log.end_time) - new Date(log.start_time)) / 60000) : 0;
+                  const value = (log.total_produced || 0) * (log.unit_price || 0);
+                  const logFpy = log.total_produced > 0 ? ((log.total_produced - (log.defective_count || 0)) / log.total_produced * 100) : 100;
+                  return (
+                    <tr key={log.id}>
+                      <td style={{ fontWeight: '600' }}>{log.personnel_name}</td>
+                      <td><code style={{ background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>{log.model_code}</code></td>
+                      <td>{log.operation_name}</td>
+                      <td style={{ fontWeight: '700' }}>{log.total_produced}</td>
+                      <td>{log.defective_count > 0 ? (<span className="badge badge-danger" title={log.defect_reason}>{log.defective_count}</span>) : '✔'}</td>
+                      <td><span className={`badge ${logFpy >= 95 ? 'badge-success' : logFpy >= 85 ? 'badge-warning' : 'badge-danger'}`}>%{logFpy.toFixed(0)}</span></td>
+                      <td style={{ fontSize: '13px' }}>{duration} dk</td>
+                      <td style={{ fontWeight: '600', color: 'var(--accent)' }}>{value.toFixed(2)} ₺</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button className="btn btn-sm" onClick={() => openEditProduction(log)} title="Düzenle" style={{ padding: '4px 8px', fontSize: '12px' }}>✏️</button>
+                          <button className="btn btn-sm" onClick={() => handleDeleteLog(log.id)} title="Sil" style={{ padding: '4px 8px', fontSize: '12px' }}>🗑️</button>
+                          <button className="btn btn-sm" onClick={() => openProdAuditHistory(log.id)} title="Geçmiş" style={{ padding: '4px 8px', fontSize: '12px' }}>📜</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody></table></div>
           )}
-
         </div>
 
       </div>
 
+      {/* ── DÜZENLEME MODALI ── */}
+      {editProduction && (
+        <EditModal title={`Üretim #${editProduction.id} Düzenle`} onClose={() => setEditProduction(null)} onSubmit={handleUpdateProduction} fields={[
+          { key: 'total_produced', label: 'Yapılan Adet', type: 'number' },
+          { key: 'defective_count', label: 'Hatalı Adet', type: 'number' },
+          { key: 'defect_reason', label: 'Hata Nedeni' },
+          { key: 'quality_score', label: 'Kalite Puanı', type: 'number' },
+          { key: 'break_duration_min', label: 'Mola (dk)', type: 'number' },
+          { key: 'machine_down_min', label: 'Arıza (dk)', type: 'number' },
+          { key: 'material_wait_min', label: 'Bekleme (dk)', type: 'number' },
+          { key: 'passive_time_min', label: 'Pasif (dk)', type: 'number' },
+          { key: 'notes', label: 'Not' },
+        ]} form={editProductionForm} setForm={setEditProductionForm} />
+      )}
+
+      {prodAuditHistory && (
+        <AuditTrailModal data={prodAuditData} onClose={() => setProdAuditHistory(null)} title={`Üretim #${prodAuditHistory} Düzenme Geçmişi`} />
+      )}
     </>
-
   );
-
 }
-
-
 
 
 
