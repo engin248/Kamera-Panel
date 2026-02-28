@@ -216,14 +216,25 @@ subprocess.run(['npm', 'run', 'build'], cwd='app/')
 
 ---
 
-## BÖLÜM 2: AGENT ROLLERI ve DETAYLI GÖREVLERİ
+## BÖLÜM 2: AGENT ROLLERI ve DETAYLI GÖREVLERİ (3 AGENT)
 
-### AGENT 1: 🗄️ VERİTABANI AGENT (DB-Agent)
+| Agent | Rol | Kapsam | Kontrol Eden |
+|-------|-----|--------|-------------|
+| **Agent 1** | 🗄️🔌 Backend | DB + API | Agent 3 |
+| **Agent 2** | 🎨🌍 Frontend | UI + Dil (i18n) | Agent 3 |
+| **Agent 3** | 🔍 QA | Test + Doğrulama | Koordinatör (Sen) |
 
-**🎯 Amaç:** production_logs tablosuna 8 yeni kolon ekle
-**📁 Dokunacağı Dosya:** `app/lib/db.js` (SADECE production_logs bölümü)
-**🔒 Kısıtlama:** Diğer tablolara (models, personnel, machines vb.) DOKUNMAYACAK
-**👀 Kontrol Eden:** QA-Agent (Agent 5)
+---
+
+### AGENT 1: 🗄️🔌 BACKEND AGENT (DB + API)
+
+**🎯 Amaç:** Veritabanı genişletme + Production API'lerini geliştirme
+**📁 Dokunacağı Dosyalar:**
+  - `app/lib/db.js` (SADECE production_logs bölümü)
+  - `app/app/api/production/route.js`
+  - `app/app/api/production/[id]/route.js`
+**🔒 Kısıtlama:** Diğer tablolara ve API dosyalarına DOKUNMAYACAK
+**👀 Kontrol Eden:** Agent 3 (QA)
 
 #### Görev Detayı:
 
@@ -271,16 +282,9 @@ ADIM 6: Test et — node -e "const db = require('./lib/db'); console.log('OK')"
   → Bu komut boş olmalı (production_logs dışında değişiklik yok)
 ```
 
----
+#### GÖREV BÖLÜM B — API Genişletme
 
-### AGENT 2: 🔌 API AGENT (Backend-Agent)
-
-**🎯 Amaç:** Production API'lerini genişlet (GET/POST/PUT/DELETE)
-**📁 Dokunacağı Dosyalar:**
-  - `app/app/api/production/route.js`
-  - `app/app/api/production/[id]/route.js`
-**🔒 Kısıtlama:** Diğer API dosyalarına DOKUNMAYACAK
-**👀 Kontrol Eden:** QA-Agent (Agent 5)
+DB kolonları eklendikten sonra API'leri genişlet:
 
 #### Görev Detayı:
 
@@ -356,12 +360,15 @@ curl -X DELETE http://localhost:3000/api/production/1
 
 ---
 
-### AGENT 3: 🎨 UI AGENT (Frontend-Agent)
+### AGENT 2: 🎨🌍 FRONTEND AGENT (UI + Dil)
 
-**🎯 Amaç:** Üretim paneli UI'ı oluştur (21 kriter + CRUD)
-**📁 Dokunacağı Dosya:** `app/app/page.js` (SADECE `activeSection === 'production'` bölümü)
-**🔒 Kısıtlama:** Diğer panel kodlarına (personnel, models, orders vb.) DOKUNMAYACAK
-**👀 Kontrol Eden:** QA-Agent (Agent 5)
+**🎯 Amaç:** Üretim paneli UI + Türkçe/Arapça çeviri key'leri
+**📁 Dokunacağı Dosyalar:**
+  - `app/app/page.js` (SADECE `activeSection === 'production'` bölümü)
+  - `app/lib/i18n.js` (SADECE yeni key ekleme)
+  - `app/app/globals.css` (SADECE yeni CSS class ekleme)
+**🔒 Kısıtlama:** Diğer panel kodlarına ve mevcut key'lere DOKUNMAYACAK
+**👀 Kontrol Eden:** Agent 3 (QA)
 
 #### Tasarım Kuralları (Mevcut Panellerden Kopyalanacak):
 
@@ -462,14 +469,9 @@ ADIM 8: Düzenleme Modal'ı
   → Raporlar paneli açılıyor mu?
 ```
 
----
+#### GÖREV BÖLÜM B — Dil Desteği (i18n)
 
-### AGENT 4: 🌍 DİL AGENT (i18n-Agent)
-
-**🎯 Amaç:** Türkçe ve Arapça çeviri key'lerini ekle
-**📁 Dokunacağı Dosya:** `app/lib/i18n.js` (SADECE yeni key ekleme)
-**🔒 Kısıtlama:** Mevcut key'ler DEĞİŞTİRİLEMEZ
-**👀 Kontrol Eden:** QA-Agent (Agent 5)
+UI oluşturulduktan sonra çeviri key'lerini ekle:
 
 #### Eklenecek Key'ler (Minimum 45 Key):
 
@@ -546,75 +548,35 @@ no_production_yet: { tr: 'Henüz üretim kaydı yok', ar: 'لا يوجد سجل 
 
 ---
 
-### AGENT 5: 🔍 QA AGENT (Kalite Kontrol Agent)
+### AGENT 3: 🔍 QA AGENT (Kalite Kontrol)
 
-**🎯 Amaç:** Diğer tüm agentların işlerini doğrula
+**🎯 Amaç:** Agent 1 ve Agent 2'nin işlerini doğrula
 **📁 Yetkisi:** Tüm dosyaları OKUMA + test çalıştırma (yazma yok)
 **👀 Kontrol Eden:** Koordinatör (İnsan — Sen)
 
 #### Her Aşama Sonrası Kontrol Sırası:
 
 ```
-═══ AŞAMA 1 SONRASI (DB-Agent kontrolü) ═══
+═══ AGENT 1 SONRASI (Backend kontrolü) ═══
 
-1. Git diff kontrolü:
-   git diff --name-only
-   → SADECE app/lib/db.js değişmiş olmalı
+1. Git diff: SADECE db.js + api/production/ değişmiş olmalı
+2. DB integrity: node -e "require('./lib/db')" → hatasız
+3. Mevcut veri: models=1, personnel=2 kaybolmamış mı?
+4. API regression: /api/models, /api/personnel, /api/machines → 200
+5. Production API: GET/POST/PUT/DELETE çalışıyor mu?
 
-2. DB integrity:
-   node -e "const db=require('./lib/db'); console.log(db.pragma('integrity_check'))"
-   → "ok" dönmeli
+═══ AGENT 2 SONRASI (Frontend kontrolü) ═══
 
-3. Mevcut veriler:
-   node -e "const db=require('./lib/db'); console.log(db.prepare('SELECT COUNT(*) as c FROM models').get())"
-   → {c: 1} olmalı (mevcut model kaybolmamış)
-
-═══ AŞAMA 2 SONRASI (API-Agent kontrolü) ═══
-
-4. Mevcut API regression:
-   curl http://localhost:3000/api/models → 200 + veri
-   curl http://localhost:3000/api/personnel → 200 + veri
-   curl http://localhost:3000/api/machines → 200 + veri
-
-5. Production API:
-   curl http://localhost:3000/api/production → 200
-
-6. Git diff kontrolü:
-   → SADECE app/app/api/production/ dosyaları değişmiş olmalı
-
-═══ AŞAMA 3 SONRASI (i18n-Agent kontrolü) ═══
-
-7. Mevcut çeviriler:
-   grep ile mevcut key'lerin silinmediğini doğrula
-
-8. Yeni key'ler:
-   Tüm key'lerde tr ve ar var mı?
-
-═══ AŞAMA 4 SONRASI (UI-Agent kontrolü) ═══
-
-9. Build test:
-   npm run build
-   → Hatasız tamamlanmalı
-
-10. Browser test:
-    → localhost:3000 → Ana Panel açılmalı
-    → Tüm sidebar menüleri çalışmalı
-    → Üretim Takip paneli açılmalı
-    → 21 kriter görünmeli
-    → CRUD butonları çalışmalı
-
-11. Diğer paneller:
-    → Siparişler, Modeller, Personel, Makineler
-    → Hepsi eksiksiz çalışmalı
+6. Build: npm run build → hatasız
+7. Browser: Üretim paneli açılıyor mu? 21 kriter görünüyor mu?
+8. CRUD: Yazma/düzeltme/silme butonları çalışıyor mu?
+9. i18n: Türkçe + Arapça key'ler doğru mu?
+10. Regression: Diğer paneller (Sipariş, Model, Personel) bozulmamış mı?
 
 ═══ GENEL KONTROL ═══
 
-12. test_all_outputs.py çalıştır:
-    python test_all_outputs.py
-    → %100 sağlık
-
-13. Git status temiz:
-    git status → clean working tree
+11. python test_all_outputs.py → %100 sağlık
+12. git status → clean working tree
 ```
 
 ---
@@ -622,41 +584,33 @@ no_production_yet: { tr: 'Henüz üretim kaydı yok', ar: 'لا يوجد سجل 
 ## BÖLÜM 3: İŞLEM SIRASI ve ZAMAN ÇİZELGESİ
 
 ```
-Cumartesi Günü İş Planı:
-═══════════════════════
+Cumartesi Günü İş Planı (3 Agent):
+═══════════════════════════════════
 
 09:00 — PROJEYİ DİZÜSTÜ BİLGİSAYARA AKTAR
          └→ Bölüm 0'daki adımları izle
          └→ Doğrulama kontrol listesini tamamla
 
-09:30 — AŞAMA 1: DB-Agent çalıştır
-         └→ production_logs'a 8 kolon ekle
-         └→ QA-Agent: DB kontrolü yap
-         └→ ✅ geçerse devam, ❌ ise düzelt
-
-10:30 — AŞAMA 2: API-Agent çalıştır
-         └→ GET/POST genişlet, PUT/DELETE ekle
-         └→ QA-Agent: API test komutları çalıştır
+09:30 — AŞAMA 1: Agent 1 (Backend) çalıştır
+         └→ DB: production_logs'a 8 kolon ekle
+         └→ API: GET/POST genişlet, PUT/DELETE ekle
+         └→ Agent 3 (QA): Backend kontrolü yap
          └→ ✅ geçerse devam, ❌ ise düzelt
 
 12:00 — ÖĞLE MOLASI
 
-13:00 — AŞAMA 3: i18n-Agent çalıştır
-         └→ 45+ çeviri key'i ekle
-         └→ QA-Agent: Key kontrolü yap
+13:00 — AŞAMA 2: Agent 2 (Frontend) çalıştır
+         └→ UI: Üretim paneli oluştur (21 kriter + CRUD)
+         └→ i18n: 45+ Türkçe/Arapça çeviri key'i ekle
+         └→ Agent 3 (QA): Frontend + dil kontrolü yap
          └→ ✅ geçerse devam, ❌ ise düzelt
 
-13:30 — AŞAMA 4: UI-Agent çalıştır
-         └→ Üretim paneli oluştur (en uzun aşama)
-         └→ QA-Agent: Browser + build test
-         └→ ✅ geçerse devam, ❌ ise düzelt
-
-16:00 — AŞAMA 5: Entegrasyon testi
-         └→ QA-Agent: Tam test süiti
+16:00 — AŞAMA 3: Agent 3 (QA) entegrasyon testi
+         └→ Tam test süiti çalıştır
          └→ test_all_outputs.py
          └→ Tüm paneller çalışıyor mu?
 
-17:00 — AŞAMA 6: Git commit & push
+17:00 — AŞAMA 4: Git commit & push
          └→ git add -A
          └→ git commit -m "Üretim penceresi: 21 kriter + CRUD"
          └→ git push origin main
