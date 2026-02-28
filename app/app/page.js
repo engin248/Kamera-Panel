@@ -5560,6 +5560,29 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                 <div className="form-group"><label className="form-label">Açıklama</label><textarea className="form-textarea" value={editForm.description} onChange={e => setEditForm({ ...editForm, description: e.target.value })} /></div>
 
+                {/* #2 Durum Geri Geçiş Koruması */}
+                <div className="form-group">
+                  <label className="form-label">📊 Durum {editForm.status !== editModel?.status && <span style={{ fontSize: '11px', color: 'var(--warning)' }}> ⚠️ Değiştirildi</span>}</label>
+                  <select className="form-select" value={editForm.status} onChange={e => {
+                    const statusOrder = ['orijinal_numune', 'ilk_uretim_numunesi', 'uretim_numunesi', 'numune_onaylandi', 'uretimde', 'uretim_tamamlandi', 'sayi_seti', 'sevk_edildi'];
+                    const currentIdx = statusOrder.indexOf(editModel?.status);
+                    const newIdx = statusOrder.indexOf(e.target.value);
+                    if (newIdx < currentIdx) {
+                      if (!confirm(`⚠️ DİKKAT: Durumu geri almak istiyorsunuz!\n\nMevcut: ${editModel?.status}\nYeni: ${e.target.value}\n\nEmin misiniz?`)) return;
+                    }
+                    setEditForm({ ...editForm, status: e.target.value });
+                  }} style={{ fontWeight: '600' }}>
+                    <option value="orijinal_numune">🟢 Orijinal Numune</option>
+                    <option value="ilk_uretim_numunesi">🔵 İlk Üretim Numunesi</option>
+                    <option value="uretim_numunesi">🟡 Üretim Numunesi</option>
+                    <option value="numune_onaylandi">✅ Numune Onaylandı</option>
+                    <option value="uretimde">🟠 Üretimde</option>
+                    <option value="uretim_tamamlandi">🏁 Üretim Tamamlandı</option>
+                    <option value="sayi_seti">📦 Sayı Seti</option>
+                    <option value="sevk_edildi">🚚 Sevk Edildi</option>
+                  </select>
+                </div>
+
               </div>
 
               <div className="modal-footer">
