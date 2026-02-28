@@ -4264,9 +4264,9 @@ function ModelsPage({ models, loadModels, addToast }) {
 
   const handleSaveEditOp = async (modelId) => {
     try {
-      const res = await fetch(`/api/models/${modelId}/operations/${editingOp.id}`, {
+      const res = await fetch(`/api/models/${modelId}/operations`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editOpForm)
+        body: JSON.stringify({ operation_id: editingOp.id, ...editOpForm })
       });
       if (!res.ok) throw new Error('Güncelleme hatası');
       await loadOperations(modelId);
@@ -4274,6 +4274,18 @@ function ModelsPage({ models, loadModels, addToast }) {
       addToast('success', '✅ İşlem güncellendi');
     } catch (err) { addToast('error', err.message); }
   };
+
+  // İşlem silme
+  const handleDeleteOp = async (modelId, opId) => {
+    if (!confirm('Bu işlemi silmek istediğinize emin misiniz?')) return;
+    try {
+      const res = await fetch(`/api/models/${modelId}/operations?opId=${opId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Silme hatası');
+      await loadOperations(modelId);
+      addToast('success', '🗑️ İşlem silindi');
+    } catch (err) { addToast('error', err.message); }
+  };
+
 
   // === MEDYA YÜKLEME FONKSİYONU ===
   const handleUploadMedia = async (modelId, opId, file, mediaType) => {
@@ -5552,7 +5564,7 @@ function ModelsPage({ models, loadModels, addToast }) {
                                     <button onClick={() => handleMoveOperation(model.id, op.id, 'up')} title="Yukarı taşı" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', opacity: op.order_number <= 1 ? 0.3 : 1 }} disabled={op.order_number <= 1}>↑</button>
                                     <button onClick={() => handleMoveOperation(model.id, op.id, 'down')} title="Aşağı taşı" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', opacity: op.order_number >= (modelOperations[model.id] || []).length ? 0.3 : 1 }} disabled={op.order_number >= (modelOperations[model.id] || []).length}>↓</button>
                                     <button onClick={() => openEditOp(op)} title="Düzenle" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px' }}>✏️</button>
-                                    <button onClick={() => { if (confirm(`"${op.name}" işlemini silmek istediğinize emin misiniz?`)) { handleDeleteOperation(model.id, op.id); } }} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', color: 'var(--danger)' }}>🗑️</button>
+                                    <button onClick={() => handleDeleteOp(model.id, op.id)} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', color: 'var(--danger)' }}>🗑️</button>
                                   </div>
 
                                 </div>
