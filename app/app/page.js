@@ -4755,7 +4755,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                                   <th style={{ minWidth: '120px', background: 'var(--accent)', color: '#fff' }}>Ölçü Noktası</th>
 
-                                  <th style={{ minWidth: '60px', background: 'var(--accent)', color: '#fff', textAlign: 'center' }}>Tol (cm)</th>
+                                  <th style={{ minWidth: '70px', background: 'var(--accent)', color: '#fff', textAlign: 'center' }}>Tolerans (±cm)</th>
 
                                   {measureSizes.map(size => (<th key={size} style={{ textAlign: 'center', minWidth: '70px', background: 'var(--accent)', color: '#fff' }}>{size}</th>))}
 
@@ -4773,9 +4773,9 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                                     <td style={{ textAlign: 'center' }}>
 
-                                      <input style={{ width: '50px', textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px', fontSize: '12px', background: 'var(--bg-card)' }}
+                                      <input style={{ width: '55px', textAlign: 'center', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '4px', fontSize: '12px', background: 'var(--bg-card)' }}
 
-                                        placeholder="1" value={measureData[`${point.name}_tol`] || ''} onChange={e => setMeasureData({ ...measureData, [`${point.name}_tol`]: e.target.value })} />
+                                        placeholder="±1" value={measureData[`${point.name}_tol`] || '1'} onChange={e => setMeasureData({ ...measureData, [`${point.name}_tol`]: e.target.value })} />
 
                                     </td>
 
@@ -4801,7 +4801,7 @@ function ModelsPage({ models, loadModels, addToast }) {
                           </div>
 
                           <div style={{ marginTop: '12px', padding: '12px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', fontSize: '12px', color: 'var(--text-muted)' }}>
-                            📏 Ölçüler cm cinsindendir. Tolerans sütunu kabul edilebilir sapma aralığını gösterir. Satır/sütun ekleyerek tabloyu özelleştirebilirsiniz.
+                            📏 Ölçüler cm cinsindendir. Tolerans ±1 cm — yani gerçek ölçü, tablodaki değerden -1 cm ile +1 cm arasında ise kabul edilir. Tolerans değerini her ölçü noktası için ayrı ayrı değiştirebilirsiniz.
                           </div>
 
                           {/* KAYDET BUTONU */}
