@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 
-// GET — Tüm personeli getir (silinmiş olanlar hariç)
+// GET — Tüm personeli getir
 export async function GET() {
     try {
         const db = getDb();
-        const personnel = db.prepare(
-            'SELECT * FROM personnel WHERE deleted_at IS NULL ORDER BY name'
-        ).all();
+        const personnel = db.prepare('SELECT * FROM personnel WHERE deleted_at IS NULL ORDER BY name').all();
         return NextResponse.json(personnel);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
