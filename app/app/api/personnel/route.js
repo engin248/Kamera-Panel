@@ -5,7 +5,7 @@ import getDb from '@/lib/db';
 export async function GET() {
     try {
         const db = getDb();
-        const personnel = db.prepare('SELECT * FROM personnel ORDER BY name').all();
+        const personnel = db.prepare('SELECT * FROM personnel WHERE deleted_at IS NULL ORDER BY name').all();
         return NextResponse.json(personnel);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });

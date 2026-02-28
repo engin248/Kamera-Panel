@@ -300,6 +300,50 @@ function initTables() {
       FOREIGN KEY (machine_id) REFERENCES machines(id)
     );
 
+    -- ============================================================
+    -- DEVAM TAKİBİ — Her saniyeden gün sonuna kadar tam kontrol
+    -- ============================================================
+    CREATE TABLE IF NOT EXISTS attendance (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      personnel_id INTEGER NOT NULL,
+      date DATE NOT NULL,                          -- Gün: 2026-02-28
+      clock_in DATETIME,                           -- İşe giriş: 2026-02-28 08:03:00
+      clock_out DATETIME,                          -- İşten çıkış: 2026-02-28 18:01:00
+      total_work_minutes REAL DEFAULT 0,           -- Gerçek çalışma dakikası
+      break_minutes REAL DEFAULT 0,                -- Toplam mola süresi (dk)
+      overtime_minutes REAL DEFAULT 0,             -- Fazla mesai (dk)
+      late_minutes REAL DEFAULT 0,                 -- Geç kalma (dk)
+      early_leave_minutes REAL DEFAULT 0,          -- Erken çıkma (dk)
+      status TEXT DEFAULT 'present'                -- present/absent/half_day/permission/sick/holiday
+        CHECK(status IN ('present','absent','half_day','permission','sick','holiday','remote')),
+      absence_reason TEXT,                         -- Devamsızlık nedeni
+      notes TEXT,                                  -- Ek not
+      approved_by TEXT,                            -- Kim onayladı
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (personnel_id) REFERENCES personnel(id),
+      UNIQUE(personnel_id, date)                   -- Günde bir kayıt
+    );
+
+    -- SAATLİK ÜRETİM TAKİBİ — Saat bazında hedef vs gerçekleşen
+    CREATE TABLE IF NOT EXISTS hourly_production (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      personnel_id INTEGER NOT NULL,
+      attendance_id INTEGER,
+      date DATE NOT NULL,
+      hour INTEGER NOT NULL CHECK(hour >= 6 AND hour <= 22),  -- 08, 09, 10...
+      target_count INTEGER DEFAULT 0,              -- O saat için hedef adet
+      actual_count INTEGER DEFAULT 0,              -- Gerçek üretilen
+      defective_count INTEGER DEFAULT 0,           -- Hatalı adet
+      model_id INTEGER,                            -- Hangi model
+      operation_id INTEGER,                        -- Hangi operasyon
+      efficiency_pct REAL DEFAULT 0,               -- (actual/target)*100
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (personnel_id) REFERENCES personnel(id),
+      UNIQUE(personnel_id, date, hour)
+    );
+
     -- Müşteriler
     CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

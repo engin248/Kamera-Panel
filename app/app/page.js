@@ -275,6 +275,10 @@ function Sidebar({ activePage, setActivePage }) {
 
       title: 'Üretim Süreci', color: '#D4A847', items: [
 
+        { id: 'atolye', icon: '\uD83C\uDFE0', label: 'Atölye Paneli' },
+
+        { id: 'attendance', icon: '⏱️', label: 'Devam Takibi' },
+
         { id: 'production', icon: '🏭', label: 'Üretim Takip' },
 
         { id: 'quality', icon: '✅', label: 'Kalite Kontrol' },
@@ -9169,8 +9173,46 @@ function SettingsPage({ addToast }) {
 
 function CostsPage({ models, personnel, addToast }) {
   // EDIT system states
+  const [editExpense, setEditExpense] = useState(null);
+  const [editExpenseForm, setEditExpenseForm] = useState({});
   const [editCost, setEditCost] = useState(null);
   const [editCostForm, setEditCostForm] = useState({});
+
+  // PRİM ORANI — varsayılan %10, kullanıcı değiştirebilir
+  const [primOrani, setPrimOrani] = useState(10);
+
+  const openEditExpense = (entry) => {
+    setEditExpenseForm({
+      category: entry.category || '', description: entry.description || '',
+      amount: entry.amount || 0, is_recurring: entry.is_recurring || 0
+    });
+    setEditExpense(entry);
+  };
+
+  const handleUpdateExpense = async () => {
+    try {
+      // Audit trail
+      const changes = [];
+      Object.keys(editExpenseForm).forEach(key => {
+        const oldVal = String(editExpense[key] ?? '');
+        const newVal = String(editExpenseForm[key] ?? '');
+        if (oldVal !== newVal) changes.push({ field_name: key, old_value: oldVal, new_value: newVal });
+      });
+      if (changes.length > 0) {
+        await fetch('/api/audit-trail', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ table_name: 'business_expenses', record_id: editExpense.id, changes, changed_by: 'admin' })
+        });
+      }
+      await fetch('/api/expenses', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editExpense.id, ...editExpenseForm, amount: parseFloat(editExpenseForm.amount) })
+      });
+      setEditExpense(null);
+      loadExpenses();
+      addToast('success', 'Gider güncellendi!');
+    } catch (err) { addToast('error', err.message); }
+  };
 
   const openEditCost = (entry) => {
     setEditCostForm({
@@ -9213,6 +9255,8 @@ function CostsPage({ models, personnel, addToast }) {
 
   const [workDaysInfo, setWorkDaysInfo] = useState(null);
 
+  const [netWorkMinutes, setNetWorkMinutes] = useState(490);
+
   const [expenses, setExpenses] = useState([]);
 
   const [showExpenseForm, setShowExpenseForm] = useState(false);
@@ -9243,6 +9287,12 @@ function CostsPage({ models, personnel, addToast }) {
     { value: 'personel_mesai', label: '\u23F0 Fazla Mesai \u00DCcreti', icon: '\u23F0' },
     { value: 'temizlik', label: '\uD83E\uDDF9 Temizlik Malzemesi', icon: '\uD83E\uDDF9' },
     { value: 'mutfak', label: '\u2615 Mutfak (\u00C7ay/\u015Eeker/\u0130\u00E7ecek)', icon: '\u2615' },
+    // HATA-5 FIX: Kira kategorisi eklendi
+    { value: 'kira', label: '\uD83C\uDFE0 Kira / Bina Kiras\u0131', icon: '\uD83C\uDFE0' },
+    // HATA-6 FIX: Makine Amortismanı kategorisi eklendi
+    { value: 'amortisman', label: '\u2699\uFE0F Makine Amortismanı', icon: '\u2699\uFE0F' },
+    { value: 'kargo_nakliye', label: '\uD83D\uDE9A Kargo / Nakliye', icon: '\uD83D\uDE9A' },
+    { value: 'kumas', label: '\uD83E\uDDE5 Kumaş', icon: '\uD83E\uDDE5' },
     { value: 'diger', label: '\uD83D\uDCE6 Di\u011Fer', icon: '\uD83D\uDCE6' },
   ];
 
@@ -9276,6 +9326,18 @@ function CostsPage({ models, personnel, addToast }) {
 
       if (Array.isArray(d)) { const curr = d.find(w => w.month === n.getMonth() + 1); setWorkDaysInfo(curr); }
 
+    }).catch(() => { });
+
+    // H3 FIX: Gerçek çalışma dakikasını hesapla (480 sabit yerine)
+    fetch('/api/work-schedule').then(r => r.json()).then(d => {
+      if (Array.isArray(d)) {
+        const workMin = d.filter(s => s.type === 'work').reduce((sum, s) => {
+          const [sh, sm] = s.start_time.split(':').map(Number);
+          const [eh, em] = s.end_time.split(':').map(Number);
+          return sum + (eh * 60 + em) - (sh * 60 + sm);
+        }, 0);
+        if (workMin > 0) setNetWorkMinutes(workMin);
+      }
     }).catch(() => { });
 
     loadExpenses();
@@ -9312,6 +9374,8 @@ function CostsPage({ models, personnel, addToast }) {
 
   const deleteExpense = async (id) => {
 
+    if (!confirm('Bu gideri silmek istediğinize emin misiniz?')) return;
+
     await fetch(`/api/expenses?id=${id}`, { method: 'DELETE' });
 
     loadExpenses();
@@ -9338,7 +9402,7 @@ function CostsPage({ models, personnel, addToast }) {
 
     mc.totalValue += (log.total_produced || 0) * (log.unit_price || 0);
 
-    if (log.start_time && log.end_time) { mc.totalLaborCost += (log.daily_wage || 0) / 480 * ((new Date(log.end_time) - new Date(log.start_time)) / 60000); }
+    if (log.start_time && log.end_time) { mc.totalLaborCost += (log.daily_wage || 0) / netWorkMinutes * ((new Date(log.end_time) - new Date(log.start_time)) / 60000); }
 
   });
 
@@ -9348,7 +9412,11 @@ function CostsPage({ models, personnel, addToast }) {
 
   logs.forEach(log => {
 
-    if (!personnelCosts[log.personnel_id]) personnelCosts[log.personnel_id] = { name: log.personnel_name, dailyWage: log.daily_wage || 0, totalProduced: 0, totalValue: 0, days: new Set() };
+    if (!personnelCosts[log.personnel_id]) personnelCosts[log.personnel_id] = {
+      name: log.personnel_name,
+      dailyWage: log.daily_wage || 0,
+      totalProduced: 0, totalValue: 0, days: new Set()
+    };
 
     const pc = personnelCosts[log.personnel_id];
 
@@ -9362,15 +9430,37 @@ function CostsPage({ models, personnel, addToast }) {
 
 
 
-  const totalLabor = Object.values(personnelCosts).reduce((s, p) => s + p.dailyWage * Math.max(1, p.days.size), 0);
+
+
+  // HATA-4 FIX: totalLabor (dead code) kaldırıldı
 
   const totalProduction = Object.values(modelCosts).reduce((s, m) => s + m.totalValue, 0);
 
   const totalPieces = Object.values(modelCosts).reduce((s, m) => s + m.totalProduced, 0);
 
-  const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  // HATA-1 & HATA-2 FIX: Dönem bazlı maliyet orantılama
+  const workDaysInMonth = workDaysInfo?.work_days || 22;
+  const periodMultiplier = period === 'today' ? (1 / workDaysInMonth)
+    : period === 'week' ? (5 / workDaysInMonth)
+      : 1; // 'month' veya 'all' → tam aylık
 
-  const totalCost = totalLabor + totalExpenses;
+  // HATA-3 FIX: Personel kategorili giderler ayrı takip edilir, toplama dahil edilmez
+  const PERSONNEL_EXPENSE_CATEGORIES = ['personel_maas', 'personel_yemek', 'personel_yol', 'personel_mesai'];
+  const totalExpensesMonthly = expenses
+    .filter(e => !PERSONNEL_EXPENSE_CATEGORIES.includes(e.category))
+    .reduce((s, e) => s + (e.amount || 0), 0);
+  const personnelExpensesMonthly = expenses
+    .filter(e => PERSONNEL_EXPENSE_CATEGORIES.includes(e.category))
+    .reduce((s, e) => s + (e.amount || 0), 0);
+  const totalExpenses = Math.round(totalExpensesMonthly * periodMultiplier);
+
+  // HATA-1 FIX: Aylık personel maliyeti döneme göre orantılama
+  const totalPersonnelPayrollMonthly = (personnel || []).filter(p => !p.deleted_at).reduce((sum, p) => {
+    return sum + (parseFloat(p.base_salary) || 0) + (parseFloat(p.transport_allowance) || 0) + (parseFloat(p.ssk_cost) || 0) + (parseFloat(p.food_allowance) || 0) + (parseFloat(p.compensation) || 0);
+  }, 0);
+  const totalPersonnelPayroll = Math.round(totalPersonnelPayrollMonthly * periodMultiplier);
+
+  const totalCost = totalPersonnelPayroll + totalExpenses;
 
   const netProfit = totalProduction - totalCost;
 
@@ -9386,24 +9476,92 @@ function CostsPage({ models, personnel, addToast }) {
 
     <>
 
-      <div className="topbar">
-
-        <h1 className="topbar-title">💰 Maliyet Analizi</h1>
-
-        <div className="topbar-actions" style={{ display: 'flex', gap: '8px' }}>
-
-          <button className="btn btn-primary" onClick={() => setShowExpenseForm(!showExpenseForm)}>➕ Gider Ekle</button>
-
-          <select className="form-select" value={period} onChange={e => setPeriod(e.target.value)} style={{ minWidth: '160px' }}>
-
-            <option value="today">Bugün</option><option value="week">Bu Hafta</option>
-
-            <option value="month">Bu Ay</option><option value="all">Tüm Zamanlar</option>
-
-          </select>
-
+      {/* GİDER DÜZENLEME MODAL */}
+      {editExpense && (
+        <div className="modal-overlay" onClick={() => setEditExpense(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #e67e22, #d35400)', color: '#fff' }}>
+              <h2 className="modal-title" style={{ color: '#fff' }}>✏️ Gider Düzenle</h2>
+              <button className="modal-close" onClick={() => setEditExpense(null)} style={{ color: '#fff' }}>✕</button>
+            </div>
+            <div style={{ padding: '20px' }}>
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label className="form-label">Kategori</label>
+                <select className="form-select" value={editExpenseForm.category} onChange={e => setEditExpenseForm({ ...editExpenseForm, category: e.target.value })}>
+                  {expenseCategories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+              </div>
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Tutar (₺)</span>
+                  {String(editExpense.amount) !== String(editExpenseForm.amount) && <span style={{ fontSize: '10px', color: '#e67e22', fontWeight: '700' }}>● DEĞİŞTİ (Eski: {editExpense.amount}₺)</span>}
+                </label>
+                <input className="form-input" type="number" step="0.01" value={editExpenseForm.amount} onChange={e => setEditExpenseForm({ ...editExpenseForm, amount: e.target.value })} />
+              </div>
+              <div className="form-group" style={{ marginBottom: '12px' }}>
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Açıklama</span>
+                  {(editExpense.description || '') !== (editExpenseForm.description || '') && <span style={{ fontSize: '10px', color: '#e67e22', fontWeight: '700' }}>● DEĞİŞTİ</span>}
+                </label>
+                <input className="form-input" value={editExpenseForm.description} onChange={e => setEditExpenseForm({ ...editExpenseForm, description: e.target.value })} />
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer' }}>
+                <input type="checkbox" checked={!!editExpenseForm.is_recurring} onChange={e => setEditExpenseForm({ ...editExpenseForm, is_recurring: e.target.checked ? 1 : 0 })} /> 🔄 Her ay tekrarlanan
+              </label>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setEditExpense(null)}>İptal</button>
+              <button className="btn btn-primary" onClick={handleUpdateExpense} style={{ background: '#e67e22', borderColor: '#e67e22' }}>✏️ Düzeltmeyi Kaydet</button>
+            </div>
+          </div>
         </div>
+      )}
 
+
+      <div className="topbar">
+        <h1 className="topbar-title">💰 Maliyet Analizi</h1>
+        <div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* DÖNEM FİLTRESİ — Butonlar */}
+          <div style={{ display: 'flex', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+            {[
+              { val: 'today', label: 'Bugün' },
+              { val: 'week', label: 'Bu Hafta' },
+              { val: 'month', label: 'Bu Ay' },
+              { val: 'all', label: 'Tüm' },
+            ].map(opt => (
+              <button
+                key={opt.val}
+                onClick={() => setPeriod(opt.val)}
+                style={{
+                  padding: '7px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', border: 'none',
+                  background: period === opt.val ? 'var(--accent)' : 'var(--bg-input)',
+                  color: period === opt.val ? '#fff' : 'var(--text-secondary)',
+                  transition: 'all 0.15s',
+                  borderRight: '1px solid var(--border-color)',
+                }}
+              >{opt.label}</button>
+            ))}
+          </div>
+          {/* EXCEL EXPORT */}
+          <button
+            className="btn btn-secondary"
+            style={{ fontSize: '12px' }}
+            onClick={() => {
+              const rows = [['Kategori', 'Açıklama', 'Tutar (₺)', 'Tekrar']];
+              expenses.forEach(e => rows.push([e.category, e.description || '', e.amount, e.is_recurring ? 'Evet' : 'Hayır']));
+              rows.push([]);
+              rows.push(['TOPLAM GİDER', '', totalExpensesMonthly, '']);
+              rows.push(['TOPLAM PERSONEL', '', totalPersonnelPayrollMonthly, '']);
+              const csv = rows.map(r => r.join('\t')).join('\n');
+              const blob = new Blob(['\ufeff' + csv], { type: 'text/tab-separated-values;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a'); a.href = url;
+              a.download = `maliyet_${new Date().toISOString().split('T')[0]}.xls`; a.click();
+              URL.revokeObjectURL(url);
+            }}
+          >📊 Excel İndir</button>
+          <button className="btn btn-primary" onClick={() => setShowExpenseForm(!showExpenseForm)}>➕ Gider Ekle</button>
+        </div>
       </div>
 
       <div className="page-content">
@@ -9460,51 +9618,106 @@ function CostsPage({ models, personnel, addToast }) {
 
 
 
+        {/* DÖNEM ETİKETİ */}
+        <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '12px', background: 'rgba(var(--accent-rgb,52,152,219),0.12)', color: 'var(--accent)', padding: '4px 10px', borderRadius: '20px', fontWeight: '700' }}>
+            {period === 'today' ? '📅 Bugün — Tüm değerler bugüne orantılandı' : period === 'week' ? '📅 Bu Hafta (5 iş günü) orantılandı' : period === 'month' ? '📅 Bu Ay (Aylık Toplam)' : '📅 Tüm Zamanlar'}
+          </span>
+          {(period === 'today' || period === 'week') && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({workDaysInMonth} iş günü / ay baz alındı)</span>}
+        </div>
+
+        {/* HATA-3: ÇİFT SAYIM UYARISI */}
+        {personnelExpensesMonthly > 0 && (
+          <div style={{ marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(231,76,60,0.08)', border: '1px solid rgba(231,76,60,0.3)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            <span style={{ fontSize: '18px' }}>⚠️</span>
+            <div style={{ fontSize: '12px' }}>
+              <strong style={{ color: 'var(--danger)' }}>Çift Sayım Uyarısı!</strong>
+              <span style={{ color: 'var(--text-secondary)', marginLeft: '6px' }}>
+                Personel maaşı/yemek/yol/mesai giderleri ({personnelExpensesMonthly.toLocaleString('tr-TR')} ₺) zaten <strong>Personel Aylık Maliyet</strong> tablosundan otomatik alınmaktadır. Bu tutarlar toplam maliyet hesabına dahil <strong>edilmemiştir</strong>.
+              </span>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px', marginBottom: '16px' }}>
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
-
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 İşçilik</div>
-
-            <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--danger)' }}>{totalLabor.toLocaleString('tr-TR')} ₺</div>
-
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>👷 İşçilik (Personel)</div>
+            <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--danger)' }}>{totalPersonnelPayroll.toLocaleString('tr-TR')} ₺</div>
+            {(period === 'today' || period === 'week') && <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>Aylık: {totalPersonnelPayrollMonthly.toLocaleString('tr-TR')} ₺</div>}
           </div>
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
-
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 İşletme Gideri</div>
-
             <div style={{ fontSize: '22px', fontWeight: '800', color: '#e67e22' }}>{totalExpenses.toLocaleString('tr-TR')} ₺</div>
-
+            {(period === 'today' || period === 'week') && <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>Aylık: {totalExpensesMonthly.toLocaleString('tr-TR')} ₺</div>}
           </div>
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
-
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>🧮 Toplam Maliyet</div>
-
             <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--danger)' }}>{totalCost.toLocaleString('tr-TR')} ₺</div>
-
           </div>
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
-
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 Üretim DeĞeri</div>
-
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📊 Üretim Değeri</div>
             <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--success)' }}>{totalProduction.toLocaleString('tr-TR')} ₺</div>
-
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>{totalPieces} adet</div>
           </div>
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
-
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📈 Net Kar/Zarar</div>
-
             <div style={{ fontSize: '22px', fontWeight: '800', color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-
               {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('tr-TR')} ₺
-
             </div>
-
+            <div style={{ fontSize: '10px', color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)', marginTop: '2px', fontWeight: '700' }}>
+              {totalCost > 0 ? (netProfit >= 0 ? `✅ Kârlı %${Math.round((netProfit / totalCost) * 100)}` : `❌ Zararda %${Math.abs(Math.round((netProfit / totalCost) * 100))}`) : '—'}
+            </div>
           </div>
+
+          {/* CPM KARTI */}
+          {(() => {
+            const activeCount = (personnel || []).filter(p => !p.deleted_at).length;
+            const dailyWorkMin = 9 * 60;
+            const totalMonthlyMin = activeCount * (workDaysInfo?.work_days || 22) * dailyWorkMin;
+            const cpm = totalMonthlyMin > 0 ? (totalPersonnelPayrollMonthly + totalExpensesMonthly) / totalMonthlyMin : 0;
+            return (
+              <div className="card" style={{ textAlign: 'center', padding: '14px', border: '1px solid rgba(155,89,182,0.3)', background: 'rgba(155,89,182,0.05)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>⚡ CPM (₺/dakika)</div>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: '#9b59b6' }}>{cpm.toFixed(2)} ₺</div>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>Dakika Başı Maliyet</div>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{activeCount} personel × {workDaysInfo?.work_days || 22} gün × 9s</div>
+              </div>
+            );
+          })()}
+
+          {/* BREAK-EVEN KARTI */}
+          {(() => {
+            const avgFasonPrice = (() => {
+              const ms = (models || []).filter(m => !m.deleted_at && (m.fason_price || 0) > 0);
+              if (ms.length === 0) return 0;
+              return ms.reduce((s, m) => s + (parseFloat(m.fason_price) || 0), 0) / ms.length;
+            })();
+            const avgVariableCostPerPiece = totalPieces > 0 ? (totalPersonnelPayroll / totalPieces) : 0;
+            const fixedCost = totalExpenses;
+            const bep = avgFasonPrice > avgVariableCostPerPiece && fixedCost > 0
+              ? Math.ceil(fixedCost / (avgFasonPrice - avgVariableCostPerPiece)) : null;
+            return (
+              <div className="card" style={{ textAlign: 'center', padding: '14px', border: `1px solid ${bep ? 'rgba(46,204,113,0.3)' : 'rgba(231,76,60,0.3)'}`, background: bep ? 'rgba(46,204,113,0.05)' : 'rgba(231,76,60,0.05)' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>🎯 Başabaş Noktası</div>
+                {bep ? (
+                  <>
+                    <div style={{ fontSize: '22px', fontWeight: '800', color: totalPieces >= bep ? 'var(--success)' : '#e67e22' }}>{bep.toLocaleString('tr-TR')} adet</div>
+                    <div style={{ fontSize: '10px', marginTop: '2px', color: totalPieces >= bep ? 'var(--success)' : 'var(--text-muted)', fontWeight: '700' }}>
+                      {totalPieces >= bep ? `✅ Geçildi (+${(totalPieces - bep).toLocaleString('tr-TR')} adet)` : `⏳ ${(bep - totalPieces).toLocaleString('tr-TR')} adet kaldı`}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Ort. Fason: {avgFasonPrice.toFixed(0)} ₺/ad</div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '8px' }}>Hesap için model fason fiyatı girin</div>
+                )}
+              </div>
+            );
+          })()}
 
         </div>
 
@@ -9512,7 +9725,10 @@ function CostsPage({ models, personnel, addToast }) {
 
         <div className="card" style={{ marginBottom: '16px' }}>
 
-          <div className="card-header"><h3 className="card-title">🏢 İşletme Giderleri — {new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</h3></div>
+          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 className="card-title">🏢 İşletme Giderleri — {new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</h3>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>📌 Giderler her zaman aylık bazda gösterilir</span>
+          </div>
 
           {expenses.length === 0 ? (
 
@@ -9560,13 +9776,14 @@ function CostsPage({ models, personnel, addToast }) {
 
               </div>
 
-              <div className="table-wrapper"><table className="table"><thead><tr><th>Kategori</th><th>Açıklama</th><th>Tutar</th><th>Tekrar</th><th></th></tr></thead><tbody>
+              <div className="table-wrapper"><table className="table"><thead><tr><th>Kategori</th><th>Açıklama</th><th>Tarih</th><th>Tutar</th><th>Tekrar</th><th style={{ width: '80px' }}>İşlem</th></tr></thead><tbody>
 
                 {expenses.map(e => {
 
                   const catInfo = expenseCategories.find(c => c.value === e.category);
+                  const tarih = e.created_at ? new Date(e.created_at).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
 
-                  return (<tr key={e.id}><td>{catInfo?.icon} {catInfo?.label || e.category}</td><td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{e.description || '—'}</td><td style={{ fontWeight: '700' }}>{e.amount.toLocaleString('tr-TR')} ₺</td><td>{e.is_recurring ? <span className="badge badge-info">📋 Aylık</span> : '—'}</td><td><button onClick={() => deleteExpense(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="Sil">🗑️</button></td></tr>);
+                  return (<tr key={e.id}><td>{catInfo?.icon} {catInfo?.label || e.category}</td><td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{e.description || '—'}</td><td style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{tarih}</td><td style={{ fontWeight: '700' }}>{e.amount.toLocaleString('tr-TR')} ₺</td><td>{e.is_recurring ? <span className="badge badge-info">📋 Aylık</span> : '—'}</td><td><div style={{ display: 'flex', gap: '4px' }}><button onClick={() => openEditExpense(e)} style={{ background: 'rgba(230,126,34,0.1)', border: '1px solid rgba(230,126,34,0.3)', color: '#e67e22', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }} title="Düzenle">✏️</button><button onClick={() => deleteExpense(e.id)} style={{ background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', color: '#e74c3c', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }} title="Sil">🗑️</button></div></td></tr>);
 
                 })}
 
@@ -9578,11 +9795,54 @@ function CostsPage({ models, personnel, addToast }) {
 
         </div>
 
-
+        {/* PERSONEL AYLIK MALİYET — OTOMATİK */}
+        <div className="card" style={{ marginBottom: '16px' }}>
+          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 className="card-title">💰 Personel Aylık Maliyet</h3>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '400' }}>📌 Personel panelinden otomatik çekilen veriler</span>
+          </div>
+          {(personnel || []).filter(p => !p.deleted_at).length === 0 ? (
+            <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>Aktif personel yok.</div>
+          ) : (
+            <div className="table-wrapper"><table className="table"><thead><tr><th>Personel</th><th>Maaş</th><th>Yol</th><th>SSK</th><th>Yemek</th><th>Tazminat</th><th style={{ fontWeight: '800' }}>TOPLAM</th></tr></thead><tbody>
+              {(personnel || []).filter(p => !p.deleted_at).map(p => {
+                const maas = parseFloat(p.base_salary) || 0;
+                const yol = parseFloat(p.transport_allowance) || 0;
+                const ssk = parseFloat(p.ssk_cost) || 0;
+                const yemek = parseFloat(p.food_allowance) || 0;
+                const tazminat = parseFloat(p.compensation) || 0;
+                const toplam = maas + yol + ssk + yemek + tazminat;
+                return (<tr key={p.id}>
+                  <td><strong>{p.name}</strong><br /><span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{p.role || '—'}</span></td>
+                  <td>{maas.toLocaleString('tr-TR')}₺</td>
+                  <td>{yol.toLocaleString('tr-TR')}₺</td>
+                  <td>{ssk.toLocaleString('tr-TR')}₺</td>
+                  <td>{yemek.toLocaleString('tr-TR')}₺</td>
+                  <td>{tazminat.toLocaleString('tr-TR')}₺</td>
+                  <td style={{ fontWeight: '800', color: 'var(--danger)' }}>{toplam.toLocaleString('tr-TR')}₺</td>
+                </tr>);
+              })}
+              <tr style={{ background: 'rgba(231,76,60,0.05)' }}>
+                <td style={{ fontWeight: '800' }}>TOPLAM</td>
+                <td style={{ fontWeight: '700' }}>{(personnel || []).filter(p => !p.deleted_at).reduce((s, p) => s + (parseFloat(p.base_salary) || 0), 0).toLocaleString('tr-TR')}₺</td>
+                <td style={{ fontWeight: '700' }}>{(personnel || []).filter(p => !p.deleted_at).reduce((s, p) => s + (parseFloat(p.transport_allowance) || 0), 0).toLocaleString('tr-TR')}₺</td>
+                <td style={{ fontWeight: '700' }}>{(personnel || []).filter(p => !p.deleted_at).reduce((s, p) => s + (parseFloat(p.ssk_cost) || 0), 0).toLocaleString('tr-TR')}₺</td>
+                <td style={{ fontWeight: '700' }}>{(personnel || []).filter(p => !p.deleted_at).reduce((s, p) => s + (parseFloat(p.food_allowance) || 0), 0).toLocaleString('tr-TR')}₺</td>
+                <td style={{ fontWeight: '700' }}>{(personnel || []).filter(p => !p.deleted_at).reduce((s, p) => s + (parseFloat(p.compensation) || 0), 0).toLocaleString('tr-TR')}₺</td>
+                <td style={{ fontWeight: '900', fontSize: '16px', color: 'var(--danger)' }}>{totalPersonnelPayroll.toLocaleString('tr-TR')}₺</td>
+              </tr>
+            </tbody></table></div>
+          )}
+        </div>
 
         <div className="card" style={{ marginBottom: '16px' }}>
 
-          <div className="card-header"><h3 className="card-title">📦 Model Bazlı Maliyet</h3></div>
+          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 className="card-title">📦 Model Bazlı Maliyet</h3>
+            <span style={{ fontSize: '11px', color: '#e67e22', fontWeight: '600', background: 'rgba(230,126,34,0.1)', padding: '3px 8px', borderRadius: '6px' }}>
+              ⚠️ Karlılık = Yalnızca işçilik dahil — genel gider dahil değil
+            </span>
+          </div>
 
           {Object.keys(modelCosts).length === 0 ? (
 
@@ -9615,46 +9875,202 @@ function CostsPage({ models, personnel, addToast }) {
 
 
         <div className="card">
+          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <h3 className="card-title">📈 Personel Katkı & Prim Analizi</h3>
+            {/* PRİM ORANI SEÇİCİ */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>🎯 Prim Oranı:</span>
+              {[5, 10, 15, 20, 25, 30].map(oran => (
+                <button
+                  key={oran}
+                  onClick={() => setPrimOrani(oran)}
+                  style={{
+                    padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', cursor: 'pointer',
+                    border: primOrani === oran ? '2px solid var(--accent)' : '1px solid var(--border-color)',
+                    background: primOrani === oran ? 'var(--accent)' : 'var(--bg-input)',
+                    color: primOrani === oran ? '#fff' : 'var(--text-secondary)',
+                    transition: 'all 0.15s'
+                  }}
+                >%{oran}</button>
+              ))}
+              {/* MANUEL GİRİŞ */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '2px 8px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>%</span>
+                <input
+                  type="number"
+                  min="0" max="100" step="1"
+                  value={primOrani}
+                  onChange={e => {
+                    const v = parseFloat(e.target.value);
+                    if (!isNaN(v) && v >= 0 && v <= 100) setPrimOrani(v);
+                  }}
+                  style={{
+                    width: '48px', border: 'none', background: 'transparent',
+                    fontSize: '13px', fontWeight: '800', color: 'var(--accent)',
+                    outline: 'none', textAlign: 'center'
+                  }}
+                  title="Elle prim oranı girin (0-100)"
+                />
+              </div>
+            </div>
+          </div>
 
-          <div className="card-header"><h3 className="card-title">👥 Personel Maliyet</h3></div>
+          {/* FORMÜL AÇIKLAMASI */}
+          <div style={{ padding: '10px 16px', background: 'rgba(52,152,219,0.06)', borderBottom: '1px solid var(--border-color)', fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            <span>🧮 <strong>Kişi Tam Maliyet</strong> = Maaş + SSK + Yol + Yemek + Tazminat + İşletme Gider Payı</span>
+            <span>💎 <strong>Katkı Değeri</strong> = Üretim Değeri − Kişi Tam Maliyet</span>
+            <span>🎯 <strong>Hak Edilen Prim</strong> = Katkı Değeri × <strong style={{ color: 'var(--accent)' }}>%{primOrani}</strong></span>
+          </div>
 
           {Object.keys(personnelCosts).length === 0 ? (
-
-            <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>Veri yok.</div>
-
-          ) : (
-
-            <div style={{ display: 'grid', gap: '10px', padding: '16px' }}>
-
-              {Object.entries(personnelCosts).map(([pid, pc]) => {
-
-                const totalWage = pc.dailyWage * Math.max(1, pc.days.size);
-
-                const diff = pc.totalValue - totalWage;
-
-                const efficiency = totalWage > 0 ? Math.round((pc.totalValue / totalWage) * 100) : 0;
-
-                return (
-
-                  <div key={pid} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: 'var(--bg-input)', border: `1px solid ${diff >= 0 ? 'rgba(46,204,113,0.2)' : 'rgba(231,76,60,0.2)'}` }}>
-
-                    <div style={{ fontSize: '28px' }}>{diff >= 0 ? '✅' : '⚠️'}</div>
-
-                    <div style={{ flex: 1 }}><div style={{ fontWeight: '700', fontSize: '14px' }}>{pc.name}</div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ücret: {totalWage.toFixed(0)}₺  Üretim: {pc.totalValue.toFixed(0)}₺  {pc.totalProduced} ad  {Math.max(1, pc.days.size)} gün</div></div>
-
-                    <div style={{ textAlign: 'right' }}><div style={{ fontSize: '18px', fontWeight: '800', color: diff >= 0 ? 'var(--success)' : 'var(--danger)' }}>%{efficiency}</div><div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>verimlilik</div></div>
-
-                  </div>);
-
-              })}
-
+            <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📉</div>
+              Üretim verisi girildiğinde otomatik hesaplanır.
             </div>
+          ) : (
+            <div style={{ display: 'grid', gap: '12px', padding: '16px' }}>
+              {(() => {
+                // İşletme gider payı hesabı (personel dışı giderler ÷ aktif personel)
+                const activeCount = Math.max(1, (personnel || []).filter(p => !p.deleted_at).length);
+                const genel_gider_payi_aylik = totalExpensesMonthly / activeCount;
+                const genel_gider_payi_donem = genel_gider_payi_aylik * periodMultiplier;
 
+                return Object.entries(personnelCosts).map(([pid, pc]) => {
+                  // Personelin GERÇEK tam aylık maliyeti personel tablosundan
+                  const pData = (personnel || []).find(p => String(p.id) === String(pid));
+                  const aylik_maas = parseFloat(pData?.base_salary) || 0;
+                  const aylik_ssk = parseFloat(pData?.ssk_cost) || 0;
+                  const aylik_yol = parseFloat(pData?.transport_allowance) || 0;
+                  const aylik_yemek = parseFloat(pData?.food_allowance) || 0;
+                  const aylik_tazminat = parseFloat(pData?.compensation) || 0;
+                  const aylik_personel_maliyet = aylik_maas + aylik_ssk + aylik_yol + aylik_yemek + aylik_tazminat;
+
+                  // Döneme orantıla
+                  const donem_personel_maliyet = aylik_personel_maliyet * periodMultiplier;
+
+                  // Toplam kişi maliyeti: Personel + İşletme gider payı
+                  const kisi_tam_maliyet = donem_personel_maliyet + genel_gider_payi_donem;
+
+                  // Üretim değeri
+                  const uretim_degeri = pc.totalValue;
+
+                  // Katkı değeri
+                  const katki_degeri = uretim_degeri - kisi_tam_maliyet;
+
+                  // Prim bazisi (sadece pozitifse)
+                  const prim_bazisi = katki_degeri > 0 ? katki_degeri : 0;
+
+                  // Hak edilen prim = Prim bazisi × Prim oranı
+                  const hak_edilen_prim = Math.round(prim_bazisi * primOrani / 100);
+
+                  // Verimlilik %
+                  const efficiency = kisi_tam_maliyet > 0 ? Math.round((uretim_degeri / kisi_tam_maliyet) * 100) : 0;
+
+                  const status = katki_degeri >= 0 ? 'karli' : 'zararli';
+
+                  return (
+                    <div key={pid} style={{
+                      borderRadius: '12px',
+                      background: 'var(--bg-input)',
+                      border: `2px solid ${status === 'karli' ? 'rgba(46,204,113,0.3)' : 'rgba(231,76,60,0.3)'}`,
+                      overflow: 'hidden'
+                    }}>
+                      {/* Üst başlık */}
+                      <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border-color)' }}>
+                        <div style={{ fontSize: '24px' }}>{status === 'karli' ? '✅' : '⚠️'}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: '800', fontSize: '15px' }}>{pc.name}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                            {Math.max(1, pc.days.size)} gün · {pc.totalProduced} adet üretim
+                            {pData?.role ? ` · ${pData.role}` : ''}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '22px', fontWeight: '900', color: status === 'karli' ? 'var(--success)' : 'var(--danger)' }}>
+                            %{efficiency}
+                          </div>
+                          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>verimlilik</div>
+                        </div>
+                      </div>
+
+                      {/* Maliyet Detayı */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0', fontSize: '12px' }}>
+
+                        {/* Sol: Maliyet Kırılımı */}
+                        <div style={{ padding: '10px 16px', borderRight: '1px solid var(--border-color)' }}>
+                          <div style={{ fontWeight: '700', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💰 Kişi Tam Maliyet</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2px 8px', fontSize: '11px' }}>
+                            <span style={{ color: 'var(--text-muted)' }}>Maaş:</span><span style={{ fontWeight: '600', textAlign: 'right' }}>{Math.round(aylik_maas * periodMultiplier).toLocaleString('tr-TR')} ₺</span>
+                            <span style={{ color: 'var(--text-muted)' }}>SSK:</span><span style={{ fontWeight: '600', textAlign: 'right' }}>{Math.round(aylik_ssk * periodMultiplier).toLocaleString('tr-TR')} ₺</span>
+                            <span style={{ color: 'var(--text-muted)' }}>Yol:</span><span style={{ fontWeight: '600', textAlign: 'right' }}>{Math.round(aylik_yol * periodMultiplier).toLocaleString('tr-TR')} ₺</span>
+                            <span style={{ color: 'var(--text-muted)' }}>Yemek:</span><span style={{ fontWeight: '600', textAlign: 'right' }}>{Math.round(aylik_yemek * periodMultiplier).toLocaleString('tr-TR')} ₺</span>
+                            <span style={{ color: 'var(--text-muted)' }}>Tazminat:</span><span style={{ fontWeight: '600', textAlign: 'right' }}>{Math.round(aylik_tazminat * periodMultiplier).toLocaleString('tr-TR')} ₺</span>
+                            <span style={{ color: '#e67e22' }}>Gider Payı:</span><span style={{ fontWeight: '600', color: '#e67e22', textAlign: 'right' }}>{Math.round(genel_gider_payi_donem).toLocaleString('tr-TR')} ₺</span>
+                            <span style={{ color: 'var(--danger)', fontWeight: '700', borderTop: '1px solid var(--border-color)', paddingTop: '4px' }}>TOPLAM:</span>
+                            <span style={{ fontWeight: '900', color: 'var(--danger)', textAlign: 'right', borderTop: '1px solid var(--border-color)', paddingTop: '4px' }}>
+                              {Math.round(kisi_tam_maliyet).toLocaleString('tr-TR')} ₺
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Orta: Üretim Değeri */}
+                        <div style={{ padding: '10px 16px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                          <div style={{ fontWeight: '700', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🏭 Üretim Değeri</div>
+                          <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--success)' }}>{Math.round(uretim_degeri).toLocaleString('tr-TR')} ₺</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{pc.totalProduced} adet × fason birim</div>
+                        </div>
+
+                        {/* Sağ: Katkı + Prim */}
+                        <div style={{ padding: '10px 16px', background: katki_degeri >= 0 ? 'rgba(46,204,113,0.05)' : 'rgba(231,76,60,0.05)' }}>
+                          <div style={{ fontWeight: '700', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💎 Katkı & Prim</div>
+
+                          {/* Katkı Değeri */}
+                          <div style={{ marginBottom: '8px' }}>
+                            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Katkı Değeri (Artı)</div>
+                            <div style={{ fontSize: '16px', fontWeight: '900', color: katki_degeri >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                              {katki_degeri >= 0 ? '+' : ''}{Math.round(katki_degeri).toLocaleString('tr-TR')} ₺
+                            </div>
+                          </div>
+
+                          {/* Prim Bazisi */}
+                          {prim_bazisi > 0 && (
+                            <div style={{ marginBottom: '6px', fontSize: '10px', color: 'var(--text-muted)' }}>
+                              Prim Bazisi: <strong>{Math.round(prim_bazisi).toLocaleString('tr-TR')} ₺</strong>
+                            </div>
+                          )}
+
+                          {/* HAK EDİLEN PRİM — Ana Gösterge */}
+                          <div style={{
+                            padding: '8px 10px', borderRadius: '8px',
+                            background: hak_edilen_prim > 0 ? 'rgba(46,204,113,0.18)' : 'rgba(231,76,60,0.08)',
+                            border: `2px solid ${hak_edilen_prim > 0 ? 'rgba(46,204,113,0.5)' : 'rgba(231,76,60,0.2)'}`
+                          }}>
+                            <div style={{ fontSize: '10px', fontWeight: '800', color: hak_edilen_prim > 0 ? 'var(--success)' : 'var(--danger)', marginBottom: '2px' }}>
+                              {hak_edilen_prim > 0 ? `🏆 HAK EDİLEN PRİM (%${primOrani})` : '❌ PRİM YOK'}
+                            </div>
+                            <div style={{ fontSize: '20px', fontWeight: '900', color: hak_edilen_prim > 0 ? 'var(--success)' : 'var(--text-muted)' }}>
+                              {hak_edilen_prim > 0 ? `${hak_edilen_prim.toLocaleString('tr-TR')} ₺` : '—'}
+                            </div>
+                            {hak_edilen_prim > 0 && (
+                              <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                                {Math.round(prim_bazisi).toLocaleString('tr-TR')} ₺ × %{primOrani} = {hak_edilen_prim.toLocaleString('tr-TR')} ₺
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
           )}
 
         </div>
 
       </div>
+
 
     </>
 
@@ -9715,6 +10131,10 @@ export default function Home() {
   const renderPage = () => {
 
     switch (activePage) {
+
+      case 'atolye': return <AtolyePage models={models} personnel={personnel} addToast={addToast} setActivePage={setActivePage} />;
+
+      case 'attendance': return <AttendancePage personnel={personnel} addToast={addToast} />;
 
       case 'dashboard': return <DashboardPage models={models} personnel={personnel} />;
 

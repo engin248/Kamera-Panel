@@ -6,9 +6,9 @@ export async function GET(request) {
         const db = getDb();
         const { searchParams } = new URL(request.url);
         const model_id = searchParams.get('model_id');
-        let query = 'SELECT * FROM cost_entries';
+        let query = 'SELECT * FROM cost_entries WHERE deleted_at IS NULL';
         const params = [];
-        if (model_id) { query += ' WHERE model_id = ?'; params.push(model_id); }
+        if (model_id) { query += ' AND model_id = ?'; params.push(model_id); }
         query += ' ORDER BY created_at DESC';
         const entries = db.prepare(query).all(...params);
         return NextResponse.json(entries);
