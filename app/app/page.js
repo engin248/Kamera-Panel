@@ -4006,6 +4006,39 @@ function ModelsPage({ models, loadModels, addToast }) {
 
   const [expandedOp, setExpandedOp] = useState(null);
 
+  // #1 İşlem düzenleme modalı
+  const [editingOp, setEditingOp] = useState(null);
+  const [editOpForm, setEditOpForm] = useState({ name: '', machine_type: '', difficulty: 5, unit_price: 0, description: '' });
+
+  const openEditOp = (op) => {
+    setEditOpForm({ name: op.name || '', machine_type: op.machine_type || '', difficulty: op.difficulty || 5, unit_price: op.unit_price || 0, description: op.description || '' });
+    setEditingOp(op);
+  };
+
+  const handleSaveEditOp = async (modelId) => {
+    try {
+      const res = await fetch(`/api/models/${modelId}/operations/${editingOp.id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editOpForm)
+      });
+      if (!res.ok) throw new Error('Güncelleme hatası');
+      await loadOperations(modelId);
+      setEditingOp(null);
+      addToast('success', '✅ İşlem güncellendi');
+    } catch (err) { addToast('error', err.message); }
+  };
+
+  // #4 Teslim tarihi uyarı rengi
+  const getDeliveryWarning = (deliveryDate) => {
+    if (!deliveryDate) return null;
+    const diff = Math.ceil((new Date(deliveryDate) - new Date()) / (1000 * 60 * 60 * 24));
+    if (diff < 0) return { color: '#e74c3c', bg: 'rgba(231,76,60,0.1)', text: `${Math.abs(diff)} gün GEÇTİ!`, icon: '🚨' };
+    if (diff <= 3) return { color: '#e74c3c', bg: 'rgba(231,76,60,0.1)', text: `${diff} gün kaldı`, icon: '🔴' };
+    if (diff <= 7) return { color: '#e67e22', bg: 'rgba(230,126,34,0.1)', text: `${diff} gün kaldı`, icon: '🟠' };
+    if (diff <= 14) return { color: '#f39c12', bg: 'rgba(243,156,18,0.1)', text: `${diff} gün kaldı`, icon: '🟡' };
+    return null;
+  };
+
   const [editModel, setEditModel] = useState(null);
 
   const [editForm, setEditForm] = useState({});
@@ -5238,7 +5271,7 @@ function ModelsPage({ models, loadModels, addToast }) {
                                   <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                                     <button onClick={() => handleMoveOperation(model.id, op.id, 'up')} title="Yukarı taşı" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', opacity: op.order_number <= 1 ? 0.3 : 1 }} disabled={op.order_number <= 1}>↑</button>
                                     <button onClick={() => handleMoveOperation(model.id, op.id, 'down')} title="Aşağı taşı" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', opacity: op.order_number >= (modelOperations[model.id] || []).length ? 0.3 : 1 }} disabled={op.order_number >= (modelOperations[model.id] || []).length}>↓</button>
-                                    <button onClick={() => { const newName = prompt('İşlem adı:', op.name); if (newName && newName !== op.name) { fetch(`/api/models/${model.id}/operations/${op.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newName }) }).then(() => { loadOperations(model.id); addToast('success', 'İşlem güncellendi'); }); } }} title="Düzenle" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px' }}>✏️</button>
+                                    <button onClick={() => openEditOp(op)} title="Düzenle" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px' }}>✏️</button>
                                     <button onClick={() => { if (confirm(`"${op.name}" işlemini silmek istediğinize emin misiniz?`)) { handleDeleteOperation(model.id, op.id); } }} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', color: 'var(--danger)' }}>🗑️</button>
                                   </div>
 
@@ -5376,7 +5409,48 @@ function ModelsPage({ models, loadModels, addToast }) {
 
       {showOperationModal && (<NewOperationModal modelId={showOperationModal} operationCount={(modelOperations[showOperationModal] || []).length} onClose={() => setShowOperationModal(null)} onSave={(data) => handleSaveOperation(showOperationModal, data)} />)}
 
-
+      {/* ===== İŞLEM DÜZENLEME MODALI ===== */}
+      {editingOp && (
+        <div className="modal-overlay" onClick={() => setEditingOp(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header">
+              <h2 className="modal-title">✏️ İşlem Düzenle</h2>
+              <button className="modal-close" onClick={() => setEditingOp(null)}>✕</button>
+            </div>
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>İşlem Adı</label>
+                <input className="form-input" value={editOpForm.name} onChange={e => setEditOpForm({ ...editOpForm, name: e.target.value })} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Makine Tipi</label>
+                  <select className="form-select" value={editOpForm.machine_type} onChange={e => setEditOpForm({ ...editOpForm, machine_type: e.target.value })}>
+                    <option value="">Seçiniz</option>
+                    <option>Düz Dikiş</option><option>Overlok</option><option>Reçme</option><option>Baskı</option><option>Ütü</option><option>Kesim</option><option>El İşi</option><option>Nakış</option><option>Diğer</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Zorluk (1-10)</label>
+                  <input className="form-input" type="number" min={1} max={10} value={editOpForm.difficulty} onChange={e => setEditOpForm({ ...editOpForm, difficulty: parseInt(e.target.value) || 5 })} />
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Birim Fiyat (₺)</label>
+                <input className="form-input" type="number" step="0.01" min={0} value={editOpForm.unit_price} onChange={e => setEditOpForm({ ...editOpForm, unit_price: parseFloat(e.target.value) || 0 })} />
+              </div>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Açıklama</label>
+                <textarea className="form-textarea" rows={2} value={editOpForm.description} onChange={e => setEditOpForm({ ...editOpForm, description: e.target.value })} placeholder="İşlem hakkında not..." />
+              </div>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '8px' }}>
+                <button className="btn" onClick={() => setEditingOp(null)} style={{ padding: '10px 24px' }}>İptal</button>
+                <button className="btn btn-primary" onClick={() => handleSaveEditOp(expandedModel)} style={{ padding: '10px 24px' }}>💾 Kaydet</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===== DÜZENLEME MODALI ===== */}
 
@@ -6055,8 +6129,14 @@ function ProductionPage({ models, personnel, addToast }) {
   const [form, setForm] = useState({
     total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator',
     machine_down_min: '0', material_wait_min: '0', break_duration_min: '0', passive_time_min: '0',
-    lot_change: '', quality_score: '100', defect_classification: '', notes: ''
+    lot_change: '', lot_old: '', lot_new: '', quality_score: '100', defect_classification: '', notes: ''
   });
+
+  // #7 OEE hedef değeri
+  const [oeeTarget, setOeeTarget] = useState(85);
+
+  // #12 Tablo filtreleme
+  const [tableFilter, setTableFilter] = useState({ personnel: '', model: '' });
 
   const defectSources = [
     { value: 'operator', label: '👷 Operatör Hatası' },
@@ -6213,6 +6293,24 @@ function ProductionPage({ models, personnel, addToast }) {
   const todayDefects = logs.reduce((s, l) => s + (l.defective_count || 0), 0);
   const todayFPY = todayProduced > 0 ? ((todayProduced - todayDefects) / todayProduced * 100) : 100;
 
+  // #6 OEE ve toplam ₺ hesaplamaları
+  const todayValue = logs.reduce((s, l) => s + (l.unit_value || 0), 0);
+  const todayOEE = logs.length > 0 ? (logs.reduce((s, l) => s + (l.oee_score || 0), 0) / logs.length) : 0;
+
+  // #10 Düşük FPY uyarı fonksiyonu
+  const getFPYStyle = (fpy) => {
+    if (fpy >= 95) return { color: '#27ae60', bg: 'rgba(39,174,96,0.12)' };
+    if (fpy >= 85) return { color: '#f39c12', bg: 'rgba(243,156,18,0.12)' };
+    return { color: '#e74c3c', bg: 'rgba(231,76,60,0.12)' };
+  };
+
+  // #12 Filtrelenmiş loglar
+  const filteredLogs = logs.filter(l => {
+    if (tableFilter.personnel && l.personnel_id !== parseInt(tableFilter.personnel)) return false;
+    if (tableFilter.model && l.model_id !== parseInt(tableFilter.model)) return false;
+    return true;
+  });
+
   const handleStart = () => {
     if (!selectedModel || !selectedOperation || !selectedPerson) return;
     const model = models.find(m => m.id === parseInt(selectedModel));
@@ -6279,18 +6377,26 @@ function ProductionPage({ models, personnel, addToast }) {
       <div className="page-content">
 
         {/* ── STAT KARTLARI ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '16px' }}>
           <div className="stat-card">
             <div className="stat-icon" style={{ background: 'rgba(52,152,219,0.15)', color: '#3498db' }}>📦</div>
             <div><div className="stat-value">{todayProduced}</div><div className="stat-label">Bugün Üretilen</div></div>
           </div>
           <div className="stat-card">
-            <div className="stat-icon" style={{ background: 'rgba(46,204,113,0.15)', color: '#2ecc71' }}>✅</div>
+            <div className="stat-icon" style={{ background: todayFPY >= 95 ? 'rgba(46,204,113,0.15)' : todayFPY >= 85 ? 'rgba(243,156,18,0.15)' : 'rgba(231,76,60,0.15)', color: todayFPY >= 95 ? '#2ecc71' : todayFPY >= 85 ? '#f39c12' : '#e74c3c' }}>✅</div>
             <div><div className="stat-value">%{todayFPY.toFixed(1)}</div><div className="stat-label">Kalite (FPY)</div></div>
           </div>
           <div className="stat-card">
             <div className="stat-icon" style={{ background: 'rgba(231,76,60,0.15)', color: '#e74c3c' }}>❌</div>
             <div><div className="stat-value">{todayDefects}</div><div className="stat-label">Toplam Hata</div></div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: todayOEE >= oeeTarget ? 'rgba(46,204,113,0.15)' : 'rgba(243,156,18,0.15)', color: todayOEE >= oeeTarget ? '#2ecc71' : '#f39c12' }}>⚙️</div>
+            <div><div className="stat-value">%{todayOEE.toFixed(1)}</div><div className="stat-label">OEE {oeeTarget > 0 && <span style={{ fontSize: '10px' }}>(hedef %{oeeTarget})</span>}</div></div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'rgba(39,174,96,0.15)', color: '#27ae60' }}>💰</div>
+            <div><div className="stat-value">{todayValue.toFixed(2)} ₺</div><div className="stat-label">Toplam Değer</div></div>
           </div>
           <div className="stat-card">
             <div className="stat-icon" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6' }}>📊</div>
@@ -6366,7 +6472,7 @@ function ProductionPage({ models, personnel, addToast }) {
               <div style={{ textAlign: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', marginBottom: '16px' }}>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{activeSession.model_name} → {activeSession.operation_name} → {activeSession.personnel_name}</div>
                 <div style={{ fontSize: '48px', fontWeight: '800', fontFamily: 'monospace', color: 'var(--accent)', letterSpacing: '4px' }}>{formatTimer(timer)}</div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Başlangıç: {new Date(activeSession.start_time).toLocaleTimeString('tr-TR')}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Başlangıç: {new Date(activeSession.start_time).toLocaleTimeString('tr-TR')} <button onClick={() => { const newTime = prompt('Başlangıç saatini düzeltin (HH:MM):', new Date(activeSession.start_time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })); if (newTime) { const [h, m] = newTime.split(':').map(Number); if (!isNaN(h) && !isNaN(m)) { const d = new Date(activeSession.start_time); d.setHours(h, m, 0); setActiveSession(prev => ({ ...prev, start_time: d.toISOString() })); const diff = Math.floor((Date.now() - d.getTime()) / 1000); setTimer(Math.max(0, diff)); addToast('success', 'Başlangıç saati düzeltildi'); } } }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', color: 'var(--accent)', textDecoration: 'underline' }}>✏️ düzelt</button></div>
               </div>
 
               {/* A. SÜREÇ KRİTERLERİ */}
@@ -6469,19 +6575,40 @@ function ProductionPage({ models, personnel, addToast }) {
 
         {/* ── BUGÜNÜN KAYITLARI ── */}
         <div className="card" style={{ marginTop: '16px' }}>
-          <div className="card-header"><h3 className="card-title">📋 Bugünün Üretim Kayıtları ({logs.length})</h3></div>
+          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <h3 className="card-title">📋 Bugünün Üretim Kayıtları ({filteredLogs.length}{filteredLogs.length !== logs.length ? ` / ${logs.length}` : ''})</h3>
+            {logs.length > 0 && (
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <select className="form-select" value={tableFilter.personnel} onChange={e => setTableFilter(p => ({ ...p, personnel: e.target.value }))} style={{ fontSize: '11px', padding: '4px 6px', minWidth: '120px' }}>
+                  <option value="">Tüm Personel</option>
+                  {[...new Set(logs.map(l => l.personnel_id))].map(pid => {
+                    const p = logs.find(l => l.personnel_id === pid);
+                    return <option key={pid} value={pid}>{p?.personnel_name}</option>;
+                  })}
+                </select>
+                <select className="form-select" value={tableFilter.model} onChange={e => setTableFilter(p => ({ ...p, model: e.target.value }))} style={{ fontSize: '11px', padding: '4px 6px', minWidth: '120px' }}>
+                  <option value="">Tüm Modeller</option>
+                  {[...new Set(logs.map(l => l.model_id))].map(mid => {
+                    const m = logs.find(l => l.model_id === mid);
+                    return <option key={mid} value={mid}>{m?.model_code}</option>;
+                  })}
+                </select>
+                {(tableFilter.personnel || tableFilter.model) && <button className="btn btn-sm" onClick={() => setTableFilter({ personnel: '', model: '' })} style={{ fontSize: '11px', padding: '3px 8px' }}>✕ Temizle</button>}
+              </div>
+            )}
+          </div>
 
-          {logs.length === 0 ? (
+          {filteredLogs.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
               <div style={{ fontSize: '40px', marginBottom: '8px' }}>🏭</div>
-              <div>Bugün henüz üretim kaydı yok.</div>
-              <div style={{ fontSize: '12px', marginTop: '4px' }}>Yukarıdan yeni üretim başlatabilirsiniz.</div>
+              <div>{logs.length > 0 ? 'Filtre sonucu boş.' : 'Bugün henüz üretim kaydı yok.'}</div>
+              {logs.length === 0 && <div style={{ fontSize: '12px', marginTop: '4px' }}>Yukarıdan yeni üretim başlatabilirsiniz.</div>}
             </div>
           ) : (
             <div className="table-wrapper"><table className="table"><thead><tr>
               <th>Personel</th><th>Model</th><th>İşlem</th><th>Adet</th><th>Hata</th><th>FPY</th><th>Süre</th><th>Değer ₺</th><th>İşlemler</th>
             </tr></thead><tbody>
-                {logs.map(log => {
+                {filteredLogs.map(log => {
                   const duration = log.end_time ? Math.floor((new Date(log.end_time) - new Date(log.start_time)) / 60000) : 0;
                   const value = log.unit_value || ((log.total_produced || 0) * (log.unit_price || 0));
                   const logFpy = log.total_produced > 0 ? ((log.total_produced - (log.defective_count || 0)) / log.total_produced * 100) : 100;
