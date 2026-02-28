@@ -5990,6 +5990,77 @@ function ProductionPage({ models, personnel, addToast }) {
 
   useEffect(() => { let iv; if (activeSession) { iv = setInterval(() => setTimer(t => t + 1), 1000); } return () => clearInterval(iv); }, [activeSession]);
 
+  // ===== OTOMATİK PERSONEL ÖNERİSİ =====
+  const [suggestedPerson, setSuggestedPerson] = useState(null);
+
+  const suggestBestPersonnel = useCallback((op) => {
+    if (!op || !personnel || personnel.length === 0) return null;
+    const machineType = (op.machine_type || '').toLowerCase().trim();
+    const opDifficulty = op.difficulty || 5;
+    const reqSkill = op.required_skill_level || '3_sinif';
+    const skillLevelMap = { '1_sinif': 1, '2_sinif': 2, '3_sinif': 3, 'usta': 4, 'kalfa': 3 };
+    const reqSkillNum = skillLevelMap[reqSkill] || 3;
+
+    let bestScore = -1;
+    let bestPerson = null;
+
+    personnel.filter(p => p.status === 'active').forEach(p => {
+      let score = 0;
+
+      // 1. Makine uyumu (0-40 puan)
+      try {
+        const machines = typeof p.machines === 'string' ? JSON.parse(p.machines) : (p.machines || {});
+        const roleStr = (p.role || '').toLowerCase();
+        // Makine becerileri JSON'da arama
+        Object.entries(machines).forEach(([machine, level]) => {
+          if (machineType && machine.toLowerCase().includes(machineType.toLowerCase().split(' ')[0])) {
+            const lvl = String(level).toLowerCase();
+            if (lvl === 'cok_iyi' || lvl === 'çok_iyi' || lvl === 'çok iyi') score += 40;
+            else if (lvl === 'iyi') score += 30;
+            else if (lvl === 'orta') score += 20;
+            else if (lvl === 'normal' || lvl === 'yeni') score += 10;
+            else score += 15;
+          }
+        });
+        // Role'da makine geçiyor mu
+        if (machineType && roleStr.includes(machineType.split(' ')[0].toLowerCase())) score += 15;
+      } catch { }
+
+      // 2. Beceri seviyesi vs zorluk (0-30 puan)
+      const pSkill = skillLevelMap[p.skill_level] || 2;
+      if (pSkill >= reqSkillNum) score += 30;
+      else if (pSkill === reqSkillNum - 1) score += 15;
+      else score += 5;
+
+      // 3. İşlem deneyimi (0-20 puan) — daha önce bu işlemi yapmış mı
+      const prevLogs = logs.filter(l => l.operation_id === op.id && l.personnel_id === p.id);
+      if (prevLogs.length > 0) {
+        score += 20;
+        // Daha önceki FPY yüksekse bonus
+        const avgFpy = prevLogs.reduce((s, l) => s + (l.first_pass_yield || 100), 0) / prevLogs.length;
+        if (avgFpy > 95) score += 10;
+      }
+
+      if (score > bestScore) { bestScore = score; bestPerson = p; }
+    });
+
+    return bestPerson;
+  }, [personnel, logs]);
+
+  // İşlem seçildiğinde otomatik personel öner
+  useEffect(() => {
+    if (selectedOperation && operations.length > 0 && !activeSession) {
+      const op = operations.find(o => o.id === parseInt(selectedOperation));
+      const best = suggestBestPersonnel(op);
+      if (best) {
+        setSuggestedPerson(best.id);
+        if (!selectedPerson) {
+          setSelectedPerson(String(best.id));
+        }
+      }
+    }
+  }, [selectedOperation, operations, suggestBestPersonnel, activeSession]);
+
   // Otomatik hesaplamalar
   const tp = parseInt(form.total_produced) || 0;
   const dc = parseInt(form.defective_count) || 0;
@@ -6115,10 +6186,10 @@ function ProductionPage({ models, personnel, addToast }) {
                   </select>
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontSize: '13px' }}>③ Personel Seçin *</label>
-                  <select className="form-select" value={selectedPerson} onChange={e => setSelectedPerson(e.target.value)} style={{ fontSize: '15px', padding: '12px' }}>
+                  <label className="form-label" style={{ fontSize: '13px' }}>③ Personel Seçin * {suggestedPerson && parseInt(selectedPerson) === suggestedPerson && <span style={{ background: 'linear-gradient(135deg, #2ecc71, #27ae60)', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', marginLeft: '6px', fontWeight: '700' }}>🤖 Önerilen</span>}</label>
+                  <select className="form-select" value={selectedPerson} onChange={e => { setSelectedPerson(e.target.value); }} style={{ fontSize: '15px', padding: '12px' }}>
                     <option value="">— Personel seçin —</option>
-                    {personnel.filter(p => p.status === 'active').map(p => <option key={p.id} value={p.id}>{p.name} ({p.role})</option>)}
+                    {personnel.filter(p => p.status === 'active').map(p => <option key={p.id} value={p.id}>{p.name} ({p.role}){p.id === suggestedPerson ? ' ★ ÖNERİLEN' : ''}</option>)}
                   </select>
                 </div>
               </div>
