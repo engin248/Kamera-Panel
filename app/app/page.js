@@ -10140,6 +10140,8 @@ function CostsPage({ models, personnel, addToast }) {
 
   const [expenseForm, setExpenseForm] = useState({ category: 'elektrik', description: '', amount: '', is_recurring: false });
 
+  const [expenseCatFilter, setExpenseCatFilter] = useState('');
+
   const now_ref = new Date();
 
 
@@ -10480,7 +10482,13 @@ function CostsPage({ models, personnel, addToast }) {
 
         <div className="card" style={{ marginBottom: '16px' }}>
 
-          <div className="card-header"><h3 className="card-title">🏢 İşletme Giderleri — {new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</h3></div>
+          <div className="card-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
+            <h3 className="card-title">🏢 İşletme Giderleri — {new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</h3>
+            <select className="form-select" style={{ width: '180px', fontSize: '12px', padding: '6px 10px' }} value={expenseCatFilter} onChange={e => setExpenseCatFilter(e.target.value)}>
+              <option value="">Tüm Kategoriler</option>
+              {expenseCategories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </div>
 
           {expenses.length === 0 ? (
 
@@ -10530,11 +10538,11 @@ function CostsPage({ models, personnel, addToast }) {
 
               <div className="table-wrapper"><table className="table"><thead><tr><th>Kategori</th><th>Açıklama</th><th>Tutar</th><th>Tekrar</th><th></th></tr></thead><tbody>
 
-                {expenses.map(e => {
+                {expenses.filter(e => !expenseCatFilter || e.category === expenseCatFilter).map(e => {
 
                   const catInfo = expenseCategories.find(c => c.value === e.category);
 
-                  return (<tr key={e.id}><td>{catInfo?.icon} {catInfo?.label || e.category}</td><td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{e.description || '—'}</td><td style={{ fontWeight: '700' }}>{e.amount.toLocaleString('tr-TR')} ₺</td><td>{e.is_recurring ? <span className="badge badge-info">📋 Aylık</span> : '—'}</td><td><button onClick={() => deleteExpense(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="Sil">🗑️</button></td></tr>);
+                  return (<tr key={e.id}><td>{catInfo?.icon} {catInfo?.label || e.category}</td><td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{e.description || '—'}</td><td style={{ fontWeight: '700' }}>{e.amount.toLocaleString('tr-TR')} ₺</td><td>{e.is_recurring ? <span className="badge badge-info">📋 Aylık</span> : '—'}</td><td style={{ display: 'flex', gap: '4px' }}><button onClick={() => openEditCost(e)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="Düzenle">✏️</button><button onClick={() => deleteExpense(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="Sil">🗑️</button></td></tr>);
 
                 })}
 
@@ -10592,30 +10600,36 @@ function CostsPage({ models, personnel, addToast }) {
 
           ) : (
 
-            <div style={{ display: 'grid', gap: '10px', padding: '16px' }}>
-
-              {Object.entries(personnelCosts).map(([pid, pc]) => {
-
-                const totalWage = pc.dailyWage * Math.max(1, pc.days.size);
-
-                const diff = pc.totalValue - totalWage;
-
-                const efficiency = totalWage > 0 ? Math.round((pc.totalValue / totalWage) * 100) : 0;
-
-                return (
-
-                  <div key={pid} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: 'var(--bg-input)', border: `1px solid ${diff >= 0 ? 'rgba(46,204,113,0.2)' : 'rgba(231,76,60,0.2)'}` }}>
-
-                    <div style={{ fontSize: '28px' }}>{diff >= 0 ? '✅' : '⚠️'}</div>
-
-                    <div style={{ flex: 1 }}><div style={{ fontWeight: '700', fontSize: '14px' }}>{pc.name}</div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ücret: {totalWage.toFixed(0)}₺  Üretim: {pc.totalValue.toFixed(0)}₺  {pc.totalProduced} ad  {Math.max(1, pc.days.size)} gün</div></div>
-
-                    <div style={{ textAlign: 'right' }}><div style={{ fontSize: '18px', fontWeight: '800', color: diff >= 0 ? 'var(--success)' : 'var(--danger)' }}>%{efficiency}</div><div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>verimlilik</div></div>
-
-                  </div>);
-
-              })}
-
+            <div className="table-wrapper" style={{ border: 'none' }}>
+              <table className="table">
+                <thead><tr><th>Personel</th><th>Maaş</th><th>SSK</th><th>Ulaşım</th><th>Yemek</th><th>Toplam</th><th>Üretim</th><th>Fark</th><th>Verimlilik</th></tr></thead>
+                <tbody>
+                  {Object.entries(personnelCosts).map(([pid, pc]) => {
+                    const p = personnel.find(pp => pp.id == pid);
+                    const salary = p?.base_salary || 0;
+                    const ssk = p?.ssk_cost || 0;
+                    const transport = p?.transport_allowance || 0;
+                    const food = p?.food_allowance || 0;
+                    const totalCost = salary + ssk + transport + food + (p?.compensation || 0);
+                    const totalWage = pc.dailyWage * Math.max(1, pc.days.size);
+                    const diff = pc.totalValue - totalCost;
+                    const efficiency = totalCost > 0 ? Math.round((pc.totalValue / totalCost) * 100) : 0;
+                    return (
+                      <tr key={pid}>
+                        <td style={{ fontWeight: '700' }}>{pc.name}</td>
+                        <td>{salary.toLocaleString('tr-TR')} ₺</td>
+                        <td>{ssk.toLocaleString('tr-TR')} ₺</td>
+                        <td>{transport.toLocaleString('tr-TR')} ₺</td>
+                        <td>{food.toLocaleString('tr-TR')} ₺</td>
+                        <td style={{ fontWeight: '700', color: '#8e44ad' }}>{totalCost.toLocaleString('tr-TR')} ₺</td>
+                        <td style={{ fontWeight: '600', color: 'var(--accent)' }}>{pc.totalValue.toFixed(0)} ₺</td>
+                        <td style={{ fontWeight: '700', color: diff >= 0 ? 'var(--success)' : 'var(--danger)' }}>{diff >= 0 ? '+' : ''}{diff.toLocaleString('tr-TR')} ₺</td>
+                        <td><span className={`badge ${efficiency >= 100 ? 'badge-success' : efficiency >= 70 ? 'badge-warning' : 'badge-danger'}`}>%{efficiency}</span></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
 
           )}
@@ -10623,6 +10637,29 @@ function CostsPage({ models, personnel, addToast }) {
         </div>
 
       </div>
+
+      {/* EDIT COST MODAL */}
+      {editCost && (
+        <div className="modal-overlay" onClick={() => setEditCost(null)}><div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+          <div className="modal-header"><h2 className="modal-title">✏️ Gider Düzenle</h2><button className="modal-close" onClick={() => setEditCost(null)}>✕</button></div>
+          <form onSubmit={handleUpdateCost}>
+            <div className="form-group" style={{ marginBottom: '12px' }}>
+              <label className="form-label">Kategori</label>
+              <select className="form-select" value={editCostForm.category} onChange={e => setEditCostForm({ ...editCostForm, category: e.target.value })}>
+                {expenseCategories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label className="form-label">Tutar (₺)</label><input className="form-input" type="number" step="0.01" value={editCostForm.amount} onChange={e => setEditCostForm({ ...editCostForm, amount: parseFloat(e.target.value) || 0 })} /></div>
+              <div className="form-group"><label className="form-label">Açıklama</label><input className="form-input" value={editCostForm.description} onChange={e => setEditCostForm({ ...editCostForm, description: e.target.value })} /></div>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+              <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>💾 Kaydet</button>
+              <button type="button" className="btn" onClick={() => setEditCost(null)} style={{ flex: 1 }}>İptal</button>
+            </div>
+          </form>
+        </div></div>
+      )}
 
     </>
 
