@@ -967,7 +967,7 @@ function NewModelModal({ onClose, onSave }) {
 
                         <div style={{ position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)', background: T.primary, color: '#fff', padding: '5px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
 
-                          ✅ {label} Yüklendi — DeĞiştirmek için tıklayın
+                          ✅ {label} Yüklendi — Değiştirmek için tıklayın
 
                         </div>
 
@@ -1895,13 +1895,13 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
                   <label className="form-label">{'\uD83D\uDCCB'} Operasyon Kategorisi</label>
                   <select className="form-input" value={form.operation_category} onChange={e => setForm({ ...form, operation_category: e.target.value })}>
                     <option value="kesim">{'\u2702\uFE0F'} Kesim</option>
-                    <option value="nakis_baski">{'\uD83E\uDEA1'} Nak{'\u0131\u015F'} / Bask{'\u0131'}</option>
+                    <option value="nakis_baski">{'\uD83E\uDEA1'} Nak{'\u0131ş'} / Bask{'\u0131'}</option>
                     <option value="dikim">{'\uD83E\uDDF5'} Dikim</option>
                     <option value="temizlik">{'\uD83E\uDDF9'} Temizlik</option>
                     <option value="kalite_kontrol">{'\u2705'} Kalite Kontrol</option>
                     <option value="utu_paket">{'\uD83D\uDD25'} {'\u00DC'}t{'\u00FC'} / Paket</option>
                     <option value="yikama">{'\uD83E\uDDFC'} Y{'\u0131'}kama</option>
-                    <option value="diger">{'\uD83D\uDCE6'} Di{'\u011F'}er</option>
+                    <option value="diger">{'\uD83D\uDCE6'} Di{'ğ'}er</option>
                   </select>
                 </div>
 
@@ -1921,29 +1921,29 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
                 <label className="form-label">{'\u2699\uFE0F'} Kullan{'\u0131'}lacak Makine</label>
                 <select className="form-input" value={form.machine_type} onChange={e => setForm({ ...form, machine_type: e.target.value })}>
                   <option value="">-- Makine Se{'\u00E7'}in --</option>
-                  <optgroup label={'\uD83E\uDDF5 Diki\u015F Makineleri'}>
-                    <option value="Düz Dikiş (Tek İğne)">D{'\u00FC'}z Diki{'\u015F'} (Tek {'\u0130\u011F'}ne)</option>
-                    <option value="Çift İğne Düz Dikiş">{'\u00C7'}ift {'\u0130\u011F'}ne D{'\u00FC'}z Diki{'\u015F'}</option>
-                    <option value="Zincir Dikiş">Zincir Diki{'\u015F'}</option>
-                    <option value="Çift İğne Zincir Dikiş">{'\u00C7'}ift {'\u0130\u011F'}ne Zincir Diki{'\u015F'}</option>
-                    <option value="Gizli Dikiş">Gizli Diki{'\u015F'}</option>
+                  <optgroup label={'\uD83E\uDDF5 Dikiş Makineleri'}>
+                    <option value="Düz Dikiş (Tek İğne)">D{'\u00FC'}z Diki{'ş'} (Tek {'İğ'}ne)</option>
+                    <option value="Çift İğne Düz Dikiş">{'\u00C7'}ift {'İğ'}ne D{'\u00FC'}z Diki{'ş'}</option>
+                    <option value="Zincir Dikiş">Zincir Diki{'ş'}</option>
+                    <option value="Çift İğne Zincir Dikiş">{'\u00C7'}ift {'İğ'}ne Zincir Diki{'ş'}</option>
+                    <option value="Gizli Dikiş">Gizli Diki{'ş'}</option>
                     <option value="Zigzag">Zigzag</option>
                   </optgroup>
                   <optgroup label={'\uD83D\uDD04 Overlok'}>
-                    <option value="3 İplik Overlok">3 {'\u0130'}plik Overlok</option>
-                    <option value="4 İplik Overlok">4 {'\u0130'}plik Overlok</option>
-                    <option value="5 İplik Overlok">5 {'\u0130'}plik Overlok</option>
+                    <option value="3 İplik Overlok">3 {'İ'}plik Overlok</option>
+                    <option value="4 İplik Overlok">4 {'İ'}plik Overlok</option>
+                    <option value="5 İplik Overlok">5 {'İ'}plik Overlok</option>
                   </optgroup>
                   <optgroup label={'\uD83D\uDCCF Re\u00E7me & Flatlock'}>
-                    <option value="2 İğne Reçme">2 {'\u0130\u011F'}ne Re{'\u00E7'}me</option>
-                    <option value="3 İğne Reçme">3 {'\u0130\u011F'}ne Re{'\u00E7'}me</option>
+                    <option value="2 İğne Reçme">2 {'İğ'}ne Re{'\u00E7'}me</option>
+                    <option value="3 İğne Reçme">3 {'İğ'}ne Re{'\u00E7'}me</option>
                     <option value="Bıçaklı Reçme">B{'\u0131\u00E7'}akl{'\u0131'} Re{'\u00E7'}me</option>
                     <option value="Silindir Kol Reçme">Silindir Kol Re{'\u00E7'}me</option>
                     <option value="Flatlock">Flatlock</option>
                   </optgroup>
                   <optgroup label={'\u2699\uFE0F \u00D6zel Operasyon'}>
-                    <option value="İlik Makinesi">{'\u0130'}lik Makinesi</option>
-                    <option value="Düğme Dikme Makinesi">D{'\u00FC\u011F'}me Dikme Makinesi</option>
+                    <option value="İlik Makinesi">{'İ'}lik Makinesi</option>
+                    <option value="Düğme Dikme Makinesi">D{'\u00FCğ'}me Dikme Makinesi</option>
                     <option value="Punteriz (Bartack)">Punteriz (Bartack)</option>
                     <option value="Kemer Takma Makinesi">Kemer Takma Makinesi</option>
                     <option value="Kollu Makine (Feed-off-the-arm)">Kollu Makine (Feed-off-the-arm)</option>
@@ -1959,14 +1959,14 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
                     <option value="Pastal Serim Makinesi">Pastal Serim Makinesi</option>
                     <option value="CNC Otomatik Kesim">CNC Otomatik Kesim</option>
                   </optgroup>
-                  <optgroup label={'\u2668\uFE0F \u00DCt\u00FC & Son \u0130\u015Flem'}>
+                  <optgroup label={'\u2668\uFE0F \u00DCt\u00FC & Son İşlem'}>
                     <option value="Buharlı Ütü">Buharl{'\u0131'} {'\u00DC'}t{'\u00FC'}</option>
                     <option value="Vakum Ütü Masası">Vakum {'\u00DC'}t{'\u00FC'} Masas{'\u0131'}</option>
                     <option value="Ütü Presi">{'\u00DC'}t{'\u00FC'} Presi</option>
                     <option value="Buhar Kazanı">Buhar Kazan{'\u0131'}</option>
                   </optgroup>
                   <optgroup label={'\uD83D\uDCCB Yard\u0131mc\u0131'}>
-                    <option value="Nakış / Brode Makinesi">Nak{'\u0131\u015F'} / Brode Makinesi</option>
+                    <option value="Nakış / Brode Makinesi">Nak{'\u0131ş'} / Brode Makinesi</option>
                     <option value="Etiket Kesme Makinesi">Etiket Kesme Makinesi</option>
                     <option value="Baskı / Transfer Makinesi">Bask{'\u0131'} / Transfer Makinesi</option>
                     <option value="Elle (Makinesiz)">Elle (Makinesiz)</option>
@@ -2791,7 +2791,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
               </div>
 
-              <div className="form-group"><label className="form-label">BaĞımlılık (Önceki İşlem)</label><input className="form-input" placeholder="örn: Yaka dikildikten sonra" value={form.dependency} onChange={e => setForm({ ...form, dependency: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Bağımlılık (Önceki İşlem)</label><input className="form-input" placeholder="örn: Yaka dikildikten sonra" value={form.dependency} onChange={e => setForm({ ...form, dependency: e.target.value })} /></div>
 
             </div>
 
@@ -3908,7 +3908,7 @@ function DashboardPage({ models, personnel }) {
 
               <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
 
-                1. Ay: Uyarı verilir  2. Ay: DeĞerlendirme yapılır  3. Ay: Karar alınır
+                1. Ay: Uyarı verilir  2. Ay: Değerlendirme yapılır  3. Ay: Karar alınır
 
               </p>
 
@@ -3932,7 +3932,7 @@ function DashboardPage({ models, personnel }) {
 
             <div style={{ textAlign: 'center' }}><div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--warning)' }}>{activeModels}</div><div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Aktif Model</div></div>
 
-            <div style={{ textAlign: 'center' }}><div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--success)' }}>{todayStats.value.toFixed(0)} ₺</div><div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Günlük Üretim DeĞeri</div></div>
+            <div style={{ textAlign: 'center' }}><div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--success)' }}>{todayStats.value.toFixed(0)} ₺</div><div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Günlük Üretim Değeri</div></div>
 
           </div>
 
@@ -4199,9 +4199,9 @@ function ModelsPage({ models, loadModels, addToast }) {
           { name: 'G\u00f6\u011f\u00fcs', description: 'Koltuk alt\u0131ndan yatay \u00f6l\u00e7\u00fc' },
           { name: 'Bel', description: 'Bel hizas\u0131ndan yatay \u00f6l\u00e7\u00fc' },
           { name: 'Basen', description: 'Kal\u00e7a hizas\u0131ndan yatay \u00f6l\u00e7\u00fc' },
-          { name: 'Boy', description: 'Omuzdan ete\u011Fe dikey \u00f6l\u00e7\u00fc' },
-          { name: 'Kol Boyu', description: 'Omuzdan bile\u011Fe' },
-          { name: 'Omuz', description: 'Omuz geni\u015Fli\u011Fi' }
+          { name: 'Boy', description: 'Omuzdan eteğe dikey \u00f6l\u00e7\u00fc' },
+          { name: 'Kol Boyu', description: 'Omuzdan bileğe' },
+          { name: 'Omuz', description: 'Omuz genişliği' }
         ]);
         setMeasureSizes(['S', 'M', 'L', 'XL']);
         setMeasureData({});
@@ -4221,8 +4221,43 @@ function ModelsPage({ models, loadModels, addToast }) {
 
       await loadOperations(modelId); await loadModels(); setShowOperationModal(null); addToast('success', 'İşlem eklendi!');
 
-    } catch (err) { addToast('error', err.message || 'Hata olu\u015Ftu'); }
+    } catch (err) { addToast('error', err.message || 'Hata oluştu'); }
   };
+
+  // B3: İşlem silme
+  const handleDeleteOperation = async (modelId, opId) => {
+    try {
+      const res = await fetch(`/api/models/${modelId}/operations?opId=${opId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Silme hatası');
+      await loadOperations(modelId);
+      await loadModels();
+      addToast('success', 'İşlem silindi');
+    } catch (err) { addToast('error', err.message); }
+  };
+
+  // B4: İşlem sıra değiştirme
+  const handleMoveOperation = async (modelId, opId, direction) => {
+    const ops = modelOperations[modelId] || [];
+    const idx = ops.findIndex(o => o.id === opId);
+    if (idx < 0) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= ops.length) return;
+    const currentOp = ops[idx];
+    const targetOp = ops[targetIdx];
+    try {
+      await fetch(`/api/models/${modelId}/operations`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operation_id: currentOp.id, order_number: targetOp.order_number })
+      });
+      await fetch(`/api/models/${modelId}/operations`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operation_id: targetOp.id, order_number: currentOp.order_number })
+      });
+      await loadOperations(modelId);
+      addToast('success', 'Sıra değiştirildi');
+    } catch (err) { addToast('error', err.message); }
+  };
+
 
   // ===== ÖLÇÜ TABLOSU KAYDET =====
   const handleSaveMeasurements = async (modelId) => {
@@ -4236,7 +4271,7 @@ function ModelsPage({ models, loadModels, addToast }) {
       if (!res.ok) throw new Error('Kaydetme hatas\u0131');
       await loadModels();
       addToast('success', '\u2705 \u00D6l\u00E7\u00FC tablosu kaydedildi!');
-    } catch (err) { addToast('error', err.message || 'Hata olu\u015Ftu'); }
+    } catch (err) { addToast('error', err.message || 'Hata oluştu'); }
   };
 
 
@@ -4422,7 +4457,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                     <button className="btn btn-sm" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '13px' }} onClick={(e) => { e.stopPropagation(); openEditModal(model); }} title="Düzenle">✏️</button>
 
-                    <button className="btn btn-sm" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '13px' }} onClick={(e) => { e.stopPropagation(); openAuditHistory(model.id); }} title="DeĞişiklik Geçmişi">📜</button>
+                    <button className="btn btn-sm" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '13px' }} onClick={(e) => { e.stopPropagation(); openAuditHistory(model.id); }} title="Değişiklik Geçmişi">📜</button>
 
                     <button className="btn btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); handleDeleteModel(model.id); }}>🗑️</button>
 
@@ -4567,8 +4602,8 @@ function ModelsPage({ models, loadModels, addToast }) {
                               <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent)' }}>{'\uD83D\uDCCF'} {model.name} — {'\u00D6'}l{'\u00E7\u00FC'} Tablosu</div>
                               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
                                 Model Kodu: <strong>{model.code}</strong>
-                                {model.order_no && <> | Sipari{'\u015F'} No: <strong>{model.order_no}</strong></>}
-                                {model.customer && <> | M{'\u00FC\u015F'}teri: <strong>{model.customer}</strong></>}
+                                {model.order_no && <> | Sipari{'ş'} No: <strong>{model.order_no}</strong></>}
+                                {model.customer && <> | M{'\u00FCş'}teri: <strong>{model.customer}</strong></>}
                               </div>
                             </div>
                             <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'right' }}>
@@ -4584,7 +4619,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <h4 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '12px' }}>{'\uD83D\uDCCF'} {'\u00D6'}l{'\u00E7\u00FC'} Noktalar{'\u0131'} Tan{'\u0131'}mlar{'\u0131'}</h4>
 
-                          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>Her {'\u00F6'}l{'\u00E7\u00FC'} noktas{'\u0131'}n{'\u0131'}n nerede ve nas{'\u0131'}l {'\u00F6'}l{'\u00E7\u00FC'}lece{'\u011F'}ini tan{'\u0131'}mlay{'\u0131'}n.</p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>Her {'\u00F6'}l{'\u00E7\u00FC'} noktas{'\u0131'}n{'\u0131'}n nerede ve nas{'\u0131'}l {'\u00F6'}l{'\u00E7\u00FC'}lece{'ğ'}ini tan{'\u0131'}mlay{'\u0131'}n.</p>
 
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px', marginBottom: '12px' }}>
 
@@ -4634,7 +4669,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
 
-                            <h4 style={{ fontSize: '15px', fontWeight: '700' }}>📏 Ölçü Matrisi (Beden  DeĞer)</h4>
+                            <h4 style={{ fontSize: '15px', fontWeight: '700' }}>📏 Ölçü Matrisi (Beden  Değer)</h4>
 
                             <div style={{ display: 'flex', gap: '4px' }}>
 
@@ -5115,7 +5150,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                               <div key={op.id} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--bg-card)' }}>
 
-                                <div onClick={() => setExpandedOp(expandedOp === op.id ? null : op.id)} style={{ display: 'grid', gridTemplateColumns: '50px 1fr 120px 100px 80px 80px', alignItems: 'center', padding: '12px 16px', gap: '12px', background: 'var(--bg-input)', cursor: 'pointer', borderBottom: expandedOp === op.id ? '1px solid var(--border-color)' : 'none' }}>
+                                <div onClick={() => setExpandedOp(expandedOp === op.id ? null : op.id)} style={{ display: 'grid', gridTemplateColumns: '50px 1fr 120px 100px 80px 80px auto', alignItems: 'center', padding: '12px 16px', gap: '12px', background: 'var(--bg-input)', cursor: 'pointer', borderBottom: expandedOp === op.id ? '1px solid var(--border-color)' : 'none' }}>
 
                                   <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent)', textAlign: 'center' }}>{op.order_number}</div>
 
@@ -5143,7 +5178,15 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                                   <div style={{ fontSize: '12px', fontWeight: '600', textAlign: 'center' }}>{op.standard_time_min && op.standard_time_max ? `${op.standard_time_min}–${op.standard_time_max} sn` : '—'}</div>
 
-                                  <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', textAlign: 'center' }}>{op.unit_price ? `${op.unit_price.toFixed(2)} \u20BA` : '—'}</div>
+                                  <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', textAlign: 'center' }}>{op.unit_price ? `${op.unit_price.toFixed(2)} ₺` : '—'}</div>
+
+                                  {/* B2+B3+B4: İşlem Düzenle/Sil/Sıra Değiştir */}
+                                  <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                    <button onClick={() => handleMoveOperation(model.id, op.id, 'up')} title="Yukarı taşı" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', opacity: op.order_number <= 1 ? 0.3 : 1 }} disabled={op.order_number <= 1}>↑</button>
+                                    <button onClick={() => handleMoveOperation(model.id, op.id, 'down')} title="Aşağı taşı" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', opacity: op.order_number >= (modelOperations[model.id] || []).length ? 0.3 : 1 }} disabled={op.order_number >= (modelOperations[model.id] || []).length}>↓</button>
+                                    <button onClick={() => { const newName = prompt('İşlem adı:', op.name); if (newName && newName !== op.name) { fetch(`/api/models/${model.id}/operations/${op.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newName }) }).then(() => { loadOperations(model.id); addToast('success', 'İşlem güncellendi'); }); } }} title="Düzenle" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px' }}>✏️</button>
+                                    <button onClick={() => { if (confirm(`"${op.name}" işlemini silmek istediğinize emin misiniz?`)) { handleDeleteOperation(model.id, op.id); } }} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', color: 'var(--danger)' }}>🗑️</button>
+                                  </div>
 
                                 </div>
 
@@ -5231,7 +5274,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                               <span>Toplam İşlem: {(modelOperations[model.id] || []).length}</span>
 
-                              <span style={{ color: 'var(--accent)' }}>Toplam Fiyat: {(modelOperations[model.id] || []).reduce((s, o) => s + (o.unit_price || 0), 0).toFixed(2)} \u20BA</span>
+                              <span style={{ color: 'var(--accent)' }}>Toplam Fiyat: {(modelOperations[model.id] || []).reduce((s, o) => s + (o.unit_price || 0), 0).toFixed(2)} ₺</span>
 
                             </div>
 
@@ -5299,7 +5342,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
             <div style={{ padding: '8px 16px', background: 'rgba(243,156,18,0.1)', borderBottom: '1px solid rgba(243,156,18,0.3)', fontSize: '12px', color: '#f39c12', fontWeight: '600' }}>
 
-              ⚠️ Yapılan tüm deĞişiklikler tarih/saat ile kalıcı olarak kayıt altına alınır ve silinemez.
+              ⚠️ Yapılan tüm değişiklikler tarih/saat ile kalıcı olarak kayıt altına alınır ve silinemez.
 
             </div>
 
@@ -5395,7 +5438,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                 <button type="button" className="btn btn-secondary" onClick={() => setEditModel(null)}>İptal</button>
 
-                <button type="submit" className="btn btn-primary">💾 Kaydet & DeĞişiklikleri Logla</button>
+                <button type="submit" className="btn btn-primary">💾 Kaydet & Değişiklikleri Logla</button>
 
               </div>
 
@@ -5419,7 +5462,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
             <div className="modal-header">
 
-              <h2 className="modal-title">📜 DeĞişiklik Geçmişi</h2>
+              <h2 className="modal-title">📜 Değişiklik Geçmişi</h2>
 
               <button className="modal-close" onClick={() => setAuditHistory(null)}>✕</button>
 
@@ -5427,7 +5470,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
             <div style={{ padding: '8px 16px', background: 'rgba(46,204,113,0.1)', borderBottom: '1px solid rgba(46,204,113,0.3)', fontSize: '12px', color: '#2ecc71', fontWeight: '600' }}>
 
-              🔒 Bu kayıtlar silinemez. Tüm deĞişiklikler tarih ve saat ile kalıcı olarak saklanır.
+              🔒 Bu kayıtlar silinemez. Tüm değişiklikler tarih ve saat ile kalıcı olarak saklanır.
 
             </div>
 
@@ -5439,7 +5482,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                   <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
 
-                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz deĞişiklik kaydı yok</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz değişiklik kaydı yok</div>
 
                   <div style={{ fontSize: '12px', marginTop: '4px' }}>Bu modelde düzenleme yapıldıĞında burada görünecek.</div>
 
@@ -5487,7 +5530,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                       </div>
 
-                      <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>👤 DeĞiştiren: <strong>{entry.changed_by || 'admin'}</strong></div>
+                      <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>👤 Değiştiren: <strong>{entry.changed_by || 'admin'}</strong></div>
 
                     </div>
 
@@ -5613,7 +5656,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
 
-    try { await fetch(`/api/personnel/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus, changed_by: 'admin' }) }); await loadPersonnel(); } catch (err) { addToast('error', 'Durum deĞiştirilemedi'); }
+    try { await fetch(`/api/personnel/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus, changed_by: 'admin' }) }); await loadPersonnel(); } catch (err) { addToast('error', 'Durum değiştirilemedi'); }
 
   };
 
@@ -5738,7 +5781,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
                   <button onClick={() => { setEditPerson(p); setShowModal(true); }} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
 
-                  <button onClick={() => openPersonAuditHistory(p.id)} title="DeĞişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
+                  <button onClick={() => openPersonAuditHistory(p.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
 
                   <button onClick={() => handleDelete(p.id)} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '3px' }}>🗑️</button>
 
@@ -5784,7 +5827,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
             <div className="modal-header">
 
-              <h2 className="modal-title">📜 Personel DeĞişiklik Geçmişi</h2>
+              <h2 className="modal-title">📜 Personel Değişiklik Geçmişi</h2>
 
               <button className="modal-close" onClick={() => setPersonAuditHistory(null)}>✕</button>
 
@@ -5792,7 +5835,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
             <div style={{ padding: '8px 16px', background: 'rgba(46,204,113,0.1)', borderBottom: '1px solid rgba(46,204,113,0.3)', fontSize: '12px', color: '#2ecc71', fontWeight: '600' }}>
 
-              🔒 Bu kayıtlar silinemez. Tüm deĞişiklikler kalıcı olarak saklanır.
+              🔒 Bu kayıtlar silinemez. Tüm değişiklikler kalıcı olarak saklanır.
 
             </div>
 
@@ -5804,7 +5847,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
                   <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
 
-                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz deĞişiklik kaydı yok</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz değişiklik kaydı yok</div>
 
                 </div>
 
@@ -6227,7 +6270,7 @@ function ProductionPage({ models, personnel, addToast }) {
                               <span style={{ fontSize: '9px', background: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--bg-card)', padding: '1px 5px', borderRadius: '6px' }}>⚡{o.difficulty}/10</span>
                               <span style={{ fontSize: '9px', background: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--bg-card)', padding: '1px 5px', borderRadius: '6px' }}>👥{capable.length}</span>
                             </div>
-                            {i < operations.length - 1 && <div style={{ position: 'absolute', right: '-8px', top: '50%', fontSize: '14px', color: 'var(--text-muted)' }}></div>}
+                            
                           </div>
                         );
                       })}
@@ -6242,7 +6285,7 @@ function ProductionPage({ models, personnel, addToast }) {
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label" style={{ fontSize: '13px' }}>③ Personel Seçin * {suggestedPerson && parseInt(selectedPerson) === suggestedPerson && <span style={{ background: 'linear-gradient(135deg, #2ecc71, #27ae60)', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', marginLeft: '6px', fontWeight: '700' }}>🤖 Önerilen</span>}</label>
-                  <select className="form-select" value={selectedPerson} onChange={e => { setSelectedPerson(e.target.value); }} style={{ fontSize: '15px', padding: '12px' }}>
+                  <select className="form-select" value={selectedPerson} onChange={e => { setSelectedPerson(e.target.value); }} disabled={!selectedModel || !selectedOperation} style={{ fontSize: '15px', padding: '12px', opacity: (!selectedModel || !selectedOperation) ? 0.5 : 1 }}>
                     <option value="">— Personel seçin —</option>
                     {personnel.filter(p => p.status === 'active').map(p => <option key={p.id} value={p.id}>{p.name} ({p.role}){p.id === suggestedPerson ? ' ★ ÖNERİLEN' : ''}</option>)}
                   </select>
@@ -6552,7 +6595,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
     if (summaryList.length === 0) return;
 
-    const headers = ['Personel', 'Üretim Adet', 'Üretim DeĞeri (₺)', 'Günlük Maliyet (₺)', 'Katma DeĞer (₺)', 'Hata', 'Kalite %', 'Pasif Süre (dk)'];
+    const headers = ['Personel', 'Üretim Adet', 'Üretim Değeri (₺)', 'Günlük Maliyet (₺)', 'Katma Değer (₺)', 'Hata', 'Kalite %', 'Pasif Süre (dk)'];
 
     const rows = summaryList.map(p => {
 
@@ -6596,7 +6639,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
       if (Array.isArray(ops) && ops.length > 0) {
 
-        opsHtml = `<table><thead><tr><th>#</th><th>İşlem Adı</th><th>Makine</th><th>Zorluk</th><th>İplik/Malzeme</th><th>BaĞımlılık</th><th>Birim Fiyat</th></tr></thead><tbody>` +
+        opsHtml = `<table><thead><tr><th>#</th><th>İşlem Adı</th><th>Makine</th><th>Zorluk</th><th>İplik/Malzeme</th><th>Bağımlılık</th><th>Birim Fiyat</th></tr></thead><tbody>` +
 
           ops.map(op => `<tr><td>${op.order_number}</td><td><strong>${op.name}</strong></td><td>${op.machine_type || '—'}</td><td>${op.difficulty || '—'}/10</td><td>${op.thread_material || '—'}</td><td>${op.dependency || '—'}</td><td>${op.unit_price ? op.unit_price + ' ₺' : '—'}</td></tr>`).join('') +
 
@@ -6730,7 +6773,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
           <div className="stat-card"><div className="stat-icon">📦</div><div className="stat-value">{totalProduced.toLocaleString('tr-TR')}</div><div className="stat-label">Toplam Üretim</div></div>
 
-          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{totalValue.toFixed(0)} ₺</div><div className="stat-label">Toplam Üretim DeĞeri</div></div>
+          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{totalValue.toFixed(0)} ₺</div><div className="stat-label">Toplam Üretim Değeri</div></div>
 
           <div className="stat-card"><div className="stat-icon">❌</div><div className="stat-value">{totalDefective}</div><div className="stat-label">Toplam Hata</div></div>
 
@@ -6748,7 +6791,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
           ) : (
 
-            <div className="table-wrapper"><table className="table"><thead><tr><th>Personel</th><th>Üretim Adet</th><th>Üretim DeĞeri</th><th>Günlük Maliyet</th><th>Katma DeĞer</th><th>Hata</th><th>Kalite</th><th>Pasif Süre</th><th>Durum</th></tr></thead><tbody>
+            <div className="table-wrapper"><table className="table"><thead><tr><th>Personel</th><th>Üretim Adet</th><th>Üretim Değeri</th><th>Günlük Maliyet</th><th>Katma Değer</th><th>Hata</th><th>Kalite</th><th>Pasif Süre</th><th>Durum</th></tr></thead><tbody>
 
               {summaryList.map((p, i) => {
 
@@ -6973,7 +7016,7 @@ function MachinesPage({ addToast }) {
 
   const handleDelete = async (id) => { if (!confirm('Bu makineyi silmek istediĞinize emin misiniz?')) return; try { await fetch(`/api/machines/${id}`, { method: 'DELETE' }); await load(); addToast('success', 'Makine silindi'); } catch { addToast('error', 'Silinemedi'); } };
 
-  const handleStatusToggle = async (id, cs) => { try { await fetch(`/api/machines/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: cs === 'active' ? 'inactive' : 'active', changed_by: 'admin' }) }); await load(); } catch { addToast('error', 'Durum deĞiştirilemedi'); } };
+  const handleStatusToggle = async (id, cs) => { try { await fetch(`/api/machines/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: cs === 'active' ? 'inactive' : 'active', changed_by: 'admin' }) }); await load(); } catch { addToast('error', 'Durum değiştirilemedi'); } };
 
 
 
@@ -7010,7 +7053,7 @@ function MachinesPage({ addToast }) {
 
       await load(); setEditMachine(null);
 
-      addToast('success', 'Makine güncellendi! DeĞişiklikler kayıt altına alındı.');
+      addToast('success', 'Makine güncellendi! Değişiklikler kayıt altına alındı.');
 
     } catch (err) { addToast('error', err.message); }
 
@@ -7100,7 +7143,7 @@ function MachinesPage({ addToast }) {
 
                     <button onClick={() => openEditMachine(m)} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
 
-                    <button onClick={() => openMachineAuditHistory(m.id)} title="DeĞişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
+                    <button onClick={() => openMachineAuditHistory(m.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
 
                     <button onClick={() => handleDelete(m.id)} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '3px' }}>🗑️</button>
 
@@ -7172,7 +7215,7 @@ function MachinesPage({ addToast }) {
 
             <div style={{ padding: '8px 16px', background: 'rgba(243,156,18,0.1)', borderBottom: '1px solid rgba(243,156,18,0.3)', fontSize: '12px', color: '#f39c12', fontWeight: '600' }}>
 
-              ⚠️ Tüm deĞişiklikler tarih/saat ile kalıcı olarak kayıt altına alınır ve silinemez.
+              ⚠️ Tüm değişiklikler tarih/saat ile kalıcı olarak kayıt altına alınır ve silinemez.
 
             </div>
 
@@ -7222,7 +7265,7 @@ function MachinesPage({ addToast }) {
 
                 <button type="button" className="btn btn-secondary" onClick={() => setEditMachine(null)}>İptal</button>
 
-                <button type="submit" className="btn btn-primary">💾 Kaydet & DeĞişiklikleri Logla</button>
+                <button type="submit" className="btn btn-primary">💾 Kaydet & Değişiklikleri Logla</button>
 
               </div>
 
@@ -7246,7 +7289,7 @@ function MachinesPage({ addToast }) {
 
             <div className="modal-header">
 
-              <h2 className="modal-title">📜 Makine DeĞişiklik Geçmişi</h2>
+              <h2 className="modal-title">📜 Makine Değişiklik Geçmişi</h2>
 
               <button className="modal-close" onClick={() => setMachineAuditHistory(null)}>✕</button>
 
@@ -7266,7 +7309,7 @@ function MachinesPage({ addToast }) {
 
                   <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
 
-                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz deĞişiklik kaydı yok</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz değişiklik kaydı yok</div>
 
                 </div>
 
@@ -7541,9 +7584,9 @@ function PrimPage({ models, personnel, addToast }) {
 
     const p = summary[log.personnel_id];
 
-    const saĞlamAdet = Math.max(0, (log.total_produced || 0) - (log.defective_count || 0));
+    const saglamAdet = Math.max(0, (log.total_produced || 0) - (log.defective_count || 0));
 
-    p.total_value += saĞlamAdet * (log.unit_price || 0);
+    p.total_value += saglamAdet * (log.unit_price || 0);
 
     p.total_produced += log.total_produced || 0;
 
@@ -7687,7 +7730,7 @@ function PrimPage({ models, personnel, addToast }) {
 
                     <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
 
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Üretim DeĞeri</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Üretim Değeri</div>
 
                       <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent)' }}>{p.total_value.toFixed(0)} ₺</div>
 
@@ -7735,9 +7778,9 @@ function PrimPage({ models, personnel, addToast }) {
 
                     {hasPrim
 
-                      ? `Üretim DeĞeri (${p.total_value.toFixed(0)}₺) − Toplam Ücret (${totalWage.toFixed(0)}₺) = Fazla ${diff.toFixed(0)}₺ → Prim: ${diff.toFixed(0)}  %${primRate} = ${primAmount.toFixed(0)}₺`
+                      ? `Üretim Değeri (${p.total_value.toFixed(0)}₺) − Toplam Ücret (${totalWage.toFixed(0)}₺) = Fazla ${diff.toFixed(0)}₺ → Prim: ${diff.toFixed(0)}  %${primRate} = ${primAmount.toFixed(0)}₺`
 
-                      : `Üretim DeĞeri (${p.total_value.toFixed(0)}₺) − Toplam Ücret (${totalWage.toFixed(0)}₺) = ${diff.toFixed(0)}₺ (açık)`
+                      : `Üretim Değeri (${p.total_value.toFixed(0)}₺) − Toplam Ücret (${totalWage.toFixed(0)}₺) = ${diff.toFixed(0)}₺ (açık)`
 
                     }
 
@@ -7759,7 +7802,7 @@ function PrimPage({ models, personnel, addToast }) {
 
                       { month: 1, label: '1. Ay: Uyarı', icon: '⚠️', desc: 'Performans düşüklüĞü bildirilir' },
 
-                      { month: 2, label: '2. Ay: DeĞerlendirme', icon: '📋', desc: 'Detaylı analiz ve görüşme yapılır' },
+                      { month: 2, label: '2. Ay: Değerlendirme', icon: '📋', desc: 'Detaylı analiz ve görüşme yapılır' },
 
                       { month: 3, label: '3. Ay: Karar', icon: '📋', desc: 'Görev deĞişikliĞi veya çıkış kararı' }
 
@@ -8611,9 +8654,9 @@ function CustomersPage({ addToast }) {
 
         <div className="modal-overlay" onClick={() => setAuditHistory(null)}><div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px' }}>
 
-          <div className="modal-header"><h2 className="modal-title">📜 DeĞişiklik Geçmişi</h2><button className="modal-close" onClick={() => setAuditHistory(null)}>✕</button></div>
+          <div className="modal-header"><h2 className="modal-title">📜 Değişiklik Geçmişi</h2><button className="modal-close" onClick={() => setAuditHistory(null)}>✕</button></div>
 
-          {auditData.length === 0 ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Henüz deĞişiklik kaydı yok.</p> : (
+          {auditData.length === 0 ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Henüz değişiklik kaydı yok.</p> : (
 
             <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
 
@@ -8976,9 +9019,9 @@ function ShipmentsPage({ models, addToast }) {
 
         <div className="modal-overlay" onClick={() => setAuditHistory(null)}><div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px' }}>
 
-          <div className="modal-header"><h2 className="modal-title">📜 DeĞişiklik Geçmişi</h2><button className="modal-close" onClick={() => setAuditHistory(null)}>✕</button></div>
+          <div className="modal-header"><h2 className="modal-title">📜 Değişiklik Geçmişi</h2><button className="modal-close" onClick={() => setAuditHistory(null)}>✕</button></div>
 
-          {auditData.length === 0 ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Henüz deĞişiklik kaydı yok.</p> : (
+          {auditData.length === 0 ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Henüz değişiklik kaydı yok.</p> : (
 
             <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
 
@@ -9074,7 +9117,7 @@ function SettingsPage({ addToast }) {
 
     }
 
-    addToast('success', lang === 'ar' ? 'تم تغيير اللغة إلى العربية' : 'Dil Türkçe olarak deĞiştirildi');
+    addToast('success', lang === 'ar' ? 'تم تغيير اللغة إلى العربية' : 'Dil Türkçe olarak değiştirildi');
 
   };
 
@@ -9441,9 +9484,9 @@ function CostsPage({ models, personnel, addToast }) {
   const expenseCategories = [
     { value: 'elektrik', label: '\u26A1 Elektrik', icon: '\u26A1' },
     { value: 'su', label: '\uD83D\uDCA7 Su', icon: '\uD83D\uDCA7' },
-    { value: 'internet_telefon', label: '\uD83D\uDCE1 \u0130nternet / Telefon', icon: '\uD83D\uDCE1' },
+    { value: 'internet_telefon', label: '\uD83D\uDCE1 İnternet / Telefon', icon: '\uD83D\uDCE1' },
     { value: 'sigorta', label: '\uD83D\uDEE1\uFE0F Sigorta', icon: '\uD83D\uDEE1\uFE0F' },
-    { value: 'iplik', label: '\uD83E\uDDF5 \u0130plik / Malzeme', icon: '\uD83E\uDDF5' },
+    { value: 'iplik', label: '\uD83E\uDDF5 İplik / Malzeme', icon: '\uD83E\uDDF5' },
     { value: 'makine_bakim', label: '\uD83D\uDD27 Makine Tamiri / Bak\u0131m', icon: '\uD83D\uDD27' },
     { value: 'yedek_parca', label: '\u2699\uFE0F Yedek Par\u00E7a', icon: '\u2699\uFE0F' },
     { value: 'araba_benzin', label: '\u26FD Araba Benzin', icon: '\u26FD' },
@@ -9452,13 +9495,13 @@ function CostsPage({ models, personnel, addToast }) {
     { value: 'kdv', label: '\uD83D\uDCCB KDV', icon: '\uD83D\uDCCB' },
     { value: 'stopaj', label: '\uD83D\uDCC4 Stopaj', icon: '\uD83D\uDCC4' },
     { value: 'vergi', label: '\uD83C\uDFDB\uFE0F Vergi', icon: '\uD83C\uDFDB\uFE0F' },
-    { value: 'personel_maas', label: '\uD83D\uDCB0 Personel Maa\u015F\u0131', icon: '\uD83D\uDCB0' },
-    { value: 'personel_yemek', label: '\uD83C\uDF7D\uFE0F Personel Yeme\u011Fi', icon: '\uD83C\uDF7D\uFE0F' },
+    { value: 'personel_maas', label: '\uD83D\uDCB0 Personel Maaş\u0131', icon: '\uD83D\uDCB0' },
+    { value: 'personel_yemek', label: '\uD83C\uDF7D\uFE0F Personel Yemeği', icon: '\uD83C\uDF7D\uFE0F' },
     { value: 'personel_yol', label: '\uD83D\uDE8C Personel Yol Paras\u0131', icon: '\uD83D\uDE8C' },
     { value: 'personel_mesai', label: '\u23F0 Fazla Mesai \u00DCcreti', icon: '\u23F0' },
     { value: 'temizlik', label: '\uD83E\uDDF9 Temizlik Malzemesi', icon: '\uD83E\uDDF9' },
-    { value: 'mutfak', label: '\u2615 Mutfak (\u00C7ay/\u015Eeker/\u0130\u00E7ecek)', icon: '\u2615' },
-    { value: 'diger', label: '\uD83D\uDCE6 Di\u011Fer', icon: '\uD83D\uDCE6' },
+    { value: 'mutfak', label: '\u2615 Mutfak (\u00C7ay/\u015Eeker/İ\u00E7ecek)', icon: '\u2615' },
+    { value: 'diger', label: '\uD83D\uDCE6 Diğer', icon: '\uD83D\uDCE6' },
   ];
 
 
@@ -9703,7 +9746,7 @@ function CostsPage({ models, personnel, addToast }) {
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
 
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 Üretim DeĞeri</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 Üretim Değeri</div>
 
             <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--success)' }}>{totalProduction.toLocaleString('tr-TR')} ₺</div>
 
@@ -9805,7 +9848,7 @@ function CostsPage({ models, personnel, addToast }) {
 
           ) : (
 
-            <div className="table-wrapper"><table className="table"><thead><tr><th>Model</th><th>Üretim</th><th>Fire</th><th>DeĞer</th><th>İşçilik</th><th>Birim</th><th>Karlılık</th></tr></thead><tbody>
+            <div className="table-wrapper"><table className="table"><thead><tr><th>Model</th><th>Üretim</th><th>Fire</th><th>Değer</th><th>İşçilik</th><th>Birim</th><th>Karlılık</th></tr></thead><tbody>
 
               {Object.entries(modelCosts).map(([mid, mc]) => {
 

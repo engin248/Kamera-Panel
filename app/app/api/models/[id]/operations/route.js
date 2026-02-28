@@ -115,3 +115,28 @@ export async function PUT(request, { params }) {
     }
 }
 
+// DELETE — İşlem sil
+export async function DELETE(request, { params }) {
+    try {
+        const db = getDb();
+        const { id } = await params;
+        const { searchParams } = new URL(request.url);
+        const opId = searchParams.get('opId');
+
+        if (!opId) {
+            return NextResponse.json({ error: 'opId zorunlu' }, { status: 400 });
+        }
+
+        db.prepare('DELETE FROM operations WHERE id = ? AND model_id = ?').run(opId, id);
+
+        // Sıra numaralarını yeniden düzenle
+        const remaining = db.prepare('SELECT id FROM operations WHERE model_id = ? ORDER BY order_number').all(id);
+        remaining.forEach((op, idx) => {
+            db.prepare('UPDATE operations SET order_number = ? WHERE id = ?').run(idx + 1, op.id);
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
