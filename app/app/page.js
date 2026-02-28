@@ -2917,7 +2917,8 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
     color_tone_matching: 'fark_eder', critical_matching_responsibility: 'sorumluluk_alir',
     fabric_experience: '{}',
     new_machine_learning: 'istekli', hard_work_avoidance: 'kacmaz', self_improvement: 'gelisir',
-    operator_class: 'B', satisfaction_score: '5', recommend: 'evet', weekly_note: ''
+    operator_class: 'B', satisfaction_score: '5', recommend: 'evet', weekly_note: '',
+    photo_url: ''
   };
 
   // localStorage'dan taslak yükle veya editData kullan
@@ -2988,6 +2989,38 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
 
           <div style={{ marginBottom: '14px' }}>
             <div className="form-group"><label className="form-label">Ad Soyad *</label><EditableInput value={form.name} onChange={v => setForm({ ...form, name: v })} placeholder="Ad Soyad" /></div>
+          </div>
+
+          {/* FOTOĞRAF YÜKLEME */}
+          <div style={{ marginBottom: '14px' }}>
+            <label className="form-label">📷 Profil Fotoğrafı</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {form.photo_url ? (
+                <div style={{ position: 'relative' }}>
+                  <img src={form.photo_url} alt="Profil" style={{ width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--accent)' }} />
+                  <button type="button" onClick={() => setForm({ ...form, photo_url: '' })}
+                    style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--danger)', color: '#fff', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                </div>
+              ) : (
+                <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'var(--bg-input)', border: '2px dashed var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>👤</div>
+              )}
+              <div>
+                <input type="file" id="personel-photo-input" accept="image/*" style={{ display: 'none' }}
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 2 * 1024 * 1024) { alert('Fotoğraf max 2MB olmalıdır!'); return; }
+                    const reader = new FileReader();
+                    reader.onload = ev => setForm({ ...form, photo_url: ev.target.result });
+                    reader.readAsDataURL(file);
+                  }} />
+                <button type="button" className="btn btn-secondary" style={{ fontSize: '12px' }}
+                  onClick={() => document.getElementById('personel-photo-input').click()}>
+                  📤 Fotoğraf Seç
+                </button>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>JPG, PNG — Max 2MB</div>
+              </div>
+            </div>
           </div>
 
           <div className="form-group" style={{ marginBottom: '14px' }}><label className="form-label">Pozisyon / Görev (birden fazla seçilebilir)</label>
@@ -6230,55 +6263,57 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
           ) : (
 
-            <div className="table-wrapper"><table className="table"><thead><tr><th>#</th><th>Ad Soyad</th><th>Pozisyon</th><th>Ustalık</th><th>Hız</th><th>Kalite</th><th>Sınıf</th><th>Devamsızlık</th><th>Günlük Ücret</th><th>Mesai</th><th title="Son 30 gün ortalaması">Ort.Üretim</th><th title="Son 30 gün hata oranı">Hata%</th><th title="Son 30 gün OEE verimlilik">Verimlilik</th><th>Durum</th><th style={{ width: '80px' }}>İşlem</th></tr></thead><tbody>
-
-              {filtered.map((p, idx) => (
-
-                <tr key={p.id}>
-
-                  <td style={{ fontWeight: '600', color: 'var(--text-muted)', textAlign: 'center', minWidth: '30px' }}>{idx + 1}</td>
-                  <td style={{ fontWeight: '600' }}>{p.name}</td>
-
-                  <td><span className="badge badge-info">{formatRoles(p.role)}</span></td>
-
-                  <td>{masteryLabels[p.technical_mastery] || masteryLabels.operator}</td>
-
-                  <td>{speedLabels[p.speed_level] || speedLabels.normal}</td>
-
-                  <td>{qualityLabels[p.quality_level] || qualityLabels.standart}</td>
-
-                  <td style={{ textAlign: 'center', fontWeight: '700' }}>{p.operator_class === 'A' ? ' A' : p.operator_class === 'C' ? ' C' : ' B'}</td>
-                  <td style={{ textAlign: 'center' }}>{p.attendance === 'yok' ? '' : p.attendance === 'ayda_5_ustu' ? ' 5+' : p.attendance === 'ayda_3_4' ? ' 3-4' : p.attendance === 'ayda_2' ? '🟠 2' : '✅'}</td>
-                  <td style={{ fontWeight: '600' }}>{(p.daily_wage || 0).toFixed(0)} ₺</td>
-
-                  <td style={{ fontSize: '13px' }}>{p.work_start || '08:00'} - {p.work_end || '18:00'}</td>
-
-                  <td style={{ textAlign: 'center', fontWeight: '700', color: (p.daily_avg_output || 0) > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>{(p.daily_avg_output || 0) > 0 ? p.daily_avg_output : '—'}</td>
-                  <td style={{ textAlign: 'center' }}>{(p.error_rate || 0) > 0 ? <span className={`badge ${p.error_rate <= 2 ? 'badge-success' : p.error_rate <= 5 ? 'badge-warning' : 'badge-danger'}`}>%{p.error_rate}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-                  <td style={{ textAlign: 'center' }}>{(p.efficiency_score || 0) > 0 ? <span className={`badge ${p.efficiency_score >= 70 ? 'badge-success' : p.efficiency_score >= 50 ? 'badge-warning' : 'badge-danger'}`}>%{p.efficiency_score}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-
-                  <td><span onClick={() => handleToggleStatus(p.id, p.status)} style={{ cursor: 'pointer' }} className={`badge ${p.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{p.status === 'active' ? '✅ Aktif' : '🔴 Pasif'}</span></td>
-
-                  <td style={{ display: 'flex', gap: '4px' }}>
-
-                    <button onClick={() => { setEditPerson(p); setShowModal(true); }} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
-
-                    <button onClick={() => openPersonAuditHistory(p.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
-
-                    <button onClick={() => handleDelete(p.id)} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '3px' }}>🗑️</button>
-
-                  </td>
-
-                </tr>
-
-              ))}
-
-            </tbody></table></div>
+            <div className="table-wrapper" style={{ overflowX: 'auto' }}>
+              <table className="table" style={{ minWidth: '900px' }}>
+                <thead>
+                  <tr>
+                    <th style={{ minWidth: '30px' }}>#</th>
+                    <th style={{ minWidth: '130px' }}>Ad Soyad</th>
+                    <th style={{ minWidth: '120px' }}>Pozisyon</th>
+                    <th>Ustalık</th>
+                    <th>Hız</th>
+                    <th>Kalite</th>
+                    <th title="Operatör Sınıfı">Sınıf</th>
+                    <th style={{ minWidth: '80px' }}>Günlük Ücret</th>
+                    <th style={{ minWidth: '90px' }}>Mesai</th>
+                    <th title="Son 30 gün ortalaması">Ort.Üretim</th>
+                    <th title="Son 30 gün hata oranı">Hata%</th>
+                    <th>Durum</th>
+                    <th style={{ width: '90px', position: 'sticky', right: 0, background: 'var(--bg-card)', boxShadow: '-2px 0 4px rgba(0,0,0,0.08)', zIndex: 2 }}>İşlem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((p, idx) => (
+                    <tr key={p.id}>
+                      <td style={{ fontWeight: '600', color: 'var(--text-muted)', textAlign: 'center' }}>{idx + 1}</td>
+                      <td style={{ fontWeight: '700' }}>{p.name}</td>
+                      <td><span className="badge badge-info" style={{ fontSize: '11px' }}>{formatRoles(p.role)}</span></td>
+                      <td>{masteryLabels[p.technical_mastery] || masteryLabels.operator}</td>
+                      <td>{speedLabels[p.speed_level] || speedLabels.normal}</td>
+                      <td>{qualityLabels[p.quality_level] || qualityLabels.standart}</td>
+                      <td style={{ textAlign: 'center', fontWeight: '800' }}>{p.operator_class || 'B'}</td>
+                      <td style={{ fontWeight: '700' }}>{(p.daily_wage || 0).toFixed(0)} ₺</td>
+                      <td style={{ fontSize: '12px' }}>{p.work_start || '08:00'} - {p.work_end || '18:00'}</td>
+                      <td style={{ textAlign: 'center', fontWeight: '700', color: (p.daily_avg_output || 0) > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>{(p.daily_avg_output || 0) > 0 ? p.daily_avg_output : '—'}</td>
+                      <td style={{ textAlign: 'center' }}>{(p.error_rate || 0) > 0 ? <span className={`badge ${p.error_rate <= 2 ? 'badge-success' : p.error_rate <= 5 ? 'badge-warning' : 'badge-danger'}`}>%{p.error_rate}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                      <td><span onClick={() => handleToggleStatus(p.id, p.status)} style={{ cursor: 'pointer' }} className={`badge ${p.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{p.status === 'active' ? '✅ Aktif' : '🔴 Pasif'}</span></td>
+                      <td style={{ position: 'sticky', right: 0, background: 'var(--bg-card)', boxShadow: '-2px 0 4px rgba(0,0,0,0.08)', zIndex: 1 }}>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button onClick={() => { setEditPerson(p); setShowModal(true); }} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '4px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
+                          <button onClick={() => openPersonAuditHistory(p.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '4px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
+                          <button onClick={() => handleDelete(p.id)} title="Sil" style={{ background: 'rgba(231,76,60,0.12)', border: 'none', cursor: 'pointer', fontSize: '13px', padding: '4px 6px', borderRadius: '5px' }}>🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
           );
         })()}
 
-      </div>
+      </div >
 
       {showModal && <NewPersonnelModal onClose={() => { setShowModal(false); setEditPerson(null); }} onSave={handleSave} editData={editPerson} onUpdate={async (data) => {
         try {
@@ -6302,97 +6337,99 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
       {/* ===== PERSONEL DEĞİŞİKLİK GEÇMİŞİ ===== */}
 
-      {personAuditHistory && (
+      {
+        personAuditHistory && (
 
-        <div className="modal-overlay" onClick={() => setPersonAuditHistory(null)}>
+          <div className="modal-overlay" onClick={() => setPersonAuditHistory(null)}>
 
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px', maxHeight: '90vh', overflow: 'auto' }}>
+            <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px', maxHeight: '90vh', overflow: 'auto' }}>
 
-            <div className="modal-header">
+              <div className="modal-header">
 
-              <h2 className="modal-title">📜 Personel Değişiklik Geçmişi</h2>
+                <h2 className="modal-title">📜 Personel Değişiklik Geçmişi</h2>
 
-              <button className="modal-close" onClick={() => setPersonAuditHistory(null)}>✕</button>
+                <button className="modal-close" onClick={() => setPersonAuditHistory(null)}>✕</button>
 
-            </div>
+              </div>
 
-            <div style={{ padding: '8px 16px', background: 'rgba(46,204,113,0.1)', borderBottom: '1px solid rgba(46,204,113,0.3)', fontSize: '12px', color: '#2ecc71', fontWeight: '600' }}>
+              <div style={{ padding: '8px 16px', background: 'rgba(46,204,113,0.1)', borderBottom: '1px solid rgba(46,204,113,0.3)', fontSize: '12px', color: '#2ecc71', fontWeight: '600' }}>
 
-              🔒 Bu kayıtlar silinemez. Tüm değişiklikler kalıcı olarak saklanır.
+                🔒 Bu kayıtlar silinemez. Tüm değişiklikler kalıcı olarak saklanır.
 
-            </div>
+              </div>
 
-            <div style={{ padding: '20px' }}>
+              <div style={{ padding: '20px' }}>
 
-              {personAuditData.length === 0 ? (
+                {personAuditData.length === 0 ? (
 
-                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                  <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
 
-                  <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
+                    <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
 
-                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz değişiklik kaydı yok</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz değişiklik kaydı yok</div>
 
-                </div>
+                  </div>
 
-              ) : (
+                ) : (
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-                  {personAuditData.map((entry, i) => (
+                    {personAuditData.map((entry, i) => (
 
-                    <div key={entry.id || i} style={{ padding: '14px 16px', borderRadius: '10px', background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
+                      <div key={entry.id || i} style={{ padding: '14px 16px', borderRadius: '10px', background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
 
-                        <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--accent)' }}>{entry.field_name}</span>
+                          <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--accent)' }}>{entry.field_name}</span>
 
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: '4px' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: '4px' }}>
 
-                          🕐 {new Date(entry.changed_at).toLocaleString('tr-TR')}
+                            🕐 {new Date(entry.changed_at).toLocaleString('tr-TR')}
 
-                        </span>
-
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '8px', alignItems: 'center' }}>
-
-                        <div style={{ padding: '8px 12px', background: 'rgba(231,76,60,0.08)', borderRadius: '6px', fontSize: '12px', wordBreak: 'break-word', borderLeft: '3px solid var(--danger)' }}>
-
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: 'var(--danger)', marginBottom: '2px' }}>ESKİ</div>
-
-                          {entry.old_value || '—'}
+                          </span>
 
                         </div>
 
-                        <div style={{ fontSize: '18px', color: 'var(--text-muted)' }}>→</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '8px', alignItems: 'center' }}>
 
-                        <div style={{ padding: '8px 12px', background: 'rgba(46,204,113,0.08)', borderRadius: '6px', fontSize: '12px', wordBreak: 'break-word', borderLeft: '3px solid var(--success)' }}>
+                          <div style={{ padding: '8px 12px', background: 'rgba(231,76,60,0.08)', borderRadius: '6px', fontSize: '12px', wordBreak: 'break-word', borderLeft: '3px solid var(--danger)' }}>
 
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: 'var(--success)', marginBottom: '2px' }}>YENİ</div>
+                            <div style={{ fontSize: '10px', fontWeight: '600', color: 'var(--danger)', marginBottom: '2px' }}>ESKİ</div>
 
-                          {entry.new_value || '—'}
+                            {entry.old_value || '—'}
+
+                          </div>
+
+                          <div style={{ fontSize: '18px', color: 'var(--text-muted)' }}>→</div>
+
+                          <div style={{ padding: '8px 12px', background: 'rgba(46,204,113,0.08)', borderRadius: '6px', fontSize: '12px', wordBreak: 'break-word', borderLeft: '3px solid var(--success)' }}>
+
+                            <div style={{ fontSize: '10px', fontWeight: '600', color: 'var(--success)', marginBottom: '2px' }}>YENİ</div>
+
+                            {entry.new_value || '—'}
+
+                          </div>
 
                         </div>
 
+                        <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>👤 {entry.changed_by || 'admin'}</div>
+
                       </div>
 
-                      <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>👤 {entry.changed_by || 'admin'}</div>
+                    ))}
 
-                    </div>
+                  </div>
 
-                  ))}
+                )}
 
-                </div>
-
-              )}
+              </div>
 
             </div>
 
           </div>
 
-        </div>
-
-      )}
+        )
+      }
 
     </>
 
