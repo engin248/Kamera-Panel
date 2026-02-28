@@ -3686,6 +3686,10 @@ function DashboardPage({ models, personnel }) {
 
   const [personnelPerf, setPersonnelPerf] = useState([]);
 
+  const [dashExpenses, setDashExpenses] = useState([]);
+
+  const [dashModelCosts, setDashModelCosts] = useState({});
+
   const totalOperations = models.reduce((sum, m) => sum + (m.operation_count || 0), 0);
 
   const totalOrders = models.reduce((sum, m) => sum + (m.total_order || 0), 0);
@@ -3801,6 +3805,34 @@ function DashboardPage({ models, personnel }) {
           }
         });
         setWeeklyData(Object.values(byDay));
+      }
+    } catch (e) { }
+
+    // İşletme giderleri
+    try {
+      const n = new Date();
+      const expRes = await fetch(`/api/expenses?year=${n.getFullYear()}&month=${n.getMonth() + 1}`);
+      const expData = await expRes.json();
+      setDashExpenses(Array.isArray(expData) ? expData : []);
+    } catch (e) { }
+
+    // Model bazlı maliyet (ay başından itibaren)
+    try {
+      const n = new Date();
+      const monthStart = new Date(n.getFullYear(), n.getMonth(), 1).toISOString().split('T')[0];
+      const mcRes = await fetch(`/api/production?from=${monthStart}`);
+      const mcLogs = await mcRes.json();
+      if (Array.isArray(mcLogs)) {
+        const mc = {};
+        mcLogs.forEach(log => {
+          const mid = log.model_id;
+          if (!mc[mid]) mc[mid] = { name: log.model_name, code: log.model_code, totalProduced: 0, totalDefective: 0, totalValue: 0, totalLaborCost: 0 };
+          mc[mid].totalProduced += log.total_produced || 0;
+          mc[mid].totalDefective += log.defective_count || 0;
+          mc[mid].totalValue += (log.total_produced || 0) * (log.unit_price || 0);
+          mc[mid].totalLaborCost += (log.daily_wage || 0);
+        });
+        setDashModelCosts(mc);
       }
     } catch (e) { }
 
@@ -4120,6 +4152,78 @@ function DashboardPage({ models, personnel }) {
             </div>
           </div>
         )}
+
+        {/* MODEL BAZLI KARLILIK */}
+        {Object.keys(dashModelCosts).length > 0 && (
+          <div className="card" style={{ marginBottom: '16px' }}>
+            <div className="card-header"><h3 className="card-title">📦 Model Bazlı Karlılık (Bu Ay)</h3></div>
+            <div className="table-wrapper" style={{ border: 'none' }}>
+              <table className="table">
+                <thead><tr><th>Model</th><th>Üretim</th><th>Fire %</th><th>Değer</th><th>İşçilik</th><th>Birim Maliyet</th><th>Karlılık</th></tr></thead>
+                <tbody>
+                  {Object.entries(dashModelCosts).map(([mid, mc]) => {
+                    const model = models.find(m => m.id == mid);
+                    const fireRate = mc.totalProduced > 0 ? (mc.totalDefective / mc.totalProduced * 100) : 0;
+                    const unitCost = mc.totalProduced > 0 ? mc.totalLaborCost / mc.totalProduced : 0;
+                    const fasonPrice = model?.fason_price || 0;
+                    const profit = fasonPrice > 0 ? fasonPrice - unitCost : mc.totalProduced > 0 ? (mc.totalValue - mc.totalLaborCost) / mc.totalProduced : 0;
+                    return (
+                      <tr key={mid}>
+                        <td><strong>{mc.name}</strong><br /><code style={{ fontSize: '11px', background: 'var(--bg-input)', padding: '1px 4px', borderRadius: '3px' }}>{mc.code}</code></td>
+                        <td style={{ fontWeight: '700' }}>{mc.totalProduced} ad</td>
+                        <td><span className={`badge ${fireRate > 5 ? 'badge-danger' : fireRate > 2 ? 'badge-warning' : 'badge-success'}`}>{fireRate.toFixed(1)}%</span></td>
+                        <td style={{ fontWeight: '600', color: 'var(--accent)' }}>{mc.totalValue.toFixed(0)} ₺</td>
+                        <td style={{ color: 'var(--danger)' }}>{mc.totalLaborCost.toFixed(0)} ₺</td>
+                        <td style={{ fontWeight: '700' }}>{unitCost.toFixed(2)} ₺/ad</td>
+                        <td><span style={{ fontWeight: '700', color: profit >= 0 ? 'var(--success)' : 'var(--danger)' }}>{profit >= 0 ? '+' : ''}{profit.toFixed(2)} ₺</span></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* İŞLETME GİDERLERİ DAĞILIMI */}
+        {dashExpenses.length > 0 && (() => {
+          const catTotals = {};
+          dashExpenses.forEach(e => { catTotals[e.category] = (catTotals[e.category] || 0) + (e.amount || 0); });
+          const totalExp = Object.values(catTotals).reduce((s, v) => s + v, 0);
+          const catLabels = {
+            elektrik: '⚡ Elektrik', su: '💧 Su', internet_telefon: '📡 İnternet/Tel',
+            sigorta: '🛡️ Sigorta', iplik: '🧵 İplik/Malzeme', makine_bakim: '🔧 Makine Bakım',
+            yedek_parca: '⚙️ Yedek Parça', araba_benzin: '⛽ Benzin', araba_bakim: '🚗 Araba Bakım',
+            muhasebe: '🧾 Muhasebe', kdv: '📋 KDV', stopaj: '📄 Stopaj', vergi: '🏛️ Vergi',
+            personel_maas: '💰 Personel Maaş', personel_yemek: '🍽️ Yemek', personel_yol: '🚌 Yol',
+            personel_mesai: '⏰ Mesai', temizlik: '🧹 Temizlik', mutfak: '☕ Mutfak', diger: '📦 Diğer'
+          };
+          return (
+            <div className="card" style={{ marginBottom: '16px' }}>
+              <div className="card-header">
+                <h3 className="card-title">🏢 İşletme Giderleri — {new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</h3>
+                <span style={{ fontSize: '14px', fontWeight: '800', color: '#e67e22' }}>{totalExp.toLocaleString('tr-TR')} ₺</span>
+              </div>
+              <div style={{ padding: '16px' }}>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                  {Object.entries(catTotals).sort((a, b) => b[1] - a[1]).map(([cat, total]) => {
+                    const pct = totalExp > 0 ? (total / totalExp * 100).toFixed(1) : 0;
+                    return (
+                      <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: '600', width: '130px' }}>{catLabels[cat] || cat}</span>
+                        <div style={{ flex: 1, height: '20px', background: 'var(--bg-input)', borderRadius: '10px', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, var(--accent), #e67e22)', borderRadius: '10px', minWidth: pct > 0 ? '4px' : '0' }} />
+                        </div>
+                        <span style={{ fontSize: '13px', fontWeight: '700', minWidth: '80px', textAlign: 'right' }}>{total.toLocaleString('tr-TR')} ₺</span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', minWidth: '40px' }}>%{pct}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
       </div>
 
