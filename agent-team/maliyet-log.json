@@ -20,5 +20,17 @@
       "perplexity": 0.005473799999999999
     },
     "sure_sn": 64.1
+  },
+  {
+    "tarih": "2026-02-28T07:11:56.419Z",
+    "konu": "modeller-uretim-inceleme",
+    "toplam_usd": 0.00441275,
+    "toplam_tl": 0.158859,
+    "detay": {
+      "gemini": 0,
+      "gpt": 0.00195435,
+      "perplexity": 0.0024584
+    },
+    "sure_sn": 29.4
   }
 ]
