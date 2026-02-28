@@ -6270,7 +6270,7 @@ function ProductionPage({ models, personnel, addToast }) {
                               <span style={{ fontSize: '9px', background: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--bg-card)', padding: '1px 5px', borderRadius: '6px' }}>⚡{o.difficulty}/10</span>
                               <span style={{ fontSize: '9px', background: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--bg-card)', padding: '1px 5px', borderRadius: '6px' }}>👥{capable.length}</span>
                             </div>
-                            
+
                           </div>
                         );
                       })}
@@ -6447,7 +6447,18 @@ function ProductionPage({ models, personnel, addToast }) {
 
       {/* ── DÜZENLEME MODALI ── */}
       {editProduction && (
-        <EditModal title={`Üretim #${editProduction.id} Düzenle`} onClose={() => setEditProduction(null)} onSubmit={handleUpdateProduction} fields={[
+        <EditModal title={`Üretim #${editProduction.id} Düzenle`} onClose={() => setEditProduction(null)} onSave={async (id, formData) => {
+          try {
+            const res = await fetch(`/api/production/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+            if (!res.ok) throw new Error('Güncelleme hatası');
+            // Refresh logs
+            const today = new Date().toISOString().slice(0, 10);
+            const logsRes = await fetch(`/api/production?date=${today}`);
+            const data = await logsRes.json();
+            setLogs(Array.isArray(data) ? data : []);
+            addToast('success', 'Kayıt güncellendi');
+          } catch (err) { addToast('error', err.message); }
+        }} record={editProduction} tableName="production_logs" fields={[
           { key: 'total_produced', label: 'Yapılan Adet', type: 'number' },
           { key: 'defective_count', label: 'Hatalı Adet', type: 'number' },
           { key: 'defect_reason', label: 'Hata Nedeni' },
@@ -6457,7 +6468,7 @@ function ProductionPage({ models, personnel, addToast }) {
           { key: 'material_wait_min', label: 'Bekleme (dk)', type: 'number' },
           { key: 'passive_time_min', label: 'Pasif (dk)', type: 'number' },
           { key: 'notes', label: 'Not' },
-        ]} form={editProductionForm} setForm={setEditProductionForm} />
+        ]} />
       )}
 
       {prodAuditHistory && (
