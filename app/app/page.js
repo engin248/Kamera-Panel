@@ -3105,12 +3105,6 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
               <div className="form-group"><label className="form-label">Engel Durumu</label>
                 <EditableSelect fieldKey="disability_status" label="Engel" value={form.disability_status} onChange={v => setForm({ ...form, disability_status: v })} defaultOptions={[['yok', 'Yok'], ['hafif', 'Hafif'], ['var', 'Var']]} /></div>
             </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">🚬 Sigara İçiyor mu?</label>
-                <EditableSelect fieldKey="smokes" label="Sigara" value={form.smokes} onChange={v => setForm({ ...form, smokes: v })} defaultOptions={[['hayir', 'Hayır'], ['evet', 'Evet']]} /></div>
-              <div className="form-group"><label className="form-label">🕌 Namaz Molası İhtiyacı</label>
-                <EditableSelect fieldKey="prays" label="Namaz" value={form.prays} onChange={v => setForm({ ...form, prays: v })} defaultOptions={[['hayir', 'Hayır'], ['evet', 'Evet']]} /></div>
-            </div>
             <div style={{ marginTop: '8px', padding: '8px 10px', background: 'rgba(231,76,60,0.05)', borderRadius: '8px', border: '1px solid rgba(231,76,60,0.15)' }}>
               <div style={{ fontSize: '11px', fontWeight: '700', color: '#e74c3c', marginBottom: '6px' }}>🆘 Acil Durumda Ulaşılacak Kişi</div>
               <div className="form-row">
@@ -5928,6 +5922,11 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
   const [personAuditData, setPersonAuditData] = useState([]);
 
+  // C1+C2: Arama ve filtre
+  const [persSearch, setPersSearch] = useState('');
+  const [persRoleFilter, setPersRoleFilter] = useState('');
+  const [persStatusFilter, setPersStatusFilter] = useState('');
+
 
 
   const roleLabels = {
@@ -6098,62 +6097,82 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
     <>
 
-      <div className="topbar"><h1 className="topbar-title">📋 Personel</h1><div className="topbar-actions"><button className="btn btn-primary" onClick={() => { setEditPerson(null); setShowModal(true); }}>➕ Yeni Personel</button></div></div>
+      <div className="topbar"><h1 className="topbar-title">📋 Personel</h1><div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <input className="form-input" placeholder="🔍 Ada göre ara..." value={persSearch} onChange={e => setPersSearch(e.target.value)} style={{ minWidth: '160px', fontSize: '13px' }} />
+        <select className="form-select" value={persRoleFilter} onChange={e => setPersRoleFilter(e.target.value)} style={{ minWidth: '120px', fontSize: '13px' }}>
+          <option value="">Tüm Roller</option>
+          {[...new Set(personnel.flatMap(p => (p.role || '').split(',').map(r => r.trim()).filter(Boolean)))].sort().map(r => <option key={r} value={r}>{roleLabels[r] || r}</option>)}
+        </select>
+        <select className="form-select" value={persStatusFilter} onChange={e => setPersStatusFilter(e.target.value)} style={{ minWidth: '100px', fontSize: '13px' }}>
+          <option value="">Tüm Durum</option>
+          <option value="active">✅ Aktif</option>
+          <option value="inactive">🔴 Pasif</option>
+        </select>
+        <button className="btn btn-primary" onClick={() => { setEditPerson(null); setShowModal(true); }}>➕ Yeni Personel</button>
+      </div></div>
 
       <div className="page-content">
 
-        {personnel.length === 0 ? (
+        {(() => {
+          const filtered = personnel.filter(p => {
+            if (persSearch && !p.name?.toLowerCase().includes(persSearch.toLowerCase())) return false;
+            if (persRoleFilter && !(p.role || '').split(',').map(r => r.trim()).includes(persRoleFilter)) return false;
+            if (persStatusFilter && p.status !== persStatusFilter) return false;
+            return true;
+          });
+          return filtered.length === 0 ? (
 
-          <div className="card"><div className="empty-state"><div className="empty-state-icon">📋</div><div className="empty-state-title">Henüz Personel Yok</div><div className="empty-state-text">Personel ekleyerek başlayın.</div><button className="btn btn-primary" onClick={() => setShowModal(true)}>➕ İlk Personeli Ekle</button></div></div>
+            <div className="card"><div className="empty-state"><div className="empty-state-icon">📋</div><div className="empty-state-title">{personnel.length === 0 ? 'Henüz Personel Yok' : 'Sonuç Bulunamadı'}</div><div className="empty-state-text">{personnel.length === 0 ? 'Personel ekleyerek başlayın.' : 'Arama veya filtre kriterlerini değiştirin.'}</div>{personnel.length === 0 && <button className="btn btn-primary" onClick={() => setShowModal(true)}>➕ İlk Personeli Ekle</button>}</div></div>
 
-        ) : (
+          ) : (
 
-          <div className="table-wrapper"><table className="table"><thead><tr><th>#</th><th>Ad Soyad</th><th>Pozisyon</th><th>Ustalık</th><th>Hız</th><th>Kalite</th><th>Sınıf</th><th>Devamsızlık</th><th>Günlük Ücret</th><th>Mesai</th><th title="Son 30 gün ortalaması">Ort.Üretim</th><th title="Son 30 gün hata oranı">Hata%</th><th title="Son 30 gün OEE verimlilik">Verimlilik</th><th>Durum</th><th style={{ width: '80px' }}>İşlem</th></tr></thead><tbody>
+            <div className="table-wrapper"><table className="table"><thead><tr><th>#</th><th>Ad Soyad</th><th>Pozisyon</th><th>Ustalık</th><th>Hız</th><th>Kalite</th><th>Sınıf</th><th>Devamsızlık</th><th>Günlük Ücret</th><th>Mesai</th><th title="Son 30 gün ortalaması">Ort.Üretim</th><th title="Son 30 gün hata oranı">Hata%</th><th title="Son 30 gün OEE verimlilik">Verimlilik</th><th>Durum</th><th style={{ width: '80px' }}>İşlem</th></tr></thead><tbody>
 
-            {personnel.map((p, idx) => (
+              {filtered.map((p, idx) => (
 
-              <tr key={p.id}>
+                <tr key={p.id}>
 
-                <td style={{ fontWeight: '600', color: 'var(--text-muted)', textAlign: 'center', minWidth: '30px' }}>{idx + 1}</td>
-                <td style={{ fontWeight: '600' }}>{p.name}</td>
+                  <td style={{ fontWeight: '600', color: 'var(--text-muted)', textAlign: 'center', minWidth: '30px' }}>{idx + 1}</td>
+                  <td style={{ fontWeight: '600' }}>{p.name}</td>
 
-                <td><span className="badge badge-info">{formatRoles(p.role)}</span></td>
+                  <td><span className="badge badge-info">{formatRoles(p.role)}</span></td>
 
-                <td>{masteryLabels[p.technical_mastery] || masteryLabels.operator}</td>
+                  <td>{masteryLabels[p.technical_mastery] || masteryLabels.operator}</td>
 
-                <td>{speedLabels[p.speed_level] || speedLabels.normal}</td>
+                  <td>{speedLabels[p.speed_level] || speedLabels.normal}</td>
 
-                <td>{qualityLabels[p.quality_level] || qualityLabels.standart}</td>
+                  <td>{qualityLabels[p.quality_level] || qualityLabels.standart}</td>
 
-                <td style={{ textAlign: 'center', fontWeight: '700' }}>{p.operator_class === 'A' ? ' A' : p.operator_class === 'C' ? ' C' : ' B'}</td>
-                <td style={{ textAlign: 'center' }}>{p.attendance === 'yok' ? '' : p.attendance === 'ayda_5_ustu' ? ' 5+' : p.attendance === 'ayda_3_4' ? ' 3-4' : p.attendance === 'ayda_2' ? '🟠 2' : '✅'}</td>
-                <td style={{ fontWeight: '600' }}>{(p.daily_wage || 0).toFixed(0)} ₺</td>
+                  <td style={{ textAlign: 'center', fontWeight: '700' }}>{p.operator_class === 'A' ? ' A' : p.operator_class === 'C' ? ' C' : ' B'}</td>
+                  <td style={{ textAlign: 'center' }}>{p.attendance === 'yok' ? '' : p.attendance === 'ayda_5_ustu' ? ' 5+' : p.attendance === 'ayda_3_4' ? ' 3-4' : p.attendance === 'ayda_2' ? '🟠 2' : '✅'}</td>
+                  <td style={{ fontWeight: '600' }}>{(p.daily_wage || 0).toFixed(0)} ₺</td>
 
-                <td style={{ fontSize: '13px' }}>{p.work_start || '08:00'} - {p.work_end || '18:00'}</td>
+                  <td style={{ fontSize: '13px' }}>{p.work_start || '08:00'} - {p.work_end || '18:00'}</td>
 
-                <td style={{ textAlign: 'center', fontWeight: '700', color: (p.daily_avg_output || 0) > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>{(p.daily_avg_output || 0) > 0 ? p.daily_avg_output : '—'}</td>
-                <td style={{ textAlign: 'center' }}>{(p.error_rate || 0) > 0 ? <span className={`badge ${p.error_rate <= 2 ? 'badge-success' : p.error_rate <= 5 ? 'badge-warning' : 'badge-danger'}`}>%{p.error_rate}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-                <td style={{ textAlign: 'center' }}>{(p.efficiency_score || 0) > 0 ? <span className={`badge ${p.efficiency_score >= 70 ? 'badge-success' : p.efficiency_score >= 50 ? 'badge-warning' : 'badge-danger'}`}>%{p.efficiency_score}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                  <td style={{ textAlign: 'center', fontWeight: '700', color: (p.daily_avg_output || 0) > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>{(p.daily_avg_output || 0) > 0 ? p.daily_avg_output : '—'}</td>
+                  <td style={{ textAlign: 'center' }}>{(p.error_rate || 0) > 0 ? <span className={`badge ${p.error_rate <= 2 ? 'badge-success' : p.error_rate <= 5 ? 'badge-warning' : 'badge-danger'}`}>%{p.error_rate}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                  <td style={{ textAlign: 'center' }}>{(p.efficiency_score || 0) > 0 ? <span className={`badge ${p.efficiency_score >= 70 ? 'badge-success' : p.efficiency_score >= 50 ? 'badge-warning' : 'badge-danger'}`}>%{p.efficiency_score}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
 
-                <td><span onClick={() => handleToggleStatus(p.id, p.status)} style={{ cursor: 'pointer' }} className={`badge ${p.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{p.status === 'active' ? '✅ Aktif' : '🔴 Pasif'}</span></td>
+                  <td><span onClick={() => handleToggleStatus(p.id, p.status)} style={{ cursor: 'pointer' }} className={`badge ${p.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{p.status === 'active' ? '✅ Aktif' : '🔴 Pasif'}</span></td>
 
-                <td style={{ display: 'flex', gap: '4px' }}>
+                  <td style={{ display: 'flex', gap: '4px' }}>
 
-                  <button onClick={() => { setEditPerson(p); setShowModal(true); }} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
+                    <button onClick={() => { setEditPerson(p); setShowModal(true); }} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
 
-                  <button onClick={() => openPersonAuditHistory(p.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
+                    <button onClick={() => openPersonAuditHistory(p.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
 
-                  <button onClick={() => handleDelete(p.id)} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '3px' }}>🗑️</button>
+                    <button onClick={() => handleDelete(p.id)} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '3px' }}>🗑️</button>
 
-                </td>
+                  </td>
 
-              </tr>
+                </tr>
 
-            ))}
+              ))}
 
-          </tbody></table></div>
+            </tbody></table></div>
 
-        )}
+          );
+        })()}
 
       </div>
 
@@ -6536,6 +6555,14 @@ function ProductionPage({ models, personnel, addToast }) {
   // #6 OEE ve toplam ₺ hesaplamaları
   const todayValue = logs.reduce((s, l) => s + (l.unit_value || 0), 0);
   const todayOEE = logs.length > 0 ? (logs.reduce((s, l) => s + (l.oee_score || 0), 0) / logs.length) : 0;
+  // DHU% = (toplam hata / toplam üretim) * 100
+  const todayDHU = todayProduced > 0 ? (todayDefects / todayProduced * 100) : 0;
+  // Verimlilik = ((toplam üretim * ideal süre) / toplam çalışma süresi) * 100
+  const todayTotalMinutes = logs.reduce((s, l) => s + ((l.duration_seconds || 0) / 60), 0);
+  const todayNetMinutes = todayTotalMinutes - logs.reduce((s, l) => s + (l.break_duration_min || 0) + (l.machine_down_min || 0) + (l.material_wait_min || 0), 0);
+  const todayEfficiency = todayNetMinutes > 0 && todayProduced > 0 ? Math.min(100, (todayProduced / (todayNetMinutes / 2)) * 100) : 0;
+  // Birim Süre = net çalışma süresi / toplam üretim
+  const todayUnitTime = todayProduced > 0 && todayNetMinutes > 0 ? (todayNetMinutes / todayProduced) : 0;
 
   // #10 Düşük FPY uyarı fonksiyonu
   const getFPYStyle = (fpy) => {
@@ -6646,7 +6673,15 @@ function ProductionPage({ models, personnel, addToast }) {
           </div>
           <div className="stat-card">
             <div className="stat-icon" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6' }}>📊</div>
-            <div><div className="stat-value">{logs.length}</div><div className="stat-label">Kayıt Sayısı</div></div>
+            <div><div className="stat-value">%{todayDHU.toFixed(1)}</div><div className="stat-label">DHU%</div></div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: todayEfficiency >= 80 ? 'rgba(46,204,113,0.15)' : 'rgba(243,156,18,0.15)', color: todayEfficiency >= 80 ? '#2ecc71' : '#f39c12' }}>⚡</div>
+            <div><div className="stat-value">%{todayEfficiency.toFixed(0)}</div><div className="stat-label">Verimlilik</div></div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'rgba(52,152,219,0.15)', color: '#3498db' }}>⏱️</div>
+            <div><div className="stat-value">{todayUnitTime > 0 ? `${todayUnitTime.toFixed(1)} dk` : '—'}</div><div className="stat-label">Birim Süre</div></div>
           </div>
         </div>
 
@@ -6785,8 +6820,24 @@ function ProductionPage({ models, personnel, addToast }) {
                 <InputField label="Kalite Puanı (0-100)" field="quality_score" type="number" placeholder="100" defaultVal="100" />
               </div>
 
-              {/* B. ZAMAN KRİTERLERİ */}
               <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px', marginTop: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>⏱️ Zaman Kriterleri</div>
+              {/* B6: Hızlı Butonlar */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                {[
+                  { label: '☕ Mola', field: 'break_duration_min', color: '#27ae60' },
+                  { label: '🔧 Arıza', field: 'machine_down_min', color: '#e74c3c' },
+                  { label: '⏳ Bekleme', field: 'material_wait_min', color: '#f39c12' },
+                  { label: '😴 Pasif', field: 'passive_time_min', color: '#9b59b6' },
+                ].map(btn => (
+                  <div key={btn.field} style={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: btn.color, minWidth: '60px' }}>{btn.label}</span>
+                    {[5, 10, 15, 30].map(v => (
+                      <button key={v} type="button" onClick={() => setForm(f => ({ ...f, [btn.field]: String((parseInt(f[btn.field]) || 0) + v) }))}
+                        style={{ padding: '3px 8px', borderRadius: '8px', fontSize: '10px', border: `1px solid ${btn.color}30`, background: `${btn.color}15`, color: btn.color, cursor: 'pointer', fontWeight: '700' }}>+{v}</button>
+                    ))}
+                  </div>
+                ))}
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
                 <InputField label="Mola (dk)" field="break_duration_min" type="number" placeholder="0" defaultVal="0" />
                 <InputField label="Arıza (dk)" field="machine_down_min" type="number" placeholder="0" defaultVal="0" />
