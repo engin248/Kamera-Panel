@@ -22,3 +22,7 @@ yarn-error.log*
 
 # OS
 Thumbs.db
+
+# SQLite WAL/SHM (lock files)
+*.db-wal
+*.db-shm
