@@ -5983,10 +5983,35 @@ function ProductionPage({ models, personnel, addToast }) {
 
   useEffect(() => {
     if (selectedModel) {
-      fetch(`/api/models/${selectedModel}/operations`).then(r => r.json()).then(d => setOperations(Array.isArray(d) ? d : []));
+      fetch(`/api/models/${selectedModel}/operations`).then(r => r.json()).then(d => {
+        const ops = Array.isArray(d) ? d.sort((a, b) => a.order_number - b.order_number) : [];
+        setOperations(ops);
+        // Otomatik olarak sıradaki (ilk) işlemi seç
+        if (ops.length > 0) {
+          setSelectedOperation(String(ops[0].id));
+        }
+      });
     } else { setOperations([]); }
     setSelectedOperation('');
   }, [selectedModel]);
+
+  // İşlemi yapabilecek personelleri bul
+  const getCapablePersonnel = useCallback((op) => {
+    if (!op || !personnel) return [];
+    const machineType = (op.machine_type || '').toLowerCase();
+    return personnel.filter(p => {
+      if (p.status !== 'active') return false;
+      try {
+        const machines = typeof p.machines === 'string' ? JSON.parse(p.machines) : (p.machines || {});
+        const roleStr = (p.role || '').toLowerCase();
+        // Makine tipinde eşleşme
+        const hasMatch = Object.keys(machines).some(m => m.toLowerCase().includes(machineType.split(' ')[0]));
+        const roleMatch = machineType && roleStr.includes(machineType.split(' ')[0]);
+        return hasMatch || roleMatch;
+      } catch { return true; }
+    });
+  }, [personnel]);
+
 
   useEffect(() => { let iv; if (activeSession) { iv = setInterval(() => setTimer(t => t + 1), 1000); } return () => clearInterval(iv); }, [activeSession]);
 
@@ -6179,10 +6204,40 @@ function ProductionPage({ models, personnel, addToast }) {
                   </select>
                 </div>
                 <div className="form-group" style={{ marginBottom: 0, opacity: selectedModel ? 1 : 0.5 }}>
-                  <label className="form-label" style={{ fontSize: '13px' }}>② İşlem Seçin * {!selectedModel && <span style={{ color: 'var(--warning)', fontSize: '11px' }}>(önce model seçin)</span>}</label>
-                  <select className="form-select" value={selectedOperation} onChange={e => setSelectedOperation(e.target.value)} disabled={!selectedModel || operations.length === 0} style={{ fontSize: '15px', padding: '12px' }}>
-                    <option value="">{!selectedModel ? '— Önce model seçin —' : operations.length === 0 ? '— Bu modelde işlem yok —' : '— İşlem seçin —'}</option>
-                    {operations.map(o => <option key={o.id} value={o.id}>{o.order_number}. {o.name}{o.machine_type ? ` (${o.machine_type})` : ''}</option>)}
+                  <label className="form-label" style={{ fontSize: '13px' }}>② İşlem Sırası {!selectedModel && <span style={{ color: 'var(--warning)', fontSize: '11px' }}>(önce model seçin)</span>} {operations.length > 0 && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({operations.length} işlem)</span>}</label>
+
+                  {/* ── Görsel İşlem Sırası Kartları ── */}
+                  {operations.length > 0 && (
+                    <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', padding: '4px 0 8px', marginBottom: '8px' }}>
+                      {operations.map((o, i) => {
+                        const isSelected = selectedOperation === String(o.id);
+                        const capable = getCapablePersonnel(o);
+                        return (
+                          <div key={o.id} onClick={() => setSelectedOperation(String(o.id))} style={{
+                            minWidth: '120px', padding: '8px 10px', borderRadius: '10px', cursor: 'pointer',
+                            background: isSelected ? 'linear-gradient(135deg, var(--accent), #27ae60)' : 'var(--bg-input)',
+                            color: isSelected ? '#fff' : 'var(--text-primary)',
+                            border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border-color)'}`,
+                            transition: 'all 0.2s', flex: '0 0 auto'
+                          }}>
+                            <div style={{ fontSize: '18px', fontWeight: '800', marginBottom: '2px' }}>{o.order_number}</div>
+                            <div style={{ fontSize: '12px', fontWeight: '700' }}>{o.name}</div>
+                            <div style={{ fontSize: '10px', opacity: 0.8 }}>{o.machine_type || '—'}</div>
+                            <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '9px', background: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--bg-card)', padding: '1px 5px', borderRadius: '6px' }}>⚡{o.difficulty}/10</span>
+                              <span style={{ fontSize: '9px', background: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--bg-card)', padding: '1px 5px', borderRadius: '6px' }}>👥{capable.length}</span>
+                            </div>
+                            {i < operations.length - 1 && <div style={{ position: 'absolute', right: '-8px', top: '50%', fontSize: '14px', color: 'var(--text-muted)' }}></div>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* ── Manuel Dropdown (yedek) ── */}
+                  <select className="form-select" value={selectedOperation} onChange={e => setSelectedOperation(e.target.value)} disabled={!selectedModel || operations.length === 0} style={{ fontSize: '13px', padding: '8px' }}>
+                    <option value="">{!selectedModel ? '— Önce model seçin —' : operations.length === 0 ? '— Bu modelde işlem yok —' : '— Manuel seçim —'}</option>
+                    {operations.map(o => <option key={o.id} value={o.id}>{o.order_number}. {o.name}{o.machine_type ? ` (${o.machine_type})` : ''} — {getCapablePersonnel(o).length} kişi yapabilir</option>)}
                   </select>
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
@@ -6193,7 +6248,7 @@ function ProductionPage({ models, personnel, addToast }) {
                   </select>
                 </div>
               </div>
-              {selectedOp && (<div style={{ padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}><strong>Seçilen İşlem:</strong> {selectedOp.name}  Makine: {selectedOp.machine_type || '—'}  Zorluk: {selectedOp.difficulty}/10{selectedOp.unit_price > 0 && <>  Birim: {selectedOp.unit_price.toFixed(2)} ₺</>}</div>)}
+              {selectedOp && (<div style={{ padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}><strong>Seçilen İşlem:</strong> {selectedOp.name}  Makine: {selectedOp.machine_type || '—'}  Zorluk: {selectedOp.difficulty}/10{selectedOp.unit_price > 0 && <>  Birim: {selectedOp.unit_price.toFixed(2)} ₺</>}  <strong>Yapabilecek:</strong> {getCapablePersonnel(selectedOp).map(p => p.name).join(', ') || 'Belirsiz'}</div>)}
               <button className="btn btn-primary btn-lg" onClick={handleStart} disabled={!selectedModel || !selectedOperation || !selectedPerson} style={{ width: '100%', padding: '16px', fontSize: '18px' }}>🏭 İŞLEMİ BAŞLAT</button>
             </div>
           ) : (
