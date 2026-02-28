@@ -10105,25 +10105,14 @@ function CostsPage({ models, personnel, addToast }) {
   const handleUpdateCost = async (e) => {
     e.preventDefault();
     try {
-      const changes = [];
-      Object.keys(editCostForm).forEach(key => {
-        const oldVal = String(editCost[key] ?? '');
-        const newVal = String(editCostForm[key] ?? '');
-        if (oldVal !== newVal) changes.push({ field_name: key, old_value: oldVal, new_value: newVal });
-      });
-      if (changes.length > 0) {
-        await fetch('/api/audit-trail', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ table_name: 'cost_entries', record_id: editCost.id, changes, changed_by: 'admin' })
-        });
-      }
-      const res = await fetch(`/api/costs/${editCost.id}`, {
+      const res = await fetch('/api/expenses', {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editCostForm)
+        body: JSON.stringify({ id: editCost.id, ...editCostForm })
       });
-      if (!res.ok) throw new Error('Guncelleme hatasi');
+      if (!res.ok) throw new Error('Güncelleme hatası');
       setEditCost(null);
-      addToast('success', 'Maliyet guncellendi!');
+      loadExpenses();
+      addToast('success', '✅ Gider güncellendi!');
     } catch (err) { addToast('error', err.message); }
   };
 
