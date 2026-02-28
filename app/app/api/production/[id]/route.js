@@ -33,7 +33,9 @@ export async function PUT(request, { params }) {
         const allowedFields = [
             'total_produced', 'defective_count', 'defect_reason', 'defect_source',
             'break_duration_min', 'machine_down_min', 'material_wait_min', 'passive_time_min',
-            'quality_score', 'lot_change', 'status', 'end_time'
+            'quality_score', 'lot_change', 'status', 'end_time',
+            'defect_photo', 'defect_classification', 'first_pass_yield',
+            'oee_score', 'takt_time_ratio', 'unit_value', 'net_work_minutes', 'notes'
         ];
 
         const updates = [];

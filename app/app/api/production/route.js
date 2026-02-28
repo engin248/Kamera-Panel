@@ -21,7 +21,7 @@ export async function GET(request) {
       JOIN operations o ON pl.operation_id = o.id
       JOIN personnel p ON pl.personnel_id = p.id
     `;
-        const conditions = [];
+        const conditions = ['pl.deleted_at IS NULL'];
         const params = [];
 
         if (date) {
@@ -62,12 +62,36 @@ export async function POST(request) {
             start_time, end_time,
             total_produced, defective_count, defect_reason, defect_source,
             break_duration_min, machine_down_min, material_wait_min, passive_time_min,
-            quality_score, lot_change, status
+            quality_score, lot_change, status,
+            defect_photo, defect_classification, notes
         } = body;
 
         if (!model_id || !operation_id || !personnel_id || !start_time) {
             return NextResponse.json({ error: 'Model, işlem, personel ve başlangıç saati zorunlu' }, { status: 400 });
         }
+
+        // Otomatik hesaplamalar
+        const tp = total_produced || 0;
+        const dc = defective_count || 0;
+        const fpy = tp > 0 ? ((tp - dc) / tp) * 100 : 100;
+
+        const brk = break_duration_min || 0;
+        const mch = machine_down_min || 0;
+        const mat = material_wait_min || 0;
+        const pas = passive_time_min || 0;
+
+        let netWork = 0;
+        if (end_time && start_time) {
+            const totalMin = (new Date(end_time) - new Date(start_time)) / 60000;
+            netWork = Math.max(0, totalMin - brk - mch - mat - pas);
+        }
+
+        // İşlem birim fiyatı ve değer
+        let unitVal = 0;
+        try {
+            const op = db.prepare('SELECT unit_price FROM operations WHERE id = ?').get(operation_id);
+            if (op) unitVal = (op.unit_price || 0) * tp;
+        } catch (e) { }
 
         const result = db.prepare(`
       INSERT INTO production_logs (
@@ -75,14 +99,18 @@ export async function POST(request) {
         start_time, end_time,
         total_produced, defective_count, defect_reason, defect_source,
         break_duration_min, machine_down_min, material_wait_min, passive_time_min,
-        quality_score, lot_change, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        quality_score, lot_change, status,
+        defect_photo, defect_classification, first_pass_yield,
+        oee_score, unit_value, net_work_minutes, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
             model_id, operation_id, personnel_id,
             start_time, end_time || null,
-            total_produced || 0, defective_count || 0, defect_reason || '', defect_source || 'operator',
-            break_duration_min || 0, machine_down_min || 0, material_wait_min || 0, passive_time_min || 0,
-            quality_score || 100, lot_change || '', status || 'completed'
+            tp, dc, defect_reason || '', defect_source || 'operator',
+            brk, mch, mat, pas,
+            quality_score || 100, lot_change || '', status || 'completed',
+            defect_photo || '', defect_classification || '', Math.round(fpy * 10) / 10,
+            0, unitVal, Math.round(netWork * 10) / 10, notes || ''
         );
 
         const log = db.prepare(`

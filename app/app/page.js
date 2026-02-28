@@ -275,10 +275,6 @@ function Sidebar({ activePage, setActivePage }) {
 
       title: 'Üretim Süreci', color: '#D4A847', items: [
 
-        { id: 'atolye', icon: '\uD83C\uDFE0', label: 'Atölye Paneli' },
-
-        { id: 'attendance', icon: '⏱️', label: 'Devam Takibi' },
-
         { id: 'production', icon: '🏭', label: 'Üretim Takip' },
 
         { id: 'quality', icon: '✅', label: 'Kalite Kontrol' },
@@ -971,7 +967,7 @@ function NewModelModal({ onClose, onSave }) {
 
                         <div style={{ position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)', background: T.primary, color: '#fff', padding: '5px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
 
-                          ✅ {label} Yüklendi — DeĞiştirmek için tıklayın
+                          ✅ {label} Yüklendi — Değiştirmek için tıklayın
 
                         </div>
 
@@ -1226,7 +1222,7 @@ function NewModelModal({ onClose, onSave }) {
           </div>
 
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={handleClose}>İptal</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
             <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}
             </button>
@@ -1899,13 +1895,13 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
                   <label className="form-label">{'\uD83D\uDCCB'} Operasyon Kategorisi</label>
                   <select className="form-input" value={form.operation_category} onChange={e => setForm({ ...form, operation_category: e.target.value })}>
                     <option value="kesim">{'\u2702\uFE0F'} Kesim</option>
-                    <option value="nakis_baski">{'\uD83E\uDEA1'} Nak{'\u0131\u015F'} / Bask{'\u0131'}</option>
+                    <option value="nakis_baski">{'\uD83E\uDEA1'} Nak{'\u0131ş'} / Bask{'\u0131'}</option>
                     <option value="dikim">{'\uD83E\uDDF5'} Dikim</option>
                     <option value="temizlik">{'\uD83E\uDDF9'} Temizlik</option>
                     <option value="kalite_kontrol">{'\u2705'} Kalite Kontrol</option>
                     <option value="utu_paket">{'\uD83D\uDD25'} {'\u00DC'}t{'\u00FC'} / Paket</option>
                     <option value="yikama">{'\uD83E\uDDFC'} Y{'\u0131'}kama</option>
-                    <option value="diger">{'\uD83D\uDCE6'} Di{'\u011F'}er</option>
+                    <option value="diger">{'\uD83D\uDCE6'} Di{'ğ'}er</option>
                   </select>
                 </div>
 
@@ -1925,29 +1921,29 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
                 <label className="form-label">{'\u2699\uFE0F'} Kullan{'\u0131'}lacak Makine</label>
                 <select className="form-input" value={form.machine_type} onChange={e => setForm({ ...form, machine_type: e.target.value })}>
                   <option value="">-- Makine Se{'\u00E7'}in --</option>
-                  <optgroup label={'\uD83E\uDDF5 Diki\u015F Makineleri'}>
-                    <option value="Düz Dikiş (Tek İğne)">D{'\u00FC'}z Diki{'\u015F'} (Tek {'\u0130\u011F'}ne)</option>
-                    <option value="Çift İğne Düz Dikiş">{'\u00C7'}ift {'\u0130\u011F'}ne D{'\u00FC'}z Diki{'\u015F'}</option>
-                    <option value="Zincir Dikiş">Zincir Diki{'\u015F'}</option>
-                    <option value="Çift İğne Zincir Dikiş">{'\u00C7'}ift {'\u0130\u011F'}ne Zincir Diki{'\u015F'}</option>
-                    <option value="Gizli Dikiş">Gizli Diki{'\u015F'}</option>
+                  <optgroup label={'\uD83E\uDDF5 Dikiş Makineleri'}>
+                    <option value="Düz Dikiş (Tek İğne)">D{'\u00FC'}z Diki{'ş'} (Tek {'İğ'}ne)</option>
+                    <option value="Çift İğne Düz Dikiş">{'\u00C7'}ift {'İğ'}ne D{'\u00FC'}z Diki{'ş'}</option>
+                    <option value="Zincir Dikiş">Zincir Diki{'ş'}</option>
+                    <option value="Çift İğne Zincir Dikiş">{'\u00C7'}ift {'İğ'}ne Zincir Diki{'ş'}</option>
+                    <option value="Gizli Dikiş">Gizli Diki{'ş'}</option>
                     <option value="Zigzag">Zigzag</option>
                   </optgroup>
                   <optgroup label={'\uD83D\uDD04 Overlok'}>
-                    <option value="3 İplik Overlok">3 {'\u0130'}plik Overlok</option>
-                    <option value="4 İplik Overlok">4 {'\u0130'}plik Overlok</option>
-                    <option value="5 İplik Overlok">5 {'\u0130'}plik Overlok</option>
+                    <option value="3 İplik Overlok">3 {'İ'}plik Overlok</option>
+                    <option value="4 İplik Overlok">4 {'İ'}plik Overlok</option>
+                    <option value="5 İplik Overlok">5 {'İ'}plik Overlok</option>
                   </optgroup>
                   <optgroup label={'\uD83D\uDCCF Re\u00E7me & Flatlock'}>
-                    <option value="2 İğne Reçme">2 {'\u0130\u011F'}ne Re{'\u00E7'}me</option>
-                    <option value="3 İğne Reçme">3 {'\u0130\u011F'}ne Re{'\u00E7'}me</option>
+                    <option value="2 İğne Reçme">2 {'İğ'}ne Re{'\u00E7'}me</option>
+                    <option value="3 İğne Reçme">3 {'İğ'}ne Re{'\u00E7'}me</option>
                     <option value="Bıçaklı Reçme">B{'\u0131\u00E7'}akl{'\u0131'} Re{'\u00E7'}me</option>
                     <option value="Silindir Kol Reçme">Silindir Kol Re{'\u00E7'}me</option>
                     <option value="Flatlock">Flatlock</option>
                   </optgroup>
                   <optgroup label={'\u2699\uFE0F \u00D6zel Operasyon'}>
-                    <option value="İlik Makinesi">{'\u0130'}lik Makinesi</option>
-                    <option value="Düğme Dikme Makinesi">D{'\u00FC\u011F'}me Dikme Makinesi</option>
+                    <option value="İlik Makinesi">{'İ'}lik Makinesi</option>
+                    <option value="Düğme Dikme Makinesi">D{'\u00FCğ'}me Dikme Makinesi</option>
                     <option value="Punteriz (Bartack)">Punteriz (Bartack)</option>
                     <option value="Kemer Takma Makinesi">Kemer Takma Makinesi</option>
                     <option value="Kollu Makine (Feed-off-the-arm)">Kollu Makine (Feed-off-the-arm)</option>
@@ -1963,14 +1959,14 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
                     <option value="Pastal Serim Makinesi">Pastal Serim Makinesi</option>
                     <option value="CNC Otomatik Kesim">CNC Otomatik Kesim</option>
                   </optgroup>
-                  <optgroup label={'\u2668\uFE0F \u00DCt\u00FC & Son \u0130\u015Flem'}>
+                  <optgroup label={'\u2668\uFE0F \u00DCt\u00FC & Son İşlem'}>
                     <option value="Buharlı Ütü">Buharl{'\u0131'} {'\u00DC'}t{'\u00FC'}</option>
                     <option value="Vakum Ütü Masası">Vakum {'\u00DC'}t{'\u00FC'} Masas{'\u0131'}</option>
                     <option value="Ütü Presi">{'\u00DC'}t{'\u00FC'} Presi</option>
                     <option value="Buhar Kazanı">Buhar Kazan{'\u0131'}</option>
                   </optgroup>
                   <optgroup label={'\uD83D\uDCCB Yard\u0131mc\u0131'}>
-                    <option value="Nakış / Brode Makinesi">Nak{'\u0131\u015F'} / Brode Makinesi</option>
+                    <option value="Nakış / Brode Makinesi">Nak{'\u0131ş'} / Brode Makinesi</option>
                     <option value="Etiket Kesme Makinesi">Etiket Kesme Makinesi</option>
                     <option value="Baskı / Transfer Makinesi">Bask{'\u0131'} / Transfer Makinesi</option>
                     <option value="Elle (Makinesiz)">Elle (Makinesiz)</option>
@@ -2795,7 +2791,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
               </div>
 
-              <div className="form-group"><label className="form-label">BaĞımlılık (Önceki İşlem)</label><input className="form-input" placeholder="örn: Yaka dikildikten sonra" value={form.dependency} onChange={e => setForm({ ...form, dependency: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Bağımlılık (Önceki İşlem)</label><input className="form-input" placeholder="örn: Yaka dikildikten sonra" value={form.dependency} onChange={e => setForm({ ...form, dependency: e.target.value })} /></div>
 
             </div>
 
@@ -2803,7 +2799,7 @@ function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
 
           <div className="modal-footer">
 
-            <button type="button" className="btn btn-secondary" onClick={handleClose}>İptal</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
 
             <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}</button>
 
@@ -2984,7 +2980,7 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
 
           <h2 className="modal-title">{editData ? `✏️ Düzenle — ${form.name}` : `📋 Yeni Personel ${form.name ? `— ${form.name}` : ''}`}</h2>
 
-          <button className="modal-close" onClick={handleClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>✕</button>
 
         </div>
 
@@ -3626,7 +3622,7 @@ function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
 
           <div className="modal-footer">
 
-            <button type="button" className="btn btn-secondary" onClick={handleClose}>İptal</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
 
             <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}</button>
 
@@ -3912,7 +3908,7 @@ function DashboardPage({ models, personnel }) {
 
               <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
 
-                1. Ay: Uyarı verilir  2. Ay: DeĞerlendirme yapılır  3. Ay: Karar alınır
+                1. Ay: Uyarı verilir  2. Ay: Değerlendirme yapılır  3. Ay: Karar alınır
 
               </p>
 
@@ -3936,7 +3932,7 @@ function DashboardPage({ models, personnel }) {
 
             <div style={{ textAlign: 'center' }}><div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--warning)' }}>{activeModels}</div><div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Aktif Model</div></div>
 
-            <div style={{ textAlign: 'center' }}><div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--success)' }}>{todayStats.value.toFixed(0)} ₺</div><div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Günlük Üretim DeĞeri</div></div>
+            <div style={{ textAlign: 'center' }}><div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--success)' }}>{todayStats.value.toFixed(0)} ₺</div><div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Günlük Üretim Değeri</div></div>
 
           </div>
 
@@ -4203,9 +4199,9 @@ function ModelsPage({ models, loadModels, addToast }) {
           { name: 'G\u00f6\u011f\u00fcs', description: 'Koltuk alt\u0131ndan yatay \u00f6l\u00e7\u00fc' },
           { name: 'Bel', description: 'Bel hizas\u0131ndan yatay \u00f6l\u00e7\u00fc' },
           { name: 'Basen', description: 'Kal\u00e7a hizas\u0131ndan yatay \u00f6l\u00e7\u00fc' },
-          { name: 'Boy', description: 'Omuzdan ete\u011Fe dikey \u00f6l\u00e7\u00fc' },
-          { name: 'Kol Boyu', description: 'Omuzdan bile\u011Fe' },
-          { name: 'Omuz', description: 'Omuz geni\u015Fli\u011Fi' }
+          { name: 'Boy', description: 'Omuzdan eteğe dikey \u00f6l\u00e7\u00fc' },
+          { name: 'Kol Boyu', description: 'Omuzdan bileğe' },
+          { name: 'Omuz', description: 'Omuz genişliği' }
         ]);
         setMeasureSizes(['S', 'M', 'L', 'XL']);
         setMeasureData({});
@@ -4225,8 +4221,43 @@ function ModelsPage({ models, loadModels, addToast }) {
 
       await loadOperations(modelId); await loadModels(); setShowOperationModal(null); addToast('success', 'İşlem eklendi!');
 
-    } catch (err) { addToast('error', err.message || 'Hata olu\u015Ftu'); }
+    } catch (err) { addToast('error', err.message || 'Hata oluştu'); }
   };
+
+  // B3: İşlem silme
+  const handleDeleteOperation = async (modelId, opId) => {
+    try {
+      const res = await fetch(`/api/models/${modelId}/operations?opId=${opId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Silme hatası');
+      await loadOperations(modelId);
+      await loadModels();
+      addToast('success', 'İşlem silindi');
+    } catch (err) { addToast('error', err.message); }
+  };
+
+  // B4: İşlem sıra değiştirme
+  const handleMoveOperation = async (modelId, opId, direction) => {
+    const ops = modelOperations[modelId] || [];
+    const idx = ops.findIndex(o => o.id === opId);
+    if (idx < 0) return;
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= ops.length) return;
+    const currentOp = ops[idx];
+    const targetOp = ops[targetIdx];
+    try {
+      await fetch(`/api/models/${modelId}/operations`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operation_id: currentOp.id, order_number: targetOp.order_number })
+      });
+      await fetch(`/api/models/${modelId}/operations`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operation_id: targetOp.id, order_number: currentOp.order_number })
+      });
+      await loadOperations(modelId);
+      addToast('success', 'Sıra değiştirildi');
+    } catch (err) { addToast('error', err.message); }
+  };
+
 
   // ===== ÖLÇÜ TABLOSU KAYDET =====
   const handleSaveMeasurements = async (modelId) => {
@@ -4240,7 +4271,7 @@ function ModelsPage({ models, loadModels, addToast }) {
       if (!res.ok) throw new Error('Kaydetme hatas\u0131');
       await loadModels();
       addToast('success', '\u2705 \u00D6l\u00E7\u00FC tablosu kaydedildi!');
-    } catch (err) { addToast('error', err.message || 'Hata olu\u015Ftu'); }
+    } catch (err) { addToast('error', err.message || 'Hata oluştu'); }
   };
 
 
@@ -4426,7 +4457,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                     <button className="btn btn-sm" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '13px' }} onClick={(e) => { e.stopPropagation(); openEditModal(model); }} title="Düzenle">✏️</button>
 
-                    <button className="btn btn-sm" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '13px' }} onClick={(e) => { e.stopPropagation(); openAuditHistory(model.id); }} title="DeĞişiklik Geçmişi">📜</button>
+                    <button className="btn btn-sm" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '13px' }} onClick={(e) => { e.stopPropagation(); openAuditHistory(model.id); }} title="Değişiklik Geçmişi">📜</button>
 
                     <button className="btn btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); handleDeleteModel(model.id); }}>🗑️</button>
 
@@ -4571,8 +4602,8 @@ function ModelsPage({ models, loadModels, addToast }) {
                               <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent)' }}>{'\uD83D\uDCCF'} {model.name} — {'\u00D6'}l{'\u00E7\u00FC'} Tablosu</div>
                               <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
                                 Model Kodu: <strong>{model.code}</strong>
-                                {model.order_no && <> | Sipari{'\u015F'} No: <strong>{model.order_no}</strong></>}
-                                {model.customer && <> | M{'\u00FC\u015F'}teri: <strong>{model.customer}</strong></>}
+                                {model.order_no && <> | Sipari{'ş'} No: <strong>{model.order_no}</strong></>}
+                                {model.customer && <> | M{'\u00FCş'}teri: <strong>{model.customer}</strong></>}
                               </div>
                             </div>
                             <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'right' }}>
@@ -4588,7 +4619,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <h4 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '12px' }}>{'\uD83D\uDCCF'} {'\u00D6'}l{'\u00E7\u00FC'} Noktalar{'\u0131'} Tan{'\u0131'}mlar{'\u0131'}</h4>
 
-                          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>Her {'\u00F6'}l{'\u00E7\u00FC'} noktas{'\u0131'}n{'\u0131'}n nerede ve nas{'\u0131'}l {'\u00F6'}l{'\u00E7\u00FC'}lece{'\u011F'}ini tan{'\u0131'}mlay{'\u0131'}n.</p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>Her {'\u00F6'}l{'\u00E7\u00FC'} noktas{'\u0131'}n{'\u0131'}n nerede ve nas{'\u0131'}l {'\u00F6'}l{'\u00E7\u00FC'}lece{'ğ'}ini tan{'\u0131'}mlay{'\u0131'}n.</p>
 
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8px', marginBottom: '12px' }}>
 
@@ -4638,7 +4669,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
 
-                            <h4 style={{ fontSize: '15px', fontWeight: '700' }}>📏 Ölçü Matrisi (Beden  DeĞer)</h4>
+                            <h4 style={{ fontSize: '15px', fontWeight: '700' }}>📏 Ölçü Matrisi (Beden  Değer)</h4>
 
                             <div style={{ display: 'flex', gap: '4px' }}>
 
@@ -5119,7 +5150,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                               <div key={op.id} style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--bg-card)' }}>
 
-                                <div onClick={() => setExpandedOp(expandedOp === op.id ? null : op.id)} style={{ display: 'grid', gridTemplateColumns: '50px 1fr 120px 100px 80px 80px', alignItems: 'center', padding: '12px 16px', gap: '12px', background: 'var(--bg-input)', cursor: 'pointer', borderBottom: expandedOp === op.id ? '1px solid var(--border-color)' : 'none' }}>
+                                <div onClick={() => setExpandedOp(expandedOp === op.id ? null : op.id)} style={{ display: 'grid', gridTemplateColumns: '50px 1fr 120px 100px 80px 80px auto', alignItems: 'center', padding: '12px 16px', gap: '12px', background: 'var(--bg-input)', cursor: 'pointer', borderBottom: expandedOp === op.id ? '1px solid var(--border-color)' : 'none' }}>
 
                                   <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent)', textAlign: 'center' }}>{op.order_number}</div>
 
@@ -5147,7 +5178,15 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                                   <div style={{ fontSize: '12px', fontWeight: '600', textAlign: 'center' }}>{op.standard_time_min && op.standard_time_max ? `${op.standard_time_min}–${op.standard_time_max} sn` : '—'}</div>
 
-                                  <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', textAlign: 'center' }}>{op.unit_price ? `${op.unit_price.toFixed(2)} \u20BA` : '—'}</div>
+                                  <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', textAlign: 'center' }}>{op.unit_price ? `${op.unit_price.toFixed(2)} ₺` : '—'}</div>
+
+                                  {/* B2+B3+B4: İşlem Düzenle/Sil/Sıra Değiştir */}
+                                  <div onClick={e => e.stopPropagation()} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                    <button onClick={() => handleMoveOperation(model.id, op.id, 'up')} title="Yukarı taşı" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', opacity: op.order_number <= 1 ? 0.3 : 1 }} disabled={op.order_number <= 1}>↑</button>
+                                    <button onClick={() => handleMoveOperation(model.id, op.id, 'down')} title="Aşağı taşı" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', opacity: op.order_number >= (modelOperations[model.id] || []).length ? 0.3 : 1 }} disabled={op.order_number >= (modelOperations[model.id] || []).length}>↓</button>
+                                    <button onClick={() => { const newName = prompt('İşlem adı:', op.name); if (newName && newName !== op.name) { fetch(`/api/models/${model.id}/operations/${op.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newName }) }).then(() => { loadOperations(model.id); addToast('success', 'İşlem güncellendi'); }); } }} title="Düzenle" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px' }}>✏️</button>
+                                    <button onClick={() => { if (confirm(`"${op.name}" işlemini silmek istediğinize emin misiniz?`)) { handleDeleteOperation(model.id, op.id); } }} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px', color: 'var(--danger)' }}>🗑️</button>
+                                  </div>
 
                                 </div>
 
@@ -5235,7 +5274,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                               <span>Toplam İşlem: {(modelOperations[model.id] || []).length}</span>
 
-                              <span style={{ color: 'var(--accent)' }}>Toplam Fiyat: {(modelOperations[model.id] || []).reduce((s, o) => s + (o.unit_price || 0), 0).toFixed(2)} \u20BA</span>
+                              <span style={{ color: 'var(--accent)' }}>Toplam Fiyat: {(modelOperations[model.id] || []).reduce((s, o) => s + (o.unit_price || 0), 0).toFixed(2)} ₺</span>
 
                             </div>
 
@@ -5303,7 +5342,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
             <div style={{ padding: '8px 16px', background: 'rgba(243,156,18,0.1)', borderBottom: '1px solid rgba(243,156,18,0.3)', fontSize: '12px', color: '#f39c12', fontWeight: '600' }}>
 
-              ⚠️ Yapılan tüm deĞişiklikler tarih/saat ile kalıcı olarak kayıt altına alınır ve silinemez.
+              ⚠️ Yapılan tüm değişiklikler tarih/saat ile kalıcı olarak kayıt altına alınır ve silinemez.
 
             </div>
 
@@ -5399,7 +5438,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                 <button type="button" className="btn btn-secondary" onClick={() => setEditModel(null)}>İptal</button>
 
-                <button type="submit" className="btn btn-primary">💾 Kaydet & DeĞişiklikleri Logla</button>
+                <button type="submit" className="btn btn-primary">💾 Kaydet & Değişiklikleri Logla</button>
 
               </div>
 
@@ -5423,7 +5462,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
             <div className="modal-header">
 
-              <h2 className="modal-title">📜 DeĞişiklik Geçmişi</h2>
+              <h2 className="modal-title">📜 Değişiklik Geçmişi</h2>
 
               <button className="modal-close" onClick={() => setAuditHistory(null)}>✕</button>
 
@@ -5431,7 +5470,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
             <div style={{ padding: '8px 16px', background: 'rgba(46,204,113,0.1)', borderBottom: '1px solid rgba(46,204,113,0.3)', fontSize: '12px', color: '#2ecc71', fontWeight: '600' }}>
 
-              🔒 Bu kayıtlar silinemez. Tüm deĞişiklikler tarih ve saat ile kalıcı olarak saklanır.
+              🔒 Bu kayıtlar silinemez. Tüm değişiklikler tarih ve saat ile kalıcı olarak saklanır.
 
             </div>
 
@@ -5443,7 +5482,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                   <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
 
-                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz deĞişiklik kaydı yok</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz değişiklik kaydı yok</div>
 
                   <div style={{ fontSize: '12px', marginTop: '4px' }}>Bu modelde düzenleme yapıldıĞında burada görünecek.</div>
 
@@ -5491,7 +5530,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                       </div>
 
-                      <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>👤 DeĞiştiren: <strong>{entry.changed_by || 'admin'}</strong></div>
+                      <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>👤 Değiştiren: <strong>{entry.changed_by || 'admin'}</strong></div>
 
                     </div>
 
@@ -5617,7 +5656,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
 
-    try { await fetch(`/api/personnel/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus, changed_by: 'admin' }) }); await loadPersonnel(); } catch (err) { addToast('error', 'Durum deĞiştirilemedi'); }
+    try { await fetch(`/api/personnel/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus, changed_by: 'admin' }) }); await loadPersonnel(); } catch (err) { addToast('error', 'Durum değiştirilemedi'); }
 
   };
 
@@ -5742,7 +5781,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
                   <button onClick={() => { setEditPerson(p); setShowModal(true); }} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
 
-                  <button onClick={() => openPersonAuditHistory(p.id)} title="DeĞişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
+                  <button onClick={() => openPersonAuditHistory(p.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
 
                   <button onClick={() => handleDelete(p.id)} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '3px' }}>🗑️</button>
 
@@ -5788,7 +5827,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
             <div className="modal-header">
 
-              <h2 className="modal-title">📜 Personel DeĞişiklik Geçmişi</h2>
+              <h2 className="modal-title">📜 Personel Değişiklik Geçmişi</h2>
 
               <button className="modal-close" onClick={() => setPersonAuditHistory(null)}>✕</button>
 
@@ -5796,7 +5835,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
             <div style={{ padding: '8px 16px', background: 'rgba(46,204,113,0.1)', borderBottom: '1px solid rgba(46,204,113,0.3)', fontSize: '12px', color: '#2ecc71', fontWeight: '600' }}>
 
-              🔒 Bu kayıtlar silinemez. Tüm deĞişiklikler kalıcı olarak saklanır.
+              🔒 Bu kayıtlar silinemez. Tüm değişiklikler kalıcı olarak saklanır.
 
             </div>
 
@@ -5808,7 +5847,7 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
                   <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
 
-                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz deĞişiklik kaydı yok</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz değişiklik kaydı yok</div>
 
                 </div>
 
@@ -5892,8 +5931,11 @@ function ProductionPage({ models, personnel, addToast }) {
   const openEditProduction = (log) => {
     setEditProductionForm({
       total_produced: log.total_produced || 0, defective_count: log.defective_count || 0,
-      defect_reason: log.defect_reason || '', lot_change: log.lot_change || '',
-      quality_score: log.quality_score || 100
+      defect_reason: log.defect_reason || '', defect_source: log.defect_source || 'operator',
+      lot_change: log.lot_change || '', quality_score: log.quality_score || 100,
+      break_duration_min: log.break_duration_min || 0, machine_down_min: log.machine_down_min || 0,
+      material_wait_min: log.material_wait_min || 0, passive_time_min: log.passive_time_min || 0,
+      defect_classification: log.defect_classification || '', notes: log.notes || ''
     });
     setEditProduction(log);
   };
@@ -5917,9 +5959,10 @@ function ProductionPage({ models, personnel, addToast }) {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editProductionForm)
       });
-      if (!res.ok) throw new Error('Guncelleme hatasi');
+      if (!res.ok) throw new Error('Güncelleme hatası');
       setEditProduction(null);
-      addToast('success', 'Uretim kaydi guncellendi!');
+      await loadLogs();
+      addToast('success', 'Üretim kaydı güncellendi!');
     } catch (err) { addToast('error', err.message); }
   };
 
@@ -5932,286 +5975,508 @@ function ProductionPage({ models, personnel, addToast }) {
     } catch { setProdAuditData([]); setProdAuditHistory(logId); }
   };
 
+  const handleDeleteLog = async (logId) => {
+    if (!confirm('Bu üretim kaydını silmek istediğinize emin misiniz?')) return;
+    try {
+      const res = await fetch(`/api/production/${logId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Silme hatası');
+      await loadLogs();
+      addToast('success', 'Kayıt silindi (geri alınabilir)');
+    } catch (err) { addToast('error', err.message); }
+  };
 
   const [selectedModel, setSelectedModel] = useState('');
-
   const [selectedOperation, setSelectedOperation] = useState('');
-
   const [selectedPerson, setSelectedPerson] = useState('');
-
   const [operations, setOperations] = useState([]);
-
   const [activeSession, setActiveSession] = useState(null);
-
   const [timer, setTimer] = useState(0);
-
   const [logs, setLogs] = useState([]);
 
-  const [form, setForm] = useState({ total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator', machine_down_min: '0', material_wait_min: '0' });
+  const [form, setForm] = useState({
+    total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator',
+    machine_down_min: '0', material_wait_min: '0', break_duration_min: '0', passive_time_min: '0',
+    lot_change: '', quality_score: '100', defect_classification: '', notes: ''
+  });
 
-  const defectSources = [{ value: 'operator', label: '📋 Operatör Hatası' }, { value: 'machine', label: '📋 Makine Hatası' }, { value: 'material', label: '🧵 Malzeme Hatası' }, { value: 'design', label: '📏 Tasarım Hatası' }];
+  const defectSources = [
+    { value: 'operator', label: '👷 Operatör Hatası' },
+    { value: 'machine', label: '⚙️ Makine Hatası' },
+    { value: 'material', label: '🧵 Malzeme Hatası' },
+    { value: 'design', label: '📐 Tasarım Hatası' }
+  ];
 
-
+  const defectTypes = [
+    'Atlanmış dikiş', 'Eğri dikiş', 'İplik kopması', 'Kumaş hatası',
+    'Ölçü hatası', 'Leke/iz', 'Diğer'
+  ];
 
   const formatTimer = (s) => `${String(Math.floor(s / 3600)).padStart(2, '0')}:${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
-
-
   const loadLogs = useCallback(async () => {
-
     const today = new Date().toISOString().split('T')[0];
-
-    const res = await fetch(`/api/production?date=${today}`); const d = await res.json(); setLogs(Array.isArray(d) ? d : []);
-
+    try {
+      const res = await fetch(`/api/production?date=${today}`);
+      const d = await res.json();
+      setLogs(Array.isArray(d) ? d : []);
+    } catch { setLogs([]); }
   }, []);
-
-
 
   useEffect(() => { loadLogs(); }, [loadLogs]);
 
   useEffect(() => {
-
-    if (selectedModel) { fetch(`/api/models/${selectedModel}/operations`).then(r => r.json()).then(d => setOperations(Array.isArray(d) ? d : [])); }
-
-    else { setOperations([]); }
-
+    if (selectedModel) {
+      fetch(`/api/models/${selectedModel}/operations`).then(r => r.json()).then(d => {
+        const ops = Array.isArray(d) ? d.sort((a, b) => a.order_number - b.order_number) : [];
+        setOperations(ops);
+        // Otomatik olarak sıradaki (ilk) işlemi seç
+        if (ops.length > 0) {
+          setSelectedOperation(String(ops[0].id));
+        }
+      });
+    } else { setOperations([]); }
     setSelectedOperation('');
-
   }, [selectedModel]);
+
+  // İşlemi yapabilecek personelleri bul
+  const getCapablePersonnel = useCallback((op) => {
+    if (!op || !personnel) return [];
+    const machineType = (op.machine_type || '').toLowerCase();
+    return personnel.filter(p => {
+      if (p.status !== 'active') return false;
+      try {
+        const machines = typeof p.machines === 'string' ? JSON.parse(p.machines) : (p.machines || {});
+        const roleStr = (p.role || '').toLowerCase();
+        // Makine tipinde eşleşme
+        const hasMatch = Object.keys(machines).some(m => m.toLowerCase().includes(machineType.split(' ')[0]));
+        const roleMatch = machineType && roleStr.includes(machineType.split(' ')[0]);
+        return hasMatch || roleMatch;
+      } catch { return true; }
+    });
+  }, [personnel]);
+
 
   useEffect(() => { let iv; if (activeSession) { iv = setInterval(() => setTimer(t => t + 1), 1000); } return () => clearInterval(iv); }, [activeSession]);
 
+  // ===== OTOMATİK PERSONEL ÖNERİSİ =====
+  const [suggestedPerson, setSuggestedPerson] = useState(null);
 
+  const suggestBestPersonnel = useCallback((op) => {
+    if (!op || !personnel || personnel.length === 0) return null;
+    const machineType = (op.machine_type || '').toLowerCase().trim();
+    const opDifficulty = op.difficulty || 5;
+    const reqSkill = op.required_skill_level || '3_sinif';
+    const skillLevelMap = { '1_sinif': 1, '2_sinif': 2, '3_sinif': 3, 'usta': 4, 'kalfa': 3 };
+    const reqSkillNum = skillLevelMap[reqSkill] || 3;
+
+    let bestScore = -1;
+    let bestPerson = null;
+
+    personnel.filter(p => p.status === 'active').forEach(p => {
+      let score = 0;
+
+      // 1. Makine uyumu (0-40 puan)
+      try {
+        const machines = typeof p.machines === 'string' ? JSON.parse(p.machines) : (p.machines || {});
+        const roleStr = (p.role || '').toLowerCase();
+        // Makine becerileri JSON'da arama
+        Object.entries(machines).forEach(([machine, level]) => {
+          if (machineType && machine.toLowerCase().includes(machineType.toLowerCase().split(' ')[0])) {
+            const lvl = String(level).toLowerCase();
+            if (lvl === 'cok_iyi' || lvl === 'çok_iyi' || lvl === 'çok iyi') score += 40;
+            else if (lvl === 'iyi') score += 30;
+            else if (lvl === 'orta') score += 20;
+            else if (lvl === 'normal' || lvl === 'yeni') score += 10;
+            else score += 15;
+          }
+        });
+        // Role'da makine geçiyor mu
+        if (machineType && roleStr.includes(machineType.split(' ')[0].toLowerCase())) score += 15;
+      } catch { }
+
+      // 2. Beceri seviyesi vs zorluk (0-30 puan)
+      const pSkill = skillLevelMap[p.skill_level] || 2;
+      if (pSkill >= reqSkillNum) score += 30;
+      else if (pSkill === reqSkillNum - 1) score += 15;
+      else score += 5;
+
+      // 3. İşlem deneyimi (0-20 puan) — daha önce bu işlemi yapmış mı
+      const prevLogs = logs.filter(l => l.operation_id === op.id && l.personnel_id === p.id);
+      if (prevLogs.length > 0) {
+        score += 20;
+        // Daha önceki FPY yüksekse bonus
+        const avgFpy = prevLogs.reduce((s, l) => s + (l.first_pass_yield || 100), 0) / prevLogs.length;
+        if (avgFpy > 95) score += 10;
+      }
+
+      if (score > bestScore) { bestScore = score; bestPerson = p; }
+    });
+
+    return bestPerson;
+  }, [personnel, logs]);
+
+  // İşlem seçildiğinde otomatik personel öner
+  useEffect(() => {
+    if (selectedOperation && operations.length > 0 && !activeSession) {
+      const op = operations.find(o => o.id === parseInt(selectedOperation));
+      const best = suggestBestPersonnel(op);
+      if (best) {
+        setSuggestedPerson(best.id);
+        if (!selectedPerson) {
+          setSelectedPerson(String(best.id));
+        }
+      }
+    }
+  }, [selectedOperation, operations, suggestBestPersonnel, activeSession]);
+
+  // Otomatik hesaplamalar
+  const tp = parseInt(form.total_produced) || 0;
+  const dc = parseInt(form.defective_count) || 0;
+  const fpy = tp > 0 ? ((tp - dc) / tp) * 100 : 100;
+  const brk = parseFloat(form.break_duration_min) || 0;
+  const mch = parseFloat(form.machine_down_min) || 0;
+  const mat = parseFloat(form.material_wait_min) || 0;
+  const pas = parseFloat(form.passive_time_min) || 0;
+  const netWorkMin = timer > 0 ? Math.max(0, (timer / 60) - brk - mch - mat - pas) : 0;
+  const unitTimeSec = tp > 0 && netWorkMin > 0 ? (netWorkMin * 60) / tp : 0;
+  const selectedOp = operations.find(o => o.id === parseInt(selectedOperation));
+  const unitValue = tp * (selectedOp?.unit_price || 0);
+
+  // Stat kartları hesaplamaları
+  const todayProduced = logs.reduce((s, l) => s + (l.total_produced || 0), 0);
+  const todayDefects = logs.reduce((s, l) => s + (l.defective_count || 0), 0);
+  const todayFPY = todayProduced > 0 ? ((todayProduced - todayDefects) / todayProduced * 100) : 100;
 
   const handleStart = () => {
-
     if (!selectedModel || !selectedOperation || !selectedPerson) return;
-
     const model = models.find(m => m.id === parseInt(selectedModel));
-
     const op = operations.find(o => o.id === parseInt(selectedOperation));
-
     const person = personnel.find(p => p.id === parseInt(selectedPerson));
-
-    setActiveSession({ model_id: parseInt(selectedModel), operation_id: parseInt(selectedOperation), personnel_id: parseInt(selectedPerson), model_name: model?.name, model_code: model?.code, operation_name: op?.name, personnel_name: person?.name, unit_price: op?.unit_price || 0, start_time: new Date().toISOString() });
-
+    setActiveSession({
+      model_id: parseInt(selectedModel), operation_id: parseInt(selectedOperation),
+      personnel_id: parseInt(selectedPerson), model_name: model?.name, model_code: model?.code,
+      operation_name: op?.name, personnel_name: person?.name, unit_price: op?.unit_price || 0,
+      start_time: new Date().toISOString()
+    });
     setTimer(0);
-
   };
-
-
 
   const handleStop = async () => {
-
     if (!activeSession) return;
-
     const produced = parseInt(form.total_produced) || 0;
-
+    if (produced === 0 && timer < 120) {
+      if (!confirm('2 dakikadan kısa ve 0 adet — emin misiniz?')) return;
+    }
     if (produced === 0) { addToast('error', 'Yapılan adet giriniz'); return; }
-
     try {
-
-      const passiveTotal = (parseFloat(form.machine_down_min) || 0) + (parseFloat(form.material_wait_min) || 0);
-
-      const res = await fetch('/api/production', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...activeSession, end_time: new Date().toISOString(), total_produced: produced, defective_count: parseInt(form.defective_count) || 0, defect_reason: form.defect_reason, defect_source: form.defect_source, machine_down_min: parseFloat(form.machine_down_min) || 0, material_wait_min: parseFloat(form.material_wait_min) || 0, passive_time_min: passiveTotal, quality_score: produced > 0 ? Math.max(0, 100 - ((parseInt(form.defective_count) || 0) / produced * 100)) : 100 }) });
-
+      const res = await fetch('/api/production', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...activeSession, end_time: new Date().toISOString(),
+          total_produced: produced, defective_count: dc,
+          defect_reason: form.defect_reason, defect_source: form.defect_source,
+          break_duration_min: brk, machine_down_min: mch,
+          material_wait_min: mat, passive_time_min: pas,
+          quality_score: parseFloat(form.quality_score) || 100,
+          lot_change: form.lot_change, defect_classification: form.defect_classification,
+          notes: form.notes
+        })
+      });
       if (!res.ok) throw new Error('Kayıt hatası');
-
-      setActiveSession(null); setTimer(0); setForm({ total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator', machine_down_min: '0', material_wait_min: '0' });
-
+      setActiveSession(null); setTimer(0);
+      setForm({ total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator', machine_down_min: '0', material_wait_min: '0', break_duration_min: '0', passive_time_min: '0', lot_change: '', quality_score: '100', defect_classification: '', notes: '' });
       await loadLogs(); addToast('success', '✅ Üretim kaydı oluşturuldu');
-
     } catch (err) { addToast('error', err.message); }
-
   };
 
+  // Clear input helper
+  const ClearBtn = ({ field, defaultVal = '' }) => (
+    <button type="button" onClick={() => setForm(p => ({ ...p, [field]: defaultVal }))}
+      title="Temizle" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '2px 4px', opacity: 0.6 }}>❌</button>
+  );
 
-
-  const selectedOp = operations.find(o => o.id === parseInt(selectedOperation));
-
-
+  const InputField = ({ label, field, type = 'text', placeholder = '', defaultVal = '' }) => (
+    <div className="form-group" style={{ marginBottom: '8px' }}>
+      <label className="form-label" style={{ fontSize: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {label} <ClearBtn field={field} defaultVal={defaultVal} />
+      </label>
+      <input className="form-input" type={type} placeholder={placeholder}
+        value={form[field]} onChange={e => setForm({ ...form, [field]: e.target.value })}
+        style={type === 'number' ? { textAlign: 'center', fontWeight: '600' } : {}} />
+    </div>
+  );
 
   return (
-
     <>
-
-      <div className="topbar"><h1 className="topbar-title">🏭️ Üretim Takip</h1><div className="topbar-actions"><span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div></div>
+      <div className="topbar"><h1 className="topbar-title">🏭 Üretim Takip</h1><div className="topbar-actions"><span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div></div>
 
       <div className="page-content">
 
-        <div className="card">
-
-          <div className="card-header"><h3 className="card-title">{activeSession ? '⏱️ Aktif Üretim' : '🏭️ Yeni Üretim Başlat'}</h3></div>
-
-          {!activeSession ? (
-
-            <div>
-
-              <div style={{ display: 'grid', gap: '12px', marginBottom: '16px' }}>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-
-                  <label className="form-label" style={{ fontSize: '13px' }}>① Model Seçin *</label>
-
-                  <select className="form-select" value={selectedModel} onChange={e => setSelectedModel(e.target.value)} style={{ fontSize: '15px', padding: '12px' }}>
-
-                    <option value="">— Model seçin —</option>
-
-                    {models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}
-
-                  </select>
-
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0, opacity: selectedModel ? 1 : 0.5 }}>
-
-                  <label className="form-label" style={{ fontSize: '13px' }}>② İşlem Seçin * {!selectedModel && <span style={{ color: 'var(--warning)', fontSize: '11px' }}>(önce model seçin)</span>}</label>
-
-                  <select className="form-select" value={selectedOperation} onChange={e => setSelectedOperation(e.target.value)} disabled={!selectedModel || operations.length === 0} style={{ fontSize: '15px', padding: '12px', borderColor: !selectedModel ? 'var(--border-color)' : selectedOperation ? 'var(--success)' : 'var(--warning)' }}>
-
-                    <option value="">{!selectedModel ? '— Önce model seçin —' : operations.length === 0 ? '— Bu modelde işlem yok —' : '— İşlem seçin —'}</option>
-
-                    {operations.map(o => <option key={o.id} value={o.id}>{o.order_number}. {o.name}{o.machine_type ? ` (${o.machine_type})` : ''}</option>)}
-
-                  </select>
-
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-
-                  <label className="form-label" style={{ fontSize: '13px' }}>③ Personel Seçin *</label>
-
-                  <select className="form-select" value={selectedPerson} onChange={e => setSelectedPerson(e.target.value)} style={{ fontSize: '15px', padding: '12px' }}>
-
-                    <option value="">— Personel seçin —</option>
-
-                    {personnel.filter(p => p.status === 'active').map(p => <option key={p.id} value={p.id}>{p.name} ({p.role})</option>)}
-
-                  </select>
-
-                </div>
-
-              </div>
-
-              {selectedOp && (<div style={{ padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}><strong>Seçilen İşlem:</strong> {selectedOp.name}  Makine: {selectedOp.machine_type || '—'}  Zorluk: {selectedOp.difficulty}/10{selectedOp.standard_time_min && selectedOp.standard_time_max && <>  Std. Süre: {selectedOp.standard_time_min}–{selectedOp.standard_time_max} sn</>}{selectedOp.unit_price > 0 && <>  Birim: {selectedOp.unit_price.toFixed(2)} ₺</>}</div>)}
-
-              <button className="btn btn-primary btn-lg" onClick={handleStart} disabled={!selectedModel || !selectedOperation || !selectedPerson} style={{ width: '100%', padding: '16px', fontSize: '18px' }}>🏭️ İŞLEMİ BAŞLAT</button>
-
-            </div>
-
-          ) : (
-
-            <div>
-
-              <div style={{ textAlign: 'center', padding: '24px 0' }}>
-
-                <div style={{ fontSize: '48px', fontWeight: '800', fontFamily: 'monospace', color: 'var(--accent)', letterSpacing: '4px' }}>{formatTimer(timer)}</div>
-
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Başlangıç: {new Date(activeSession.start_time).toLocaleTimeString('tr-TR')}</div>
-
-              </div>
-
-              <div className="form-row">
-
-                <div className="form-group"><label className="form-label">Yapılan Adet *</label><input className="form-input" type="number" min="0" placeholder="0" style={{ fontSize: '20px', fontWeight: '700', textAlign: 'center' }} value={form.total_produced} onChange={e => setForm({ ...form, total_produced: e.target.value })} /></div>
-
-                <div className="form-group"><label className="form-label">Hatalı Adet</label><input className="form-input" type="number" min="0" placeholder="0" style={{ fontSize: '20px', fontWeight: '700', textAlign: 'center' }} value={form.defective_count} onChange={e => setForm({ ...form, defective_count: e.target.value })} /></div>
-
-              </div>
-
-              {parseInt(form.defective_count) > 0 && (
-
-                <div className="form-row">
-
-                  <div className="form-group"><label className="form-label">Hata Nedeni Sınıflandırması</label><select className="form-select" value={form.defect_source} onChange={e => setForm({ ...form, defect_source: e.target.value })}>{defectSources.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}</select></div>
-
-                  <div className="form-group"><label className="form-label">Hata Açıklaması</label><input className="form-input" placeholder="Kısa açıklama..." value={form.defect_reason} onChange={e => setForm({ ...form, defect_reason: e.target.value })} /></div>
-
-                </div>
-
-              )}
-
-              <div style={{ padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
-
-                <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>⏸️ Pasif Zaman (performansı etkilemez)</div>
-
-                <div className="form-row">
-
-                  <div className="form-group" style={{ marginBottom: 0 }}><label className="form-label" style={{ fontSize: '12px' }}>Makine Arızası (dk)</label><input className="form-input" type="number" min="0" step="1" value={form.machine_down_min} onChange={e => setForm({ ...form, machine_down_min: e.target.value })} /></div>
-
-                  <div className="form-group" style={{ marginBottom: 0 }}><label className="form-label" style={{ fontSize: '12px' }}>Malzeme/İş Bekleme (dk)</label><input className="form-input" type="number" min="0" step="1" value={form.material_wait_min} onChange={e => setForm({ ...form, material_wait_min: e.target.value })} /></div>
-
-                </div>
-
-              </div>
-
-              <button className="btn btn-danger btn-lg" onClick={handleStop} style={{ width: '100%', padding: '16px', fontSize: '18px' }}>⏹️ İŞLEMİ BİTİR & KAYDET</button>
-
-            </div>
-
-          )}
-
+        {/* ── STAT KARTLARI ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'rgba(52,152,219,0.15)', color: '#3498db' }}>📦</div>
+            <div><div className="stat-value">{todayProduced}</div><div className="stat-label">Bugün Üretilen</div></div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'rgba(46,204,113,0.15)', color: '#2ecc71' }}>✅</div>
+            <div><div className="stat-value">%{todayFPY.toFixed(1)}</div><div className="stat-label">Kalite (FPY)</div></div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'rgba(231,76,60,0.15)', color: '#e74c3c' }}>❌</div>
+            <div><div className="stat-value">{todayDefects}</div><div className="stat-label">Toplam Hata</div></div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6' }}>📊</div>
+            <div><div className="stat-value">{logs.length}</div><div className="stat-label">Kayıt Sayısı</div></div>
+          </div>
         </div>
 
-        <div className="card" style={{ marginTop: '16px' }}>
+        {/* ── AKTİF ÜRETİM / YENİ BAŞLAT ── */}
+        <div className="card">
+          <div className="card-header"><h3 className="card-title">{activeSession ? '⏱️ Aktif Üretim' : '🏭 Yeni Üretim Başlat'}</h3></div>
 
-          <div className="card-header"><h3 className="card-title">📋 Bugünün Üretim Kayıtları</h3></div>
+          {!activeSession ? (
+            <div>
+              <div style={{ display: 'grid', gap: '12px', marginBottom: '16px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '13px' }}>① Model Seçin *</label>
+                  <select className="form-select" value={selectedModel} onChange={e => setSelectedModel(e.target.value)} style={{ fontSize: '15px', padding: '12px' }}>
+                    <option value="">— Model seçin —</option>
+                    {models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0, opacity: selectedModel ? 1 : 0.5 }}>
+                  <label className="form-label" style={{ fontSize: '13px' }}>② İşlem Sırası {!selectedModel && <span style={{ color: 'var(--warning)', fontSize: '11px' }}>(önce model seçin)</span>} {operations.length > 0 && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({operations.length} işlem)</span>}</label>
+
+                  {/* ── Görsel İşlem Sırası Kartları ── */}
+                  {operations.length > 0 && (
+                    <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', padding: '4px 0 8px', marginBottom: '8px' }}>
+                      {operations.map((o, i) => {
+                        const isSelected = selectedOperation === String(o.id);
+                        const capable = getCapablePersonnel(o);
+                        return (
+                          <div key={o.id} onClick={() => setSelectedOperation(String(o.id))} style={{
+                            minWidth: '120px', padding: '8px 10px', borderRadius: '10px', cursor: 'pointer',
+                            background: isSelected ? 'linear-gradient(135deg, var(--accent), #27ae60)' : 'var(--bg-input)',
+                            color: isSelected ? '#fff' : 'var(--text-primary)',
+                            border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border-color)'}`,
+                            transition: 'all 0.2s', flex: '0 0 auto'
+                          }}>
+                            <div style={{ fontSize: '18px', fontWeight: '800', marginBottom: '2px' }}>{o.order_number}</div>
+                            <div style={{ fontSize: '12px', fontWeight: '700' }}>{o.name}</div>
+                            <div style={{ fontSize: '10px', opacity: 0.8 }}>{o.machine_type || '—'}</div>
+                            <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: '9px', background: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--bg-card)', padding: '1px 5px', borderRadius: '6px' }}>⚡{o.difficulty}/10</span>
+                              <span style={{ fontSize: '9px', background: isSelected ? 'rgba(255,255,255,0.25)' : 'var(--bg-card)', padding: '1px 5px', borderRadius: '6px' }}>👥{capable.length}</span>
+                            </div>
+
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* ── Manuel Dropdown (yedek) ── */}
+                  <select className="form-select" value={selectedOperation} onChange={e => setSelectedOperation(e.target.value)} disabled={!selectedModel || operations.length === 0} style={{ fontSize: '13px', padding: '8px' }}>
+                    <option value="">{!selectedModel ? '— Önce model seçin —' : operations.length === 0 ? '— Bu modelde işlem yok —' : '— Manuel seçim —'}</option>
+                    {operations.map(o => <option key={o.id} value={o.id}>{o.order_number}. {o.name}{o.machine_type ? ` (${o.machine_type})` : ''} — {getCapablePersonnel(o).length} kişi yapabilir</option>)}
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontSize: '13px' }}>③ Personel Seçin * {suggestedPerson && parseInt(selectedPerson) === suggestedPerson && <span style={{ background: 'linear-gradient(135deg, #2ecc71, #27ae60)', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontSize: '10px', marginLeft: '6px', fontWeight: '700' }}>🤖 Önerilen</span>}</label>
+                  <select className="form-select" value={selectedPerson} onChange={e => { setSelectedPerson(e.target.value); }} disabled={!selectedModel || !selectedOperation} style={{ fontSize: '15px', padding: '12px', opacity: (!selectedModel || !selectedOperation) ? 0.5 : 1 }}>
+                    <option value="">— Personel seçin —</option>
+                    {personnel.filter(p => p.status === 'active').map(p => <option key={p.id} value={p.id}>{p.name} ({p.role}){p.id === suggestedPerson ? ' ★ ÖNERİLEN' : ''}</option>)}
+                  </select>
+                </div>
+              </div>
+              {selectedOp && (<div style={{ padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: '16px', fontSize: '13px' }}><strong>Seçilen İşlem:</strong> {selectedOp.name}  Makine: {selectedOp.machine_type || '—'}  Zorluk: {selectedOp.difficulty}/10{selectedOp.unit_price > 0 && <>  Birim: {selectedOp.unit_price.toFixed(2)} ₺</>}  <strong>Yapabilecek:</strong> {getCapablePersonnel(selectedOp).map(p => p.name).join(', ') || 'Belirsiz'}</div>)}
+              <button className="btn btn-primary btn-lg" onClick={handleStart} disabled={!selectedModel || !selectedOperation || !selectedPerson} style={{ width: '100%', padding: '16px', fontSize: '18px' }}>🏭 İŞLEMİ BAŞLAT</button>
+            </div>
+          ) : (
+            <div>
+              {/* Timer */}
+              <div style={{ textAlign: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-color)', marginBottom: '16px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>{activeSession.model_name} → {activeSession.operation_name} → {activeSession.personnel_name}</div>
+                <div style={{ fontSize: '48px', fontWeight: '800', fontFamily: 'monospace', color: 'var(--accent)', letterSpacing: '4px' }}>{formatTimer(timer)}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Başlangıç: {new Date(activeSession.start_time).toLocaleTimeString('tr-TR')}</div>
+              </div>
+
+              {/* A. SÜREÇ KRİTERLERİ */}
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>📋 Süreç Kriterleri</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <InputField label="Yapılan Adet *" field="total_produced" type="number" placeholder="0" />
+                <InputField label="Hatalı Adet" field="defective_count" type="number" placeholder="0" defaultVal="0" />
+              </div>
+
+              {dc > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div className="form-group" style={{ marginBottom: '8px' }}>
+                    <label className="form-label" style={{ fontSize: '12px', display: 'flex', justifyContent: 'space-between' }}>Hata Kaynağı <ClearBtn field="defect_source" defaultVal="operator" /></label>
+                    <select className="form-select" value={form.defect_source} onChange={e => setForm({ ...form, defect_source: e.target.value })}>
+                      {defectSources.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                    </select>
+                  </div>
+                  <InputField label="Hata Açıklaması" field="defect_reason" placeholder="Kısa açıklama..." />
+                </div>
+              )}
+
+              {dc > 0 && (
+                <div className="form-group" style={{ marginBottom: '8px' }}>
+                  <label className="form-label" style={{ fontSize: '12px', display: 'flex', justifyContent: 'space-between' }}>Hata Tipi Sınıflandırma <ClearBtn field="defect_classification" /></label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {defectTypes.map(dt => {
+                      const selected = (form.defect_classification || '').split(',').map(s => s.trim()).includes(dt);
+                      return (
+                        <button key={dt} type="button" onClick={() => {
+                          const arr = (form.defect_classification || '').split(',').map(s => s.trim()).filter(Boolean);
+                          const next = selected ? arr.filter(x => x !== dt) : [...arr, dt];
+                          setForm({ ...form, defect_classification: next.join(', ') });
+                        }} style={{
+                          padding: '4px 10px', borderRadius: '12px', fontSize: '11px', border: '1px solid var(--border-color)',
+                          background: selected ? 'var(--accent)' : 'var(--bg-input)', color: selected ? '#fff' : 'var(--text-primary)',
+                          cursor: 'pointer', transition: 'all 0.2s'
+                        }}>{dt}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div className="form-group" style={{ marginBottom: '8px' }}>
+                  <label className="form-label" style={{ fontSize: '12px', display: 'flex', justifyContent: 'space-between' }}>İşlem Durumu <ClearBtn field="lot_change" /></label>
+                  <select className="form-select" value={form.lot_change || ''} onChange={e => setForm({ ...form, lot_change: e.target.value })}>
+                    <option value="">Lot değişimi yok</option>
+                    <option value="renk">Renk değişimi</option>
+                    <option value="beden">Beden değişimi</option>
+                    <option value="ikisi">İkisi birden</option>
+                  </select>
+                </div>
+                <InputField label="Kalite Puanı (0-100)" field="quality_score" type="number" placeholder="100" defaultVal="100" />
+              </div>
+
+              {/* B. ZAMAN KRİTERLERİ */}
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px', marginTop: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>⏱️ Zaman Kriterleri</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
+                <InputField label="Mola (dk)" field="break_duration_min" type="number" placeholder="0" defaultVal="0" />
+                <InputField label="Arıza (dk)" field="machine_down_min" type="number" placeholder="0" defaultVal="0" />
+                <InputField label="Bekleme (dk)" field="material_wait_min" type="number" placeholder="0" defaultVal="0" />
+                <InputField label="Pasif (dk)" field="passive_time_min" type="number" placeholder="0" defaultVal="0" />
+              </div>
+
+              {/* Not */}
+              <InputField label="📝 Not / Açıklama" field="notes" placeholder="İsteğe bağlı not..." />
+
+              {/* D. OTOMATİK HESAPLAMALAR */}
+              <div style={{ padding: '12px 16px', background: 'linear-gradient(135deg, rgba(13,124,102,0.08), rgba(52,152,219,0.08))', borderRadius: 'var(--radius-md)', marginTop: '12px', marginBottom: '16px' }}>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px', textTransform: 'uppercase' }}>📊 Otomatik Hesaplamalar</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: '800', color: fpy >= 95 ? '#2ecc71' : fpy >= 85 ? '#f39c12' : '#e74c3c' }}>%{fpy.toFixed(1)}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>FPY (İlk Geçiş)</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent)' }}>{netWorkMin.toFixed(1)} dk</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Net Çalışma</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent)' }}>{unitTimeSec.toFixed(1)} sn</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Birim Süre</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: '800', color: '#C5A038' }}>{unitValue.toFixed(2)} ₺</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>İşlem Değeri</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Butonlar */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '8px' }}>
+                <button className="btn btn-secondary" onClick={() => { setActiveSession(null); setTimer(0); setForm({ total_produced: '', defective_count: '0', defect_reason: '', defect_source: 'operator', machine_down_min: '0', material_wait_min: '0', break_duration_min: '0', passive_time_min: '0', lot_change: '', quality_score: '100', defect_classification: '', notes: '' }); }} style={{ padding: '14px' }}>🗑️ İptal</button>
+                <button className="btn btn-danger btn-lg" onClick={handleStop} style={{ padding: '14px', fontSize: '16px' }}>✅ TAMAMLA & KAYDET</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── BUGÜNÜN KAYITLARI ── */}
+        <div className="card" style={{ marginTop: '16px' }}>
+          <div className="card-header"><h3 className="card-title">📋 Bugünün Üretim Kayıtları ({logs.length})</h3></div>
 
           {logs.length === 0 ? (
-
-            <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Bugün henüz üretim kaydı yok.</div>
-
+            <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '40px', marginBottom: '8px' }}>🏭</div>
+              <div>Bugün henüz üretim kaydı yok.</div>
+              <div style={{ fontSize: '12px', marginTop: '4px' }}>Yukarıdan yeni üretim başlatabilirsiniz.</div>
+            </div>
           ) : (
-
-            <div className="table-wrapper"><table className="table"><thead><tr><th>Personel</th><th>Model</th><th>İşlem</th><th>Adet</th><th>Hata</th><th>Süre</th><th>Üretim ₺</th><th>Kalite</th></tr></thead><tbody>
-
-              {logs.map(log => {
-
-                const duration = log.end_time ? Math.floor((new Date(log.end_time) - new Date(log.start_time)) / 60000) : 0;
-
-                const value = (log.total_produced || 0) * (log.unit_price || 0);
-
-                return (
-
-                  <tr key={log.id}>
-
-                    <td style={{ fontWeight: '600' }}>{log.personnel_name}</td>
-
-                    <td><code style={{ background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>{log.model_code}</code></td>
-
-                    <td>{log.operation_name}</td>
-
-                    <td style={{ fontWeight: '700' }}>{log.total_produced}</td>
-
-                    <td>{log.defective_count > 0 ? (<span className="badge badge-danger" title={log.defect_reason}>{log.defective_count}</span>) : '✔'}</td>
-
-                    <td style={{ fontSize: '13px' }}>{duration} dk</td>
-
-                    <td style={{ fontWeight: '600', color: 'var(--accent)' }}>{value.toFixed(2)} ₺</td>
-
-                    <td><span className={`badge ${log.quality_score >= 95 ? 'badge-success' : log.quality_score >= 80 ? 'badge-warning' : 'badge-danger'}`}>%{Math.round(log.quality_score)}</span></td>
-
-                  </tr>
-
-                );
-
-              })}
-
-            </tbody></table></div>
-
+            <div className="table-wrapper"><table className="table"><thead><tr>
+              <th>Personel</th><th>Model</th><th>İşlem</th><th>Adet</th><th>Hata</th><th>FPY</th><th>Süre</th><th>Değer ₺</th><th>İşlemler</th>
+            </tr></thead><tbody>
+                {logs.map(log => {
+                  const duration = log.end_time ? Math.floor((new Date(log.end_time) - new Date(log.start_time)) / 60000) : 0;
+                  const value = (log.total_produced || 0) * (log.unit_price || 0);
+                  const logFpy = log.total_produced > 0 ? ((log.total_produced - (log.defective_count || 0)) / log.total_produced * 100) : 100;
+                  return (
+                    <tr key={log.id}>
+                      <td style={{ fontWeight: '600' }}>{log.personnel_name}</td>
+                      <td><code style={{ background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>{log.model_code}</code></td>
+                      <td>{log.operation_name}</td>
+                      <td style={{ fontWeight: '700' }}>{log.total_produced}</td>
+                      <td>{log.defective_count > 0 ? (<span className="badge badge-danger" title={log.defect_reason}>{log.defective_count}</span>) : '✔'}</td>
+                      <td><span className={`badge ${logFpy >= 95 ? 'badge-success' : logFpy >= 85 ? 'badge-warning' : 'badge-danger'}`}>%{logFpy.toFixed(0)}</span></td>
+                      <td style={{ fontSize: '13px' }}>{duration} dk</td>
+                      <td style={{ fontWeight: '600', color: 'var(--accent)' }}>{value.toFixed(2)} ₺</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button className="btn btn-sm" onClick={() => openEditProduction(log)} title="Düzenle" style={{ padding: '4px 8px', fontSize: '12px' }}>✏️</button>
+                          <button className="btn btn-sm" onClick={() => handleDeleteLog(log.id)} title="Sil" style={{ padding: '4px 8px', fontSize: '12px' }}>🗑️</button>
+                          <button className="btn btn-sm" onClick={() => openProdAuditHistory(log.id)} title="Geçmiş" style={{ padding: '4px 8px', fontSize: '12px' }}>📜</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody></table></div>
           )}
-
         </div>
 
       </div>
 
+      {/* ── DÜZENLEME MODALI ── */}
+      {editProduction && (
+        <EditModal title={`Üretim #${editProduction.id} Düzenle`} onClose={() => setEditProduction(null)} onSave={async (id, formData) => {
+          try {
+            const res = await fetch(`/api/production/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+            if (!res.ok) throw new Error('Güncelleme hatası');
+            // Refresh logs
+            const today = new Date().toISOString().slice(0, 10);
+            const logsRes = await fetch(`/api/production?date=${today}`);
+            const data = await logsRes.json();
+            setLogs(Array.isArray(data) ? data : []);
+            addToast('success', 'Kayıt güncellendi');
+          } catch (err) { addToast('error', err.message); }
+        }} record={editProduction} tableName="production_logs" fields={[
+          { key: 'total_produced', label: 'Yapılan Adet', type: 'number' },
+          { key: 'defective_count', label: 'Hatalı Adet', type: 'number' },
+          { key: 'defect_reason', label: 'Hata Nedeni' },
+          { key: 'quality_score', label: 'Kalite Puanı', type: 'number' },
+          { key: 'break_duration_min', label: 'Mola (dk)', type: 'number' },
+          { key: 'machine_down_min', label: 'Arıza (dk)', type: 'number' },
+          { key: 'material_wait_min', label: 'Bekleme (dk)', type: 'number' },
+          { key: 'passive_time_min', label: 'Pasif (dk)', type: 'number' },
+          { key: 'notes', label: 'Not' },
+        ]} />
+      )}
+
+      {prodAuditHistory && (
+        <AuditTrailModal data={prodAuditData} onClose={() => setProdAuditHistory(null)} title={`Üretim #${prodAuditHistory} Düzenme Geçmişi`} />
+      )}
     </>
-
   );
-
 }
-
-
 
 
 
@@ -6341,7 +6606,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
     if (summaryList.length === 0) return;
 
-    const headers = ['Personel', 'Üretim Adet', 'Üretim DeĞeri (₺)', 'Günlük Maliyet (₺)', 'Katma DeĞer (₺)', 'Hata', 'Kalite %', 'Pasif Süre (dk)'];
+    const headers = ['Personel', 'Üretim Adet', 'Üretim Değeri (₺)', 'Günlük Maliyet (₺)', 'Katma Değer (₺)', 'Hata', 'Kalite %', 'Pasif Süre (dk)'];
 
     const rows = summaryList.map(p => {
 
@@ -6385,7 +6650,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
       if (Array.isArray(ops) && ops.length > 0) {
 
-        opsHtml = `<table><thead><tr><th>#</th><th>İşlem Adı</th><th>Makine</th><th>Zorluk</th><th>İplik/Malzeme</th><th>BaĞımlılık</th><th>Birim Fiyat</th></tr></thead><tbody>` +
+        opsHtml = `<table><thead><tr><th>#</th><th>İşlem Adı</th><th>Makine</th><th>Zorluk</th><th>İplik/Malzeme</th><th>Bağımlılık</th><th>Birim Fiyat</th></tr></thead><tbody>` +
 
           ops.map(op => `<tr><td>${op.order_number}</td><td><strong>${op.name}</strong></td><td>${op.machine_type || '—'}</td><td>${op.difficulty || '—'}/10</td><td>${op.thread_material || '—'}</td><td>${op.dependency || '—'}</td><td>${op.unit_price ? op.unit_price + ' ₺' : '—'}</td></tr>`).join('') +
 
@@ -6519,7 +6784,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
           <div className="stat-card"><div className="stat-icon">📦</div><div className="stat-value">{totalProduced.toLocaleString('tr-TR')}</div><div className="stat-label">Toplam Üretim</div></div>
 
-          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{totalValue.toFixed(0)} ₺</div><div className="stat-label">Toplam Üretim DeĞeri</div></div>
+          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{totalValue.toFixed(0)} ₺</div><div className="stat-label">Toplam Üretim Değeri</div></div>
 
           <div className="stat-card"><div className="stat-icon">❌</div><div className="stat-value">{totalDefective}</div><div className="stat-label">Toplam Hata</div></div>
 
@@ -6537,7 +6802,7 @@ function ReportsPage({ models, personnel, addToast }) {
 
           ) : (
 
-            <div className="table-wrapper"><table className="table"><thead><tr><th>Personel</th><th>Üretim Adet</th><th>Üretim DeĞeri</th><th>Günlük Maliyet</th><th>Katma DeĞer</th><th>Hata</th><th>Kalite</th><th>Pasif Süre</th><th>Durum</th></tr></thead><tbody>
+            <div className="table-wrapper"><table className="table"><thead><tr><th>Personel</th><th>Üretim Adet</th><th>Üretim Değeri</th><th>Günlük Maliyet</th><th>Katma Değer</th><th>Hata</th><th>Kalite</th><th>Pasif Süre</th><th>Durum</th></tr></thead><tbody>
 
               {summaryList.map((p, i) => {
 
@@ -6762,7 +7027,7 @@ function MachinesPage({ addToast }) {
 
   const handleDelete = async (id) => { if (!confirm('Bu makineyi silmek istediĞinize emin misiniz?')) return; try { await fetch(`/api/machines/${id}`, { method: 'DELETE' }); await load(); addToast('success', 'Makine silindi'); } catch { addToast('error', 'Silinemedi'); } };
 
-  const handleStatusToggle = async (id, cs) => { try { await fetch(`/api/machines/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: cs === 'active' ? 'inactive' : 'active', changed_by: 'admin' }) }); await load(); } catch { addToast('error', 'Durum deĞiştirilemedi'); } };
+  const handleStatusToggle = async (id, cs) => { try { await fetch(`/api/machines/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: cs === 'active' ? 'inactive' : 'active', changed_by: 'admin' }) }); await load(); } catch { addToast('error', 'Durum değiştirilemedi'); } };
 
 
 
@@ -6799,7 +7064,7 @@ function MachinesPage({ addToast }) {
 
       await load(); setEditMachine(null);
 
-      addToast('success', 'Makine güncellendi! DeĞişiklikler kayıt altına alındı.');
+      addToast('success', 'Makine güncellendi! Değişiklikler kayıt altına alındı.');
 
     } catch (err) { addToast('error', err.message); }
 
@@ -6889,7 +7154,7 @@ function MachinesPage({ addToast }) {
 
                     <button onClick={() => openEditMachine(m)} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
 
-                    <button onClick={() => openMachineAuditHistory(m.id)} title="DeĞişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
+                    <button onClick={() => openMachineAuditHistory(m.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
 
                     <button onClick={() => handleDelete(m.id)} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '3px' }}>🗑️</button>
 
@@ -6961,7 +7226,7 @@ function MachinesPage({ addToast }) {
 
             <div style={{ padding: '8px 16px', background: 'rgba(243,156,18,0.1)', borderBottom: '1px solid rgba(243,156,18,0.3)', fontSize: '12px', color: '#f39c12', fontWeight: '600' }}>
 
-              ⚠️ Tüm deĞişiklikler tarih/saat ile kalıcı olarak kayıt altına alınır ve silinemez.
+              ⚠️ Tüm değişiklikler tarih/saat ile kalıcı olarak kayıt altına alınır ve silinemez.
 
             </div>
 
@@ -7011,7 +7276,7 @@ function MachinesPage({ addToast }) {
 
                 <button type="button" className="btn btn-secondary" onClick={() => setEditMachine(null)}>İptal</button>
 
-                <button type="submit" className="btn btn-primary">💾 Kaydet & DeĞişiklikleri Logla</button>
+                <button type="submit" className="btn btn-primary">💾 Kaydet & Değişiklikleri Logla</button>
 
               </div>
 
@@ -7035,7 +7300,7 @@ function MachinesPage({ addToast }) {
 
             <div className="modal-header">
 
-              <h2 className="modal-title">📜 Makine DeĞişiklik Geçmişi</h2>
+              <h2 className="modal-title">📜 Makine Değişiklik Geçmişi</h2>
 
               <button className="modal-close" onClick={() => setMachineAuditHistory(null)}>✕</button>
 
@@ -7055,7 +7320,7 @@ function MachinesPage({ addToast }) {
 
                   <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
 
-                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz deĞişiklik kaydı yok</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz değişiklik kaydı yok</div>
 
                 </div>
 
@@ -7330,9 +7595,9 @@ function PrimPage({ models, personnel, addToast }) {
 
     const p = summary[log.personnel_id];
 
-    const saĞlamAdet = Math.max(0, (log.total_produced || 0) - (log.defective_count || 0));
+    const saglamAdet = Math.max(0, (log.total_produced || 0) - (log.defective_count || 0));
 
-    p.total_value += saĞlamAdet * (log.unit_price || 0);
+    p.total_value += saglamAdet * (log.unit_price || 0);
 
     p.total_produced += log.total_produced || 0;
 
@@ -7476,7 +7741,7 @@ function PrimPage({ models, personnel, addToast }) {
 
                     <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
 
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Üretim DeĞeri</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Üretim Değeri</div>
 
                       <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent)' }}>{p.total_value.toFixed(0)} ₺</div>
 
@@ -7524,9 +7789,9 @@ function PrimPage({ models, personnel, addToast }) {
 
                     {hasPrim
 
-                      ? `Üretim DeĞeri (${p.total_value.toFixed(0)}₺) − Toplam Ücret (${totalWage.toFixed(0)}₺) = Fazla ${diff.toFixed(0)}₺ → Prim: ${diff.toFixed(0)}  %${primRate} = ${primAmount.toFixed(0)}₺`
+                      ? `Üretim Değeri (${p.total_value.toFixed(0)}₺) − Toplam Ücret (${totalWage.toFixed(0)}₺) = Fazla ${diff.toFixed(0)}₺ → Prim: ${diff.toFixed(0)}  %${primRate} = ${primAmount.toFixed(0)}₺`
 
-                      : `Üretim DeĞeri (${p.total_value.toFixed(0)}₺) − Toplam Ücret (${totalWage.toFixed(0)}₺) = ${diff.toFixed(0)}₺ (açık)`
+                      : `Üretim Değeri (${p.total_value.toFixed(0)}₺) − Toplam Ücret (${totalWage.toFixed(0)}₺) = ${diff.toFixed(0)}₺ (açık)`
 
                     }
 
@@ -7548,7 +7813,7 @@ function PrimPage({ models, personnel, addToast }) {
 
                       { month: 1, label: '1. Ay: Uyarı', icon: '⚠️', desc: 'Performans düşüklüĞü bildirilir' },
 
-                      { month: 2, label: '2. Ay: DeĞerlendirme', icon: '📋', desc: 'Detaylı analiz ve görüşme yapılır' },
+                      { month: 2, label: '2. Ay: Değerlendirme', icon: '📋', desc: 'Detaylı analiz ve görüşme yapılır' },
 
                       { month: 3, label: '3. Ay: Karar', icon: '📋', desc: 'Görev deĞişikliĞi veya çıkış kararı' }
 
@@ -8400,9 +8665,9 @@ function CustomersPage({ addToast }) {
 
         <div className="modal-overlay" onClick={() => setAuditHistory(null)}><div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px' }}>
 
-          <div className="modal-header"><h2 className="modal-title">📜 DeĞişiklik Geçmişi</h2><button className="modal-close" onClick={() => setAuditHistory(null)}>✕</button></div>
+          <div className="modal-header"><h2 className="modal-title">📜 Değişiklik Geçmişi</h2><button className="modal-close" onClick={() => setAuditHistory(null)}>✕</button></div>
 
-          {auditData.length === 0 ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Henüz deĞişiklik kaydı yok.</p> : (
+          {auditData.length === 0 ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Henüz değişiklik kaydı yok.</p> : (
 
             <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
 
@@ -8765,9 +9030,9 @@ function ShipmentsPage({ models, addToast }) {
 
         <div className="modal-overlay" onClick={() => setAuditHistory(null)}><div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px' }}>
 
-          <div className="modal-header"><h2 className="modal-title">📜 DeĞişiklik Geçmişi</h2><button className="modal-close" onClick={() => setAuditHistory(null)}>✕</button></div>
+          <div className="modal-header"><h2 className="modal-title">📜 Değişiklik Geçmişi</h2><button className="modal-close" onClick={() => setAuditHistory(null)}>✕</button></div>
 
-          {auditData.length === 0 ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Henüz deĞişiklik kaydı yok.</p> : (
+          {auditData.length === 0 ? <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>Henüz değişiklik kaydı yok.</p> : (
 
             <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
 
@@ -8863,7 +9128,7 @@ function SettingsPage({ addToast }) {
 
     }
 
-    addToast('success', lang === 'ar' ? 'تم تغيير اللغة إلى العربية' : 'Dil Türkçe olarak deĞiştirildi');
+    addToast('success', lang === 'ar' ? 'تم تغيير اللغة إلى العربية' : 'Dil Türkçe olarak değiştirildi');
 
   };
 
@@ -9173,46 +9438,8 @@ function SettingsPage({ addToast }) {
 
 function CostsPage({ models, personnel, addToast }) {
   // EDIT system states
-  const [editExpense, setEditExpense] = useState(null);
-  const [editExpenseForm, setEditExpenseForm] = useState({});
   const [editCost, setEditCost] = useState(null);
   const [editCostForm, setEditCostForm] = useState({});
-
-  // PRİM ORANI — varsayılan %10, kullanıcı değiştirebilir
-  const [primOrani, setPrimOrani] = useState(10);
-
-  const openEditExpense = (entry) => {
-    setEditExpenseForm({
-      category: entry.category || '', description: entry.description || '',
-      amount: entry.amount || 0, is_recurring: entry.is_recurring || 0
-    });
-    setEditExpense(entry);
-  };
-
-  const handleUpdateExpense = async () => {
-    try {
-      // Audit trail
-      const changes = [];
-      Object.keys(editExpenseForm).forEach(key => {
-        const oldVal = String(editExpense[key] ?? '');
-        const newVal = String(editExpenseForm[key] ?? '');
-        if (oldVal !== newVal) changes.push({ field_name: key, old_value: oldVal, new_value: newVal });
-      });
-      if (changes.length > 0) {
-        await fetch('/api/audit-trail', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ table_name: 'business_expenses', record_id: editExpense.id, changes, changed_by: 'admin' })
-        });
-      }
-      await fetch('/api/expenses', {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: editExpense.id, ...editExpenseForm, amount: parseFloat(editExpenseForm.amount) })
-      });
-      setEditExpense(null);
-      loadExpenses();
-      addToast('success', 'Gider güncellendi!');
-    } catch (err) { addToast('error', err.message); }
-  };
 
   const openEditCost = (entry) => {
     setEditCostForm({
@@ -9255,8 +9482,6 @@ function CostsPage({ models, personnel, addToast }) {
 
   const [workDaysInfo, setWorkDaysInfo] = useState(null);
 
-  const [netWorkMinutes, setNetWorkMinutes] = useState(490);
-
   const [expenses, setExpenses] = useState([]);
 
   const [showExpenseForm, setShowExpenseForm] = useState(false);
@@ -9270,9 +9495,9 @@ function CostsPage({ models, personnel, addToast }) {
   const expenseCategories = [
     { value: 'elektrik', label: '\u26A1 Elektrik', icon: '\u26A1' },
     { value: 'su', label: '\uD83D\uDCA7 Su', icon: '\uD83D\uDCA7' },
-    { value: 'internet_telefon', label: '\uD83D\uDCE1 \u0130nternet / Telefon', icon: '\uD83D\uDCE1' },
+    { value: 'internet_telefon', label: '\uD83D\uDCE1 İnternet / Telefon', icon: '\uD83D\uDCE1' },
     { value: 'sigorta', label: '\uD83D\uDEE1\uFE0F Sigorta', icon: '\uD83D\uDEE1\uFE0F' },
-    { value: 'iplik', label: '\uD83E\uDDF5 \u0130plik / Malzeme', icon: '\uD83E\uDDF5' },
+    { value: 'iplik', label: '\uD83E\uDDF5 İplik / Malzeme', icon: '\uD83E\uDDF5' },
     { value: 'makine_bakim', label: '\uD83D\uDD27 Makine Tamiri / Bak\u0131m', icon: '\uD83D\uDD27' },
     { value: 'yedek_parca', label: '\u2699\uFE0F Yedek Par\u00E7a', icon: '\u2699\uFE0F' },
     { value: 'araba_benzin', label: '\u26FD Araba Benzin', icon: '\u26FD' },
@@ -9281,19 +9506,13 @@ function CostsPage({ models, personnel, addToast }) {
     { value: 'kdv', label: '\uD83D\uDCCB KDV', icon: '\uD83D\uDCCB' },
     { value: 'stopaj', label: '\uD83D\uDCC4 Stopaj', icon: '\uD83D\uDCC4' },
     { value: 'vergi', label: '\uD83C\uDFDB\uFE0F Vergi', icon: '\uD83C\uDFDB\uFE0F' },
-    { value: 'personel_maas', label: '\uD83D\uDCB0 Personel Maa\u015F\u0131', icon: '\uD83D\uDCB0' },
-    { value: 'personel_yemek', label: '\uD83C\uDF7D\uFE0F Personel Yeme\u011Fi', icon: '\uD83C\uDF7D\uFE0F' },
+    { value: 'personel_maas', label: '\uD83D\uDCB0 Personel Maaş\u0131', icon: '\uD83D\uDCB0' },
+    { value: 'personel_yemek', label: '\uD83C\uDF7D\uFE0F Personel Yemeği', icon: '\uD83C\uDF7D\uFE0F' },
     { value: 'personel_yol', label: '\uD83D\uDE8C Personel Yol Paras\u0131', icon: '\uD83D\uDE8C' },
     { value: 'personel_mesai', label: '\u23F0 Fazla Mesai \u00DCcreti', icon: '\u23F0' },
     { value: 'temizlik', label: '\uD83E\uDDF9 Temizlik Malzemesi', icon: '\uD83E\uDDF9' },
-    { value: 'mutfak', label: '\u2615 Mutfak (\u00C7ay/\u015Eeker/\u0130\u00E7ecek)', icon: '\u2615' },
-    // HATA-5 FIX: Kira kategorisi eklendi
-    { value: 'kira', label: '\uD83C\uDFE0 Kira / Bina Kiras\u0131', icon: '\uD83C\uDFE0' },
-    // HATA-6 FIX: Makine Amortismanı kategorisi eklendi
-    { value: 'amortisman', label: '\u2699\uFE0F Makine Amortismanı', icon: '\u2699\uFE0F' },
-    { value: 'kargo_nakliye', label: '\uD83D\uDE9A Kargo / Nakliye', icon: '\uD83D\uDE9A' },
-    { value: 'kumas', label: '\uD83E\uDDE5 Kumaş', icon: '\uD83E\uDDE5' },
-    { value: 'diger', label: '\uD83D\uDCE6 Di\u011Fer', icon: '\uD83D\uDCE6' },
+    { value: 'mutfak', label: '\u2615 Mutfak (\u00C7ay/\u015Eeker/İ\u00E7ecek)', icon: '\u2615' },
+    { value: 'diger', label: '\uD83D\uDCE6 Diğer', icon: '\uD83D\uDCE6' },
   ];
 
 
@@ -9326,18 +9545,6 @@ function CostsPage({ models, personnel, addToast }) {
 
       if (Array.isArray(d)) { const curr = d.find(w => w.month === n.getMonth() + 1); setWorkDaysInfo(curr); }
 
-    }).catch(() => { });
-
-    // H3 FIX: Gerçek çalışma dakikasını hesapla (480 sabit yerine)
-    fetch('/api/work-schedule').then(r => r.json()).then(d => {
-      if (Array.isArray(d)) {
-        const workMin = d.filter(s => s.type === 'work').reduce((sum, s) => {
-          const [sh, sm] = s.start_time.split(':').map(Number);
-          const [eh, em] = s.end_time.split(':').map(Number);
-          return sum + (eh * 60 + em) - (sh * 60 + sm);
-        }, 0);
-        if (workMin > 0) setNetWorkMinutes(workMin);
-      }
     }).catch(() => { });
 
     loadExpenses();
@@ -9374,8 +9581,6 @@ function CostsPage({ models, personnel, addToast }) {
 
   const deleteExpense = async (id) => {
 
-    if (!confirm('Bu gideri silmek istediğinize emin misiniz?')) return;
-
     await fetch(`/api/expenses?id=${id}`, { method: 'DELETE' });
 
     loadExpenses();
@@ -9402,7 +9607,7 @@ function CostsPage({ models, personnel, addToast }) {
 
     mc.totalValue += (log.total_produced || 0) * (log.unit_price || 0);
 
-    if (log.start_time && log.end_time) { mc.totalLaborCost += (log.daily_wage || 0) / netWorkMinutes * ((new Date(log.end_time) - new Date(log.start_time)) / 60000); }
+    if (log.start_time && log.end_time) { mc.totalLaborCost += (log.daily_wage || 0) / 480 * ((new Date(log.end_time) - new Date(log.start_time)) / 60000); }
 
   });
 
@@ -9412,11 +9617,7 @@ function CostsPage({ models, personnel, addToast }) {
 
   logs.forEach(log => {
 
-    if (!personnelCosts[log.personnel_id]) personnelCosts[log.personnel_id] = {
-      name: log.personnel_name,
-      dailyWage: log.daily_wage || 0,
-      totalProduced: 0, totalValue: 0, days: new Set()
-    };
+    if (!personnelCosts[log.personnel_id]) personnelCosts[log.personnel_id] = { name: log.personnel_name, dailyWage: log.daily_wage || 0, totalProduced: 0, totalValue: 0, days: new Set() };
 
     const pc = personnelCosts[log.personnel_id];
 
@@ -9430,37 +9631,15 @@ function CostsPage({ models, personnel, addToast }) {
 
 
 
-
-
-  // HATA-4 FIX: totalLabor (dead code) kaldırıldı
+  const totalLabor = Object.values(personnelCosts).reduce((s, p) => s + p.dailyWage * Math.max(1, p.days.size), 0);
 
   const totalProduction = Object.values(modelCosts).reduce((s, m) => s + m.totalValue, 0);
 
   const totalPieces = Object.values(modelCosts).reduce((s, m) => s + m.totalProduced, 0);
 
-  // HATA-1 & HATA-2 FIX: Dönem bazlı maliyet orantılama
-  const workDaysInMonth = workDaysInfo?.work_days || 22;
-  const periodMultiplier = period === 'today' ? (1 / workDaysInMonth)
-    : period === 'week' ? (5 / workDaysInMonth)
-      : 1; // 'month' veya 'all' → tam aylık
+  const totalExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
 
-  // HATA-3 FIX: Personel kategorili giderler ayrı takip edilir, toplama dahil edilmez
-  const PERSONNEL_EXPENSE_CATEGORIES = ['personel_maas', 'personel_yemek', 'personel_yol', 'personel_mesai'];
-  const totalExpensesMonthly = expenses
-    .filter(e => !PERSONNEL_EXPENSE_CATEGORIES.includes(e.category))
-    .reduce((s, e) => s + (e.amount || 0), 0);
-  const personnelExpensesMonthly = expenses
-    .filter(e => PERSONNEL_EXPENSE_CATEGORIES.includes(e.category))
-    .reduce((s, e) => s + (e.amount || 0), 0);
-  const totalExpenses = Math.round(totalExpensesMonthly * periodMultiplier);
-
-  // HATA-1 FIX: Aylık personel maliyeti döneme göre orantılama
-  const totalPersonnelPayrollMonthly = (personnel || []).filter(p => !p.deleted_at).reduce((sum, p) => {
-    return sum + (parseFloat(p.base_salary) || 0) + (parseFloat(p.transport_allowance) || 0) + (parseFloat(p.ssk_cost) || 0) + (parseFloat(p.food_allowance) || 0) + (parseFloat(p.compensation) || 0);
-  }, 0);
-  const totalPersonnelPayroll = Math.round(totalPersonnelPayrollMonthly * periodMultiplier);
-
-  const totalCost = totalPersonnelPayroll + totalExpenses;
+  const totalCost = totalLabor + totalExpenses;
 
   const netProfit = totalProduction - totalCost;
 
@@ -9476,92 +9655,24 @@ function CostsPage({ models, personnel, addToast }) {
 
     <>
 
-      {/* GİDER DÜZENLEME MODAL */}
-      {editExpense && (
-        <div className="modal-overlay" onClick={() => setEditExpense(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '600px' }}>
-            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #e67e22, #d35400)', color: '#fff' }}>
-              <h2 className="modal-title" style={{ color: '#fff' }}>✏️ Gider Düzenle</h2>
-              <button className="modal-close" onClick={() => setEditExpense(null)} style={{ color: '#fff' }}>✕</button>
-            </div>
-            <div style={{ padding: '20px' }}>
-              <div className="form-group" style={{ marginBottom: '12px' }}>
-                <label className="form-label">Kategori</label>
-                <select className="form-select" value={editExpenseForm.category} onChange={e => setEditExpenseForm({ ...editExpenseForm, category: e.target.value })}>
-                  {expenseCategories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                </select>
-              </div>
-              <div className="form-group" style={{ marginBottom: '12px' }}>
-                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Tutar (₺)</span>
-                  {String(editExpense.amount) !== String(editExpenseForm.amount) && <span style={{ fontSize: '10px', color: '#e67e22', fontWeight: '700' }}>● DEĞİŞTİ (Eski: {editExpense.amount}₺)</span>}
-                </label>
-                <input className="form-input" type="number" step="0.01" value={editExpenseForm.amount} onChange={e => setEditExpenseForm({ ...editExpenseForm, amount: e.target.value })} />
-              </div>
-              <div className="form-group" style={{ marginBottom: '12px' }}>
-                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Açıklama</span>
-                  {(editExpense.description || '') !== (editExpenseForm.description || '') && <span style={{ fontSize: '10px', color: '#e67e22', fontWeight: '700' }}>● DEĞİŞTİ</span>}
-                </label>
-                <input className="form-input" value={editExpenseForm.description} onChange={e => setEditExpenseForm({ ...editExpenseForm, description: e.target.value })} />
-              </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={!!editExpenseForm.is_recurring} onChange={e => setEditExpenseForm({ ...editExpenseForm, is_recurring: e.target.checked ? 1 : 0 })} /> 🔄 Her ay tekrarlanan
-              </label>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setEditExpense(null)}>İptal</button>
-              <button className="btn btn-primary" onClick={handleUpdateExpense} style={{ background: '#e67e22', borderColor: '#e67e22' }}>✏️ Düzeltmeyi Kaydet</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-
       <div className="topbar">
+
         <h1 className="topbar-title">💰 Maliyet Analizi</h1>
-        <div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* DÖNEM FİLTRESİ — Butonlar */}
-          <div style={{ display: 'flex', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-            {[
-              { val: 'today', label: 'Bugün' },
-              { val: 'week', label: 'Bu Hafta' },
-              { val: 'month', label: 'Bu Ay' },
-              { val: 'all', label: 'Tüm' },
-            ].map(opt => (
-              <button
-                key={opt.val}
-                onClick={() => setPeriod(opt.val)}
-                style={{
-                  padding: '7px 14px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', border: 'none',
-                  background: period === opt.val ? 'var(--accent)' : 'var(--bg-input)',
-                  color: period === opt.val ? '#fff' : 'var(--text-secondary)',
-                  transition: 'all 0.15s',
-                  borderRight: '1px solid var(--border-color)',
-                }}
-              >{opt.label}</button>
-            ))}
-          </div>
-          {/* EXCEL EXPORT */}
-          <button
-            className="btn btn-secondary"
-            style={{ fontSize: '12px' }}
-            onClick={() => {
-              const rows = [['Kategori', 'Açıklama', 'Tutar (₺)', 'Tekrar']];
-              expenses.forEach(e => rows.push([e.category, e.description || '', e.amount, e.is_recurring ? 'Evet' : 'Hayır']));
-              rows.push([]);
-              rows.push(['TOPLAM GİDER', '', totalExpensesMonthly, '']);
-              rows.push(['TOPLAM PERSONEL', '', totalPersonnelPayrollMonthly, '']);
-              const csv = rows.map(r => r.join('\t')).join('\n');
-              const blob = new Blob(['\ufeff' + csv], { type: 'text/tab-separated-values;charset=utf-8' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a'); a.href = url;
-              a.download = `maliyet_${new Date().toISOString().split('T')[0]}.xls`; a.click();
-              URL.revokeObjectURL(url);
-            }}
-          >📊 Excel İndir</button>
+
+        <div className="topbar-actions" style={{ display: 'flex', gap: '8px' }}>
+
           <button className="btn btn-primary" onClick={() => setShowExpenseForm(!showExpenseForm)}>➕ Gider Ekle</button>
+
+          <select className="form-select" value={period} onChange={e => setPeriod(e.target.value)} style={{ minWidth: '160px' }}>
+
+            <option value="today">Bugün</option><option value="week">Bu Hafta</option>
+
+            <option value="month">Bu Ay</option><option value="all">Tüm Zamanlar</option>
+
+          </select>
+
         </div>
+
       </div>
 
       <div className="page-content">
@@ -9618,106 +9729,51 @@ function CostsPage({ models, personnel, addToast }) {
 
 
 
-        {/* DÖNEM ETİKETİ */}
-        <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '12px', background: 'rgba(var(--accent-rgb,52,152,219),0.12)', color: 'var(--accent)', padding: '4px 10px', borderRadius: '20px', fontWeight: '700' }}>
-            {period === 'today' ? '📅 Bugün — Tüm değerler bugüne orantılandı' : period === 'week' ? '📅 Bu Hafta (5 iş günü) orantılandı' : period === 'month' ? '📅 Bu Ay (Aylık Toplam)' : '📅 Tüm Zamanlar'}
-          </span>
-          {(period === 'today' || period === 'week') && <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>({workDaysInMonth} iş günü / ay baz alındı)</span>}
-        </div>
-
-        {/* HATA-3: ÇİFT SAYIM UYARISI */}
-        {personnelExpensesMonthly > 0 && (
-          <div style={{ marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(231,76,60,0.08)', border: '1px solid rgba(231,76,60,0.3)', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-            <span style={{ fontSize: '18px' }}>⚠️</span>
-            <div style={{ fontSize: '12px' }}>
-              <strong style={{ color: 'var(--danger)' }}>Çift Sayım Uyarısı!</strong>
-              <span style={{ color: 'var(--text-secondary)', marginLeft: '6px' }}>
-                Personel maaşı/yemek/yol/mesai giderleri ({personnelExpensesMonthly.toLocaleString('tr-TR')} ₺) zaten <strong>Personel Aylık Maliyet</strong> tablosundan otomatik alınmaktadır. Bu tutarlar toplam maliyet hesabına dahil <strong>edilmemiştir</strong>.
-              </span>
-            </div>
-          </div>
-        )}
-
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px', marginBottom: '16px' }}>
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>👷 İşçilik (Personel)</div>
-            <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--danger)' }}>{totalPersonnelPayroll.toLocaleString('tr-TR')} ₺</div>
-            {(period === 'today' || period === 'week') && <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>Aylık: {totalPersonnelPayrollMonthly.toLocaleString('tr-TR')} ₺</div>}
+
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 İşçilik</div>
+
+            <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--danger)' }}>{totalLabor.toLocaleString('tr-TR')} ₺</div>
+
           </div>
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
+
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 İşletme Gideri</div>
+
             <div style={{ fontSize: '22px', fontWeight: '800', color: '#e67e22' }}>{totalExpenses.toLocaleString('tr-TR')} ₺</div>
-            {(period === 'today' || period === 'week') && <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>Aylık: {totalExpensesMonthly.toLocaleString('tr-TR')} ₺</div>}
+
           </div>
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
+
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>🧮 Toplam Maliyet</div>
+
             <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--danger)' }}>{totalCost.toLocaleString('tr-TR')} ₺</div>
+
           </div>
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📊 Üretim Değeri</div>
+
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 Üretim Değeri</div>
+
             <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--success)' }}>{totalProduction.toLocaleString('tr-TR')} ₺</div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>{totalPieces} adet</div>
+
           </div>
 
           <div className="card" style={{ textAlign: 'center', padding: '14px' }}>
+
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📈 Net Kar/Zarar</div>
+
             <div style={{ fontSize: '22px', fontWeight: '800', color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+
               {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString('tr-TR')} ₺
+
             </div>
-            <div style={{ fontSize: '10px', color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)', marginTop: '2px', fontWeight: '700' }}>
-              {totalCost > 0 ? (netProfit >= 0 ? `✅ Kârlı %${Math.round((netProfit / totalCost) * 100)}` : `❌ Zararda %${Math.abs(Math.round((netProfit / totalCost) * 100))}`) : '—'}
-            </div>
+
           </div>
-
-          {/* CPM KARTI */}
-          {(() => {
-            const activeCount = (personnel || []).filter(p => !p.deleted_at).length;
-            const dailyWorkMin = 9 * 60;
-            const totalMonthlyMin = activeCount * (workDaysInfo?.work_days || 22) * dailyWorkMin;
-            const cpm = totalMonthlyMin > 0 ? (totalPersonnelPayrollMonthly + totalExpensesMonthly) / totalMonthlyMin : 0;
-            return (
-              <div className="card" style={{ textAlign: 'center', padding: '14px', border: '1px solid rgba(155,89,182,0.3)', background: 'rgba(155,89,182,0.05)' }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>⚡ CPM (₺/dakika)</div>
-                <div style={{ fontSize: '22px', fontWeight: '800', color: '#9b59b6' }}>{cpm.toFixed(2)} ₺</div>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>Dakika Başı Maliyet</div>
-                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{activeCount} personel × {workDaysInfo?.work_days || 22} gün × 9s</div>
-              </div>
-            );
-          })()}
-
-          {/* BREAK-EVEN KARTI */}
-          {(() => {
-            const avgFasonPrice = (() => {
-              const ms = (models || []).filter(m => !m.deleted_at && (m.fason_price || 0) > 0);
-              if (ms.length === 0) return 0;
-              return ms.reduce((s, m) => s + (parseFloat(m.fason_price) || 0), 0) / ms.length;
-            })();
-            const avgVariableCostPerPiece = totalPieces > 0 ? (totalPersonnelPayroll / totalPieces) : 0;
-            const fixedCost = totalExpenses;
-            const bep = avgFasonPrice > avgVariableCostPerPiece && fixedCost > 0
-              ? Math.ceil(fixedCost / (avgFasonPrice - avgVariableCostPerPiece)) : null;
-            return (
-              <div className="card" style={{ textAlign: 'center', padding: '14px', border: `1px solid ${bep ? 'rgba(46,204,113,0.3)' : 'rgba(231,76,60,0.3)'}`, background: bep ? 'rgba(46,204,113,0.05)' : 'rgba(231,76,60,0.05)' }}>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>🎯 Başabaş Noktası</div>
-                {bep ? (
-                  <>
-                    <div style={{ fontSize: '22px', fontWeight: '800', color: totalPieces >= bep ? 'var(--success)' : '#e67e22' }}>{bep.toLocaleString('tr-TR')} adet</div>
-                    <div style={{ fontSize: '10px', marginTop: '2px', color: totalPieces >= bep ? 'var(--success)' : 'var(--text-muted)', fontWeight: '700' }}>
-                      {totalPieces >= bep ? `✅ Geçildi (+${(totalPieces - bep).toLocaleString('tr-TR')} adet)` : `⏳ ${(bep - totalPieces).toLocaleString('tr-TR')} adet kaldı`}
-                    </div>
-                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Ort. Fason: {avgFasonPrice.toFixed(0)} ₺/ad</div>
-                  </>
-                ) : (
-                  <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '8px' }}>Hesap için model fason fiyatı girin</div>
-                )}
-              </div>
-            );
-          })()}
 
         </div>
 
@@ -9725,10 +9781,7 @@ function CostsPage({ models, personnel, addToast }) {
 
         <div className="card" style={{ marginBottom: '16px' }}>
 
-          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 className="card-title">🏢 İşletme Giderleri — {new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</h3>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>📌 Giderler her zaman aylık bazda gösterilir</span>
-          </div>
+          <div className="card-header"><h3 className="card-title">🏢 İşletme Giderleri — {new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</h3></div>
 
           {expenses.length === 0 ? (
 
@@ -9776,14 +9829,13 @@ function CostsPage({ models, personnel, addToast }) {
 
               </div>
 
-              <div className="table-wrapper"><table className="table"><thead><tr><th>Kategori</th><th>Açıklama</th><th>Tarih</th><th>Tutar</th><th>Tekrar</th><th style={{ width: '80px' }}>İşlem</th></tr></thead><tbody>
+              <div className="table-wrapper"><table className="table"><thead><tr><th>Kategori</th><th>Açıklama</th><th>Tutar</th><th>Tekrar</th><th></th></tr></thead><tbody>
 
                 {expenses.map(e => {
 
                   const catInfo = expenseCategories.find(c => c.value === e.category);
-                  const tarih = e.created_at ? new Date(e.created_at).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
 
-                  return (<tr key={e.id}><td>{catInfo?.icon} {catInfo?.label || e.category}</td><td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{e.description || '—'}</td><td style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{tarih}</td><td style={{ fontWeight: '700' }}>{e.amount.toLocaleString('tr-TR')} ₺</td><td>{e.is_recurring ? <span className="badge badge-info">📋 Aylık</span> : '—'}</td><td><div style={{ display: 'flex', gap: '4px' }}><button onClick={() => openEditExpense(e)} style={{ background: 'rgba(230,126,34,0.1)', border: '1px solid rgba(230,126,34,0.3)', color: '#e67e22', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }} title="Düzenle">✏️</button><button onClick={() => deleteExpense(e.id)} style={{ background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', color: '#e74c3c', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }} title="Sil">🗑️</button></div></td></tr>);
+                  return (<tr key={e.id}><td>{catInfo?.icon} {catInfo?.label || e.category}</td><td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{e.description || '—'}</td><td style={{ fontWeight: '700' }}>{e.amount.toLocaleString('tr-TR')} ₺</td><td>{e.is_recurring ? <span className="badge badge-info">📋 Aylık</span> : '—'}</td><td><button onClick={() => deleteExpense(e.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }} title="Sil">🗑️</button></td></tr>);
 
                 })}
 
@@ -9795,54 +9847,11 @@ function CostsPage({ models, personnel, addToast }) {
 
         </div>
 
-        {/* PERSONEL AYLIK MALİYET — OTOMATİK */}
-        <div className="card" style={{ marginBottom: '16px' }}>
-          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 className="card-title">💰 Personel Aylık Maliyet</h3>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '400' }}>📌 Personel panelinden otomatik çekilen veriler</span>
-          </div>
-          {(personnel || []).filter(p => !p.deleted_at).length === 0 ? (
-            <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>Aktif personel yok.</div>
-          ) : (
-            <div className="table-wrapper"><table className="table"><thead><tr><th>Personel</th><th>Maaş</th><th>Yol</th><th>SSK</th><th>Yemek</th><th>Tazminat</th><th style={{ fontWeight: '800' }}>TOPLAM</th></tr></thead><tbody>
-              {(personnel || []).filter(p => !p.deleted_at).map(p => {
-                const maas = parseFloat(p.base_salary) || 0;
-                const yol = parseFloat(p.transport_allowance) || 0;
-                const ssk = parseFloat(p.ssk_cost) || 0;
-                const yemek = parseFloat(p.food_allowance) || 0;
-                const tazminat = parseFloat(p.compensation) || 0;
-                const toplam = maas + yol + ssk + yemek + tazminat;
-                return (<tr key={p.id}>
-                  <td><strong>{p.name}</strong><br /><span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{p.role || '—'}</span></td>
-                  <td>{maas.toLocaleString('tr-TR')}₺</td>
-                  <td>{yol.toLocaleString('tr-TR')}₺</td>
-                  <td>{ssk.toLocaleString('tr-TR')}₺</td>
-                  <td>{yemek.toLocaleString('tr-TR')}₺</td>
-                  <td>{tazminat.toLocaleString('tr-TR')}₺</td>
-                  <td style={{ fontWeight: '800', color: 'var(--danger)' }}>{toplam.toLocaleString('tr-TR')}₺</td>
-                </tr>);
-              })}
-              <tr style={{ background: 'rgba(231,76,60,0.05)' }}>
-                <td style={{ fontWeight: '800' }}>TOPLAM</td>
-                <td style={{ fontWeight: '700' }}>{(personnel || []).filter(p => !p.deleted_at).reduce((s, p) => s + (parseFloat(p.base_salary) || 0), 0).toLocaleString('tr-TR')}₺</td>
-                <td style={{ fontWeight: '700' }}>{(personnel || []).filter(p => !p.deleted_at).reduce((s, p) => s + (parseFloat(p.transport_allowance) || 0), 0).toLocaleString('tr-TR')}₺</td>
-                <td style={{ fontWeight: '700' }}>{(personnel || []).filter(p => !p.deleted_at).reduce((s, p) => s + (parseFloat(p.ssk_cost) || 0), 0).toLocaleString('tr-TR')}₺</td>
-                <td style={{ fontWeight: '700' }}>{(personnel || []).filter(p => !p.deleted_at).reduce((s, p) => s + (parseFloat(p.food_allowance) || 0), 0).toLocaleString('tr-TR')}₺</td>
-                <td style={{ fontWeight: '700' }}>{(personnel || []).filter(p => !p.deleted_at).reduce((s, p) => s + (parseFloat(p.compensation) || 0), 0).toLocaleString('tr-TR')}₺</td>
-                <td style={{ fontWeight: '900', fontSize: '16px', color: 'var(--danger)' }}>{totalPersonnelPayroll.toLocaleString('tr-TR')}₺</td>
-              </tr>
-            </tbody></table></div>
-          )}
-        </div>
+
 
         <div className="card" style={{ marginBottom: '16px' }}>
 
-          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 className="card-title">📦 Model Bazlı Maliyet</h3>
-            <span style={{ fontSize: '11px', color: '#e67e22', fontWeight: '600', background: 'rgba(230,126,34,0.1)', padding: '3px 8px', borderRadius: '6px' }}>
-              ⚠️ Karlılık = Yalnızca işçilik dahil — genel gider dahil değil
-            </span>
-          </div>
+          <div className="card-header"><h3 className="card-title">📦 Model Bazlı Maliyet</h3></div>
 
           {Object.keys(modelCosts).length === 0 ? (
 
@@ -9850,7 +9859,7 @@ function CostsPage({ models, personnel, addToast }) {
 
           ) : (
 
-            <div className="table-wrapper"><table className="table"><thead><tr><th>Model</th><th>Üretim</th><th>Fire</th><th>DeĞer</th><th>İşçilik</th><th>Birim</th><th>Karlılık</th></tr></thead><tbody>
+            <div className="table-wrapper"><table className="table"><thead><tr><th>Model</th><th>Üretim</th><th>Fire</th><th>Değer</th><th>İşçilik</th><th>Birim</th><th>Karlılık</th></tr></thead><tbody>
 
               {Object.entries(modelCosts).map(([mid, mc]) => {
 
@@ -9875,202 +9884,46 @@ function CostsPage({ models, personnel, addToast }) {
 
 
         <div className="card">
-          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-            <h3 className="card-title">📈 Personel Katkı & Prim Analizi</h3>
-            {/* PRİM ORANI SEÇİCİ */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>🎯 Prim Oranı:</span>
-              {[5, 10, 15, 20, 25, 30].map(oran => (
-                <button
-                  key={oran}
-                  onClick={() => setPrimOrani(oran)}
-                  style={{
-                    padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', cursor: 'pointer',
-                    border: primOrani === oran ? '2px solid var(--accent)' : '1px solid var(--border-color)',
-                    background: primOrani === oran ? 'var(--accent)' : 'var(--bg-input)',
-                    color: primOrani === oran ? '#fff' : 'var(--text-secondary)',
-                    transition: 'all 0.15s'
-                  }}
-                >%{oran}</button>
-              ))}
-              {/* MANUEL GİRİŞ */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '2px 8px' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>%</span>
-                <input
-                  type="number"
-                  min="0" max="100" step="1"
-                  value={primOrani}
-                  onChange={e => {
-                    const v = parseFloat(e.target.value);
-                    if (!isNaN(v) && v >= 0 && v <= 100) setPrimOrani(v);
-                  }}
-                  style={{
-                    width: '48px', border: 'none', background: 'transparent',
-                    fontSize: '13px', fontWeight: '800', color: 'var(--accent)',
-                    outline: 'none', textAlign: 'center'
-                  }}
-                  title="Elle prim oranı girin (0-100)"
-                />
-              </div>
-            </div>
-          </div>
 
-          {/* FORMÜL AÇIKLAMASI */}
-          <div style={{ padding: '10px 16px', background: 'rgba(52,152,219,0.06)', borderBottom: '1px solid var(--border-color)', fontSize: '11px', color: 'var(--text-secondary)', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <span>🧮 <strong>Kişi Tam Maliyet</strong> = Maaş + SSK + Yol + Yemek + Tazminat + İşletme Gider Payı</span>
-            <span>💎 <strong>Katkı Değeri</strong> = Üretim Değeri − Kişi Tam Maliyet</span>
-            <span>🎯 <strong>Hak Edilen Prim</strong> = Katkı Değeri × <strong style={{ color: 'var(--accent)' }}>%{primOrani}</strong></span>
-          </div>
+          <div className="card-header"><h3 className="card-title">👥 Personel Maliyet</h3></div>
 
           {Object.keys(personnelCosts).length === 0 ? (
-            <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              <div style={{ fontSize: '32px', marginBottom: '8px' }}>📉</div>
-              Üretim verisi girildiğinde otomatik hesaplanır.
-            </div>
+
+            <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>Veri yok.</div>
+
           ) : (
-            <div style={{ display: 'grid', gap: '12px', padding: '16px' }}>
-              {(() => {
-                // İşletme gider payı hesabı (personel dışı giderler ÷ aktif personel)
-                const activeCount = Math.max(1, (personnel || []).filter(p => !p.deleted_at).length);
-                const genel_gider_payi_aylik = totalExpensesMonthly / activeCount;
-                const genel_gider_payi_donem = genel_gider_payi_aylik * periodMultiplier;
 
-                return Object.entries(personnelCosts).map(([pid, pc]) => {
-                  // Personelin GERÇEK tam aylık maliyeti personel tablosundan
-                  const pData = (personnel || []).find(p => String(p.id) === String(pid));
-                  const aylik_maas = parseFloat(pData?.base_salary) || 0;
-                  const aylik_ssk = parseFloat(pData?.ssk_cost) || 0;
-                  const aylik_yol = parseFloat(pData?.transport_allowance) || 0;
-                  const aylik_yemek = parseFloat(pData?.food_allowance) || 0;
-                  const aylik_tazminat = parseFloat(pData?.compensation) || 0;
-                  const aylik_personel_maliyet = aylik_maas + aylik_ssk + aylik_yol + aylik_yemek + aylik_tazminat;
+            <div style={{ display: 'grid', gap: '10px', padding: '16px' }}>
 
-                  // Döneme orantıla
-                  const donem_personel_maliyet = aylik_personel_maliyet * periodMultiplier;
+              {Object.entries(personnelCosts).map(([pid, pc]) => {
 
-                  // Toplam kişi maliyeti: Personel + İşletme gider payı
-                  const kisi_tam_maliyet = donem_personel_maliyet + genel_gider_payi_donem;
+                const totalWage = pc.dailyWage * Math.max(1, pc.days.size);
 
-                  // Üretim değeri
-                  const uretim_degeri = pc.totalValue;
+                const diff = pc.totalValue - totalWage;
 
-                  // Katkı değeri
-                  const katki_degeri = uretim_degeri - kisi_tam_maliyet;
+                const efficiency = totalWage > 0 ? Math.round((pc.totalValue / totalWage) * 100) : 0;
 
-                  // Prim bazisi (sadece pozitifse)
-                  const prim_bazisi = katki_degeri > 0 ? katki_degeri : 0;
+                return (
 
-                  // Hak edilen prim = Prim bazisi × Prim oranı
-                  const hak_edilen_prim = Math.round(prim_bazisi * primOrani / 100);
+                  <div key={pid} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '10px', background: 'var(--bg-input)', border: `1px solid ${diff >= 0 ? 'rgba(46,204,113,0.2)' : 'rgba(231,76,60,0.2)'}` }}>
 
-                  // Verimlilik %
-                  const efficiency = kisi_tam_maliyet > 0 ? Math.round((uretim_degeri / kisi_tam_maliyet) * 100) : 0;
+                    <div style={{ fontSize: '28px' }}>{diff >= 0 ? '✅' : '⚠️'}</div>
 
-                  const status = katki_degeri >= 0 ? 'karli' : 'zararli';
+                    <div style={{ flex: 1 }}><div style={{ fontWeight: '700', fontSize: '14px' }}>{pc.name}</div><div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ücret: {totalWage.toFixed(0)}₺  Üretim: {pc.totalValue.toFixed(0)}₺  {pc.totalProduced} ad  {Math.max(1, pc.days.size)} gün</div></div>
 
-                  return (
-                    <div key={pid} style={{
-                      borderRadius: '12px',
-                      background: 'var(--bg-input)',
-                      border: `2px solid ${status === 'karli' ? 'rgba(46,204,113,0.3)' : 'rgba(231,76,60,0.3)'}`,
-                      overflow: 'hidden'
-                    }}>
-                      {/* Üst başlık */}
-                      <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border-color)' }}>
-                        <div style={{ fontSize: '24px' }}>{status === 'karli' ? '✅' : '⚠️'}</div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: '800', fontSize: '15px' }}>{pc.name}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                            {Math.max(1, pc.days.size)} gün · {pc.totalProduced} adet üretim
-                            {pData?.role ? ` · ${pData.role}` : ''}
-                          </div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '22px', fontWeight: '900', color: status === 'karli' ? 'var(--success)' : 'var(--danger)' }}>
-                            %{efficiency}
-                          </div>
-                          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>verimlilik</div>
-                        </div>
-                      </div>
+                    <div style={{ textAlign: 'right' }}><div style={{ fontSize: '18px', fontWeight: '800', color: diff >= 0 ? 'var(--success)' : 'var(--danger)' }}>%{efficiency}</div><div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>verimlilik</div></div>
 
-                      {/* Maliyet Detayı */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0', fontSize: '12px' }}>
+                  </div>);
 
-                        {/* Sol: Maliyet Kırılımı */}
-                        <div style={{ padding: '10px 16px', borderRight: '1px solid var(--border-color)' }}>
-                          <div style={{ fontWeight: '700', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💰 Kişi Tam Maliyet</div>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2px 8px', fontSize: '11px' }}>
-                            <span style={{ color: 'var(--text-muted)' }}>Maaş:</span><span style={{ fontWeight: '600', textAlign: 'right' }}>{Math.round(aylik_maas * periodMultiplier).toLocaleString('tr-TR')} ₺</span>
-                            <span style={{ color: 'var(--text-muted)' }}>SSK:</span><span style={{ fontWeight: '600', textAlign: 'right' }}>{Math.round(aylik_ssk * periodMultiplier).toLocaleString('tr-TR')} ₺</span>
-                            <span style={{ color: 'var(--text-muted)' }}>Yol:</span><span style={{ fontWeight: '600', textAlign: 'right' }}>{Math.round(aylik_yol * periodMultiplier).toLocaleString('tr-TR')} ₺</span>
-                            <span style={{ color: 'var(--text-muted)' }}>Yemek:</span><span style={{ fontWeight: '600', textAlign: 'right' }}>{Math.round(aylik_yemek * periodMultiplier).toLocaleString('tr-TR')} ₺</span>
-                            <span style={{ color: 'var(--text-muted)' }}>Tazminat:</span><span style={{ fontWeight: '600', textAlign: 'right' }}>{Math.round(aylik_tazminat * periodMultiplier).toLocaleString('tr-TR')} ₺</span>
-                            <span style={{ color: '#e67e22' }}>Gider Payı:</span><span style={{ fontWeight: '600', color: '#e67e22', textAlign: 'right' }}>{Math.round(genel_gider_payi_donem).toLocaleString('tr-TR')} ₺</span>
-                            <span style={{ color: 'var(--danger)', fontWeight: '700', borderTop: '1px solid var(--border-color)', paddingTop: '4px' }}>TOPLAM:</span>
-                            <span style={{ fontWeight: '900', color: 'var(--danger)', textAlign: 'right', borderTop: '1px solid var(--border-color)', paddingTop: '4px' }}>
-                              {Math.round(kisi_tam_maliyet).toLocaleString('tr-TR')} ₺
-                            </span>
-                          </div>
-                        </div>
+              })}
 
-                        {/* Orta: Üretim Değeri */}
-                        <div style={{ padding: '10px 16px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                          <div style={{ fontWeight: '700', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🏭 Üretim Değeri</div>
-                          <div style={{ fontSize: '20px', fontWeight: '900', color: 'var(--success)' }}>{Math.round(uretim_degeri).toLocaleString('tr-TR')} ₺</div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{pc.totalProduced} adet × fason birim</div>
-                        </div>
-
-                        {/* Sağ: Katkı + Prim */}
-                        <div style={{ padding: '10px 16px', background: katki_degeri >= 0 ? 'rgba(46,204,113,0.05)' : 'rgba(231,76,60,0.05)' }}>
-                          <div style={{ fontWeight: '700', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💎 Katkı & Prim</div>
-
-                          {/* Katkı Değeri */}
-                          <div style={{ marginBottom: '8px' }}>
-                            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Katkı Değeri (Artı)</div>
-                            <div style={{ fontSize: '16px', fontWeight: '900', color: katki_degeri >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-                              {katki_degeri >= 0 ? '+' : ''}{Math.round(katki_degeri).toLocaleString('tr-TR')} ₺
-                            </div>
-                          </div>
-
-                          {/* Prim Bazisi */}
-                          {prim_bazisi > 0 && (
-                            <div style={{ marginBottom: '6px', fontSize: '10px', color: 'var(--text-muted)' }}>
-                              Prim Bazisi: <strong>{Math.round(prim_bazisi).toLocaleString('tr-TR')} ₺</strong>
-                            </div>
-                          )}
-
-                          {/* HAK EDİLEN PRİM — Ana Gösterge */}
-                          <div style={{
-                            padding: '8px 10px', borderRadius: '8px',
-                            background: hak_edilen_prim > 0 ? 'rgba(46,204,113,0.18)' : 'rgba(231,76,60,0.08)',
-                            border: `2px solid ${hak_edilen_prim > 0 ? 'rgba(46,204,113,0.5)' : 'rgba(231,76,60,0.2)'}`
-                          }}>
-                            <div style={{ fontSize: '10px', fontWeight: '800', color: hak_edilen_prim > 0 ? 'var(--success)' : 'var(--danger)', marginBottom: '2px' }}>
-                              {hak_edilen_prim > 0 ? `🏆 HAK EDİLEN PRİM (%${primOrani})` : '❌ PRİM YOK'}
-                            </div>
-                            <div style={{ fontSize: '20px', fontWeight: '900', color: hak_edilen_prim > 0 ? 'var(--success)' : 'var(--text-muted)' }}>
-                              {hak_edilen_prim > 0 ? `${hak_edilen_prim.toLocaleString('tr-TR')} ₺` : '—'}
-                            </div>
-                            {hak_edilen_prim > 0 && (
-                              <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginTop: '3px' }}>
-                                {Math.round(prim_bazisi).toLocaleString('tr-TR')} ₺ × %{primOrani} = {hak_edilen_prim.toLocaleString('tr-TR')} ₺
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
-                  );
-                });
-              })()}
             </div>
+
           )}
 
         </div>
 
       </div>
-
 
     </>
 
@@ -10131,10 +9984,6 @@ export default function Home() {
   const renderPage = () => {
 
     switch (activePage) {
-
-      case 'atolye': return <AtolyePage models={models} personnel={personnel} addToast={addToast} setActivePage={setActivePage} />;
-
-      case 'attendance': return <AttendancePage personnel={personnel} addToast={addToast} />;
 
       case 'dashboard': return <DashboardPage models={models} personnel={personnel} />;
 

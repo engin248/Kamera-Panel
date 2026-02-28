@@ -9,7 +9,7 @@ export async function GET(request) {
         const year = parseInt(searchParams.get('year')) || new Date().getFullYear();
         const month = searchParams.get('month');
 
-        let query = 'SELECT * FROM business_expenses WHERE year = ? AND deleted_at IS NULL';
+        let query = 'SELECT * FROM business_expenses WHERE year = ?';
         const params = [year];
         if (month) {
             query += ' AND month = ?';
