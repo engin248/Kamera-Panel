@@ -397,150 +397,307 @@ function SpeechToText() {
 
 
 
-// ========== SIDEBAR ==========
+// ========== CHATBOT PANELİ ==========
 
-function Sidebar({ activePage, setActivePage }) {
+function ChatbotPanel({ onClose }) {
+  const [messages, setMessages] = React.useState([
+    { role: 'assistant', content: '👋 Merhaba! Ben **Kamera**, fabrikanızın AI asistanıyım.\n\nÜretim durumu, siparişler, personel veya maliyet hakkında sorularınızı yanıtlayabilirim.' }
+  ]);
+  const [input, setInput] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const messagesEndRef = React.useRef(null);
+  const inputRef = React.useRef(null);
 
-  const navGroups = [
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  React.useEffect(() => scrollToBottom(), [messages]);
 
-    {
-
-      title: null, items: [
-
-        { id: 'orders', icon: '📋', label: 'Siparişler' },
-
-        { id: 'models', icon: '👗', label: 'Modeller' },
-
-      ]
-
-    },
-
-    {
-
-      title: 'Üretim Süreci', color: '#D4A847', items: [
-
-        { id: 'production', icon: '🏭', label: 'Üretim Takip' },
-
-        { id: 'quality', icon: '✅', label: 'Kalite Kontrol' },
-
-        { id: 'fason', icon: '🔧', label: 'Fason' },
-
-        { id: 'shipments', icon: '📦', label: 'Sevkiyat' },
-
-      ]
-
-    },
-
-    {
-
-      title: 'Personel & Ekipman', items: [
-
-        { id: 'personnel', icon: '👥', label: 'Personel' },
-
-        { id: 'machines', icon: '⚙️', label: 'Makineler' },
-
-      ]
-
-    },
-
-    {
-
-      title: 'Finans', items: [
-
-        { id: 'prim', icon: '💰', label: 'Prim & Üret' },
-
-        { id: 'costs', icon: '📉', label: '💰 Maliyet Analizi' },
-
-        { id: 'reports', icon: '📈', label: 'Raporlar' },
-
-      ]
-
-    },
-
-    {
-
-      title: 'Yönetim', items: [
-
-        { id: 'dashboard', icon: '📊', label: 'Ana Panel' },
-
-        { id: 'customers', icon: '🤝', label: 'Müşteriler' },
-
-        { id: 'settings', icon: '⚙️', label: 'Ayarlar' },
-
-      ]
-
-    },
-
+  const quickCommands = [
+    '📊 Bugünkü üretim?',
+    '📋 Geciken siparişler?',
+    '👥 Personel durumu?',
+    '💰 Bu ay maliyet?',
   ];
 
+  const sendMessage = async (text) => {
+    const msg = text || input.trim();
+    if (!msg || loading) return;
+    setInput('');
+    const newHistory = [...messages, { role: 'user', content: msg }];
+    setMessages(newHistory);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg, history: newHistory.slice(-8) })
+      });
+      const data = await res.json();
+      setMessages(prev => [...prev, { role: 'assistant', content: data.reply || 'Cevap alınamadı.' }]);
+    } catch {
+      setMessages(prev => [...prev, { role: 'assistant', content: '❌ Bağlantı hatası. Lütfen tekrar deneyin.' }]);
+    } finally { setLoading(false); }
+  };
 
+  const formatText = (text) => {
+    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
+  };
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: '20px', right: '20px', width: '380px', height: '560px',
+      background: '#fff', border: '1px solid var(--border-color)', borderRadius: '20px',
+      boxShadow: '0 20px 60px rgba(44,62,45,0.18)', display: 'flex', flexDirection: 'column',
+      zIndex: 500, overflow: 'hidden', animation: 'slideUp 0.3s ease'
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '16px 20px', background: 'linear-gradient(135deg, #2c3e2d 0%, #3a5139 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '42px', height: '42px', borderRadius: '50%',
+            background: 'linear-gradient(135deg, #6a9e6e, #5b8ec2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px',
+            boxShadow: '0 0 0 3px rgba(106,158,110,0.3)', animation: 'breathe 3s ease infinite'
+          }}>🤖</div>
+          <div>
+            <div style={{ color: '#fff', fontWeight: '700', fontSize: '15px' }}>Kamera AI</div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: '6px', height: '6px', background: '#2ecc71', borderRadius: '50%', display: 'inline-block', animation: 'pulse 2s ease infinite' }}></span>
+              Aktif • Fabrika verilerine erişiyor
+            </div>
+          </div>
+        </div>
+        <button onClick={onClose} style={{
+          background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
+          width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer',
+          fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>✕</button>
+      </div>
+
+      {/* Mesajlar */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {messages.map((msg, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+            {msg.role === 'assistant' && (
+              <div style={{
+                width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg,#6a9e6e,#5b8ec2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px',
+                flexShrink: 0, marginRight: '8px', marginTop: '2px'
+              }}>🤖</div>
+            )}
+            <div style={{
+              maxWidth: '78%', padding: '10px 14px', borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
+              background: msg.role === 'user' ? 'linear-gradient(135deg, #6a9e6e, #5b8ec2)' : 'var(--bg-input)',
+              color: msg.role === 'user' ? '#fff' : 'var(--text-primary)',
+              fontSize: '13px', lineHeight: '1.5', border: msg.role === 'assistant' ? '1px solid var(--border-color)' : 'none'
+            }} dangerouslySetInnerHTML={{ __html: formatText(msg.content) }} />
+          </div>
+        ))}
+        {loading && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg,#6a9e6e,#5b8ec2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🤖</div>
+            <div style={{ padding: '10px 14px', background: 'var(--bg-input)', borderRadius: '4px 18px 18px 18px', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {[0, 1, 2].map(j => <span key={j} style={{ width: '6px', height: '6px', background: 'var(--accent)', borderRadius: '50%', display: 'inline-block', animation: `pulse ${0.8 + j * 0.2}s ease infinite` }}></span>)}
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Hızlı Komutlar */}
+      <div style={{ padding: '8px 16px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '6px', flexWrap: 'wrap', flexShrink: 0 }}>
+        {quickCommands.map((cmd, i) => (
+          <button key={i} onClick={() => sendMessage(cmd)} style={{
+            padding: '4px 10px', background: 'var(--bg-input)', border: '1px solid var(--border-color)',
+            borderRadius: '12px', cursor: 'pointer', fontSize: '11px', color: 'var(--text-secondary)',
+            fontFamily: 'inherit', transition: 'all 0.2s', whiteSpace: 'nowrap'
+          }}>{cmd}</button>
+        ))}
+      </div>
+
+      {/* Input */}
+      <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '8px', flexShrink: 0 }}>
+        <input
+          ref={inputRef}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+          placeholder="Sorunuzu yazın..."
+          style={{
+            flex: 1, padding: '10px 14px', background: 'var(--bg-input)', border: '1.5px solid var(--border-color)',
+            borderRadius: '12px', fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none'
+          }}
+        />
+        <button onClick={() => sendMessage()} disabled={loading || !input.trim()} style={{
+          width: '42px', height: '42px', background: 'linear-gradient(135deg, #6a9e6e, #5b8ec2)',
+          border: 'none', borderRadius: '12px', cursor: 'pointer', color: '#fff', fontSize: '18px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (loading || !input.trim()) ? 0.5 : 1
+        }}>➤</button>
+      </div>
+    </div>
+  );
+}
+
+
+// ========== SIDEBAR ==========
+
+function Sidebar({ activePage, setActivePage, onChatbotToggle }) {
+
+  const [uretimAcik, setUretimAcik] = React.useState(true);
+  const [digerAcik, setDigerAcik] = React.useState(false);
+
+  const uretimItems = [
+    { id: 'models', icon: '👗', label: 'Modeller' },
+    { id: 'personnel', icon: '👥', label: 'Personel' },
+    { id: 'production', icon: '🔩', label: 'Üretim Aşaması' },
+    { id: 'costs', icon: '💰', label: 'Maliyet' },
+    { id: 'muhasebe', icon: '📒', label: 'Rapor & Analiz' },
+  ];
+
+  const digerItems = [
+    { id: 'quality', icon: '✅', label: 'Kalite Kontrol' },
+    { id: 'fason', icon: '🔧', label: 'Fason' },
+    { id: 'shipments', icon: '📦', label: 'Sevkiyat' },
+    { id: 'prim', icon: '🏆', label: 'Prim & Üret' },
+    { id: 'machines', icon: '⚙️', label: 'Makineler' },
+    { id: 'customers', icon: '🤝', label: 'Müşteriler' },
+    { id: 'reports', icon: '📈', label: 'Raporlar' },
+    { id: 'dashboard', icon: '📊', label: 'Ana Panel' },
+    { id: 'settings', icon: '⚙️', label: 'Ayarlar' },
+  ];
+
+  const uretimAktif = uretimItems.some(i => i.id === activePage);
 
   return (
 
     <aside className="sidebar">
 
       <div className="sidebar-header">
-
         <div className="sidebar-logo">
-
           <div className="sidebar-logo-icon">🧵</div>
-
           <div>
-
             <div className="sidebar-logo-text">47 Sil Baştan 01</div>
-
             <div className="sidebar-logo-sub" style={{ color: '#D4A847', fontSize: '12.5px', fontWeight: '600', letterSpacing: '0.3px' }}>Adil Şeffaf Veri Odaklı Üretim Kontrol Sistemleri</div>
-
           </div>
-
         </div>
+      </div>
 
+      {/* AI CHATBOT BUTONU */}
+      <div style={{ padding: '12px 12px 0' }}>
+        <button onClick={onChatbotToggle} style={{
+          width: '100%', padding: '12px 14px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+          background: 'linear-gradient(135deg, rgba(106,158,110,0.2), rgba(91,142,194,0.2))',
+          display: 'flex', alignItems: 'center', gap: '10px', color: '#7be88e', fontWeight: '700',
+          fontSize: '14px', fontFamily: 'inherit', transition: 'all 0.25s ease',
+          borderLeft: '3px solid #6a9e6e',
+        }}>
+          <span style={{ fontSize: '22px', animation: 'breathe 3s ease infinite' }}>🤖</span>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#7be88e' }}>Kamera AI</div>
+            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)', fontWeight: '400' }}>Fabrika Asistanı</div>
+          </div>
+          <div style={{ marginLeft: 'auto', width: '8px', height: '8px', background: '#2ecc71', borderRadius: '50%', animation: 'pulse 2s ease infinite', flexShrink: 0 }} />
+        </button>
       </div>
 
       <nav className="sidebar-nav">
 
-        {navGroups.map((group, gi) => (
+        {/* SİPARİŞLER — Bağımsız (Mağazadan gelir) */}
+        <button
+          className={`nav-item ${activePage === 'orders' ? 'active' : ''}`}
+          onClick={() => setActivePage('orders')}
+        >
+          <span className="nav-item-icon">📋</span>
+          <span>Siparişler</span>
+        </button>
 
-          <div key={group.title || gi}>
+        {/* ÜRETİM DEPARTMANI — Accordion kutu */}
+        <div style={{
+          marginTop: '8px',
+          border: `1px solid ${uretimAktif || uretimAcik ? 'rgba(212,168,71,0.4)' : 'rgba(212,168,71,0.15)'}`,
+          borderRadius: '14px',
+          overflow: 'hidden',
+          background: 'rgba(212,168,71,0.04)',
+          transition: 'all 0.3s ease',
+        }}>
 
-            {group.title && <div className="nav-section-title" style={group.color ? { color: group.color } : undefined}>{group.title}</div>}
+          {/* Başlık / Toggle */}
+          <button onClick={() => setUretimAcik(p => !p)} style={{
+            width: '100%', padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'inherit',
+            color: '#D4A847', fontWeight: '700', fontSize: '14px',
+          }}>
+            <span style={{ fontSize: '20px' }}>🏭</span>
+            <span style={{ flex: 1, textAlign: 'left' }}>Üretim Departmanı</span>
+            <span style={{
+              fontSize: '12px', opacity: 0.6, transition: 'transform 0.25s',
+              transform: uretimAcik ? 'rotate(180deg)' : 'rotate(0deg)',
+              display: 'inline-block',
+            }}>▼</span>
+          </button>
 
-            {group.items.map(item => (
+          {/* İçerik — açık/kapalı */}
+          {uretimAcik && (
+            <div style={{ padding: '0 8px 10px' }}>
+              {uretimItems.map(item => (
+                <button
+                  key={item.id}
+                  className={`nav-item ${activePage === item.id ? 'active' : ''}`}
+                  onClick={() => setActivePage(item.id)}
+                  style={{
+                    borderRadius: '10px',
+                    paddingLeft: '18px',
+                    borderLeft: activePage === item.id ? '3px solid #D4A847' : '3px solid transparent',
+                  }}
+                >
+                  <span className="nav-item-icon">{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
-              <button
+        </div>
 
-                key={item.id}
+        {/* DİĞER — küçük accordion */}
+        <div style={{ marginTop: '8px' }}>
+          <button onClick={() => setDigerAcik(p => !p)} style={{
+            width: '100%', padding: '8px 14px', background: 'none', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'inherit',
+            color: 'rgba(255,255,255,0.3)', fontWeight: '700', fontSize: '12px', letterSpacing: '1.2px',
+            textTransform: 'uppercase',
+          }}>
+            <span style={{ flex: 1, textAlign: 'left' }}>Diğer</span>
+            <span style={{
+              fontSize: '10px', transition: 'transform 0.25s',
+              transform: digerAcik ? 'rotate(180deg)' : 'rotate(0deg)',
+              display: 'inline-block',
+            }}>▼</span>
+          </button>
 
-                className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-
-                onClick={() => setActivePage(item.id)}
-
-              >
-
-                <span className="nav-item-icon">{item.icon}</span>
-
-                <span>{item.label}</span>
-
-              </button>
-
-            ))}
-
-          </div>
-
-        ))}
+          {digerAcik && digerItems.map(item => (
+            <button
+              key={item.id}
+              className={`nav-item ${activePage === item.id ? 'active' : ''}`}
+              onClick={() => setActivePage(item.id)}
+            >
+              <span className="nav-item-icon">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
 
       </nav>
 
       <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-color)', marginTop: 'auto' }}>
-
         <a href="/operator" target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderRadius: '8px', background: 'linear-gradient(135deg, rgba(46,204,113,0.15), rgba(39,174,96,0.1))', color: '#2ecc71', textDecoration: 'none', fontSize: '13px', fontWeight: '700', border: '1px solid rgba(46,204,113,0.2)' }}>
-
           <span>📱</span>
-
           <span>Operatör Tablet Ekranı</span>
-
         </a>
-
       </div>
 
     </aside>
@@ -5272,7 +5429,31 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                     </div>
 
+                    {/* ── ÜRETİM İLERLEME ÇUBUĞU ── */}
+                    {(model.total_order > 0) && (() => {
+                      const tamamlanan = model.completed_count || 0;
+                      const toplam = model.total_order || 0;
+                      const hatalı = model.defective_count || 0;
+                      const yüzde = toplam > 0 ? Math.round((tamamlanan / toplam) * 100) : 0;
+                      const renk = yüzde >= 100 ? '#27ae60' : yüzde >= 60 ? '#f39c12' : '#3498db';
+                      return (
+                        <div style={{ marginTop: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '3px' }}>
+                            <span>✅ {tamamlanan.toLocaleString('tr-TR')} / {toplam.toLocaleString('tr-TR')} adet</span>
+                            <span style={{ display: 'flex', gap: '8px' }}>
+                              {hatalı > 0 && <span style={{ color: '#e74c3c' }}>❌ {hatalı} hatalı</span>}
+                              <span style={{ fontWeight: '700', color: renk }}>%{yüzde}</span>
+                            </span>
+                          </div>
+                          <div style={{ height: '6px', background: 'var(--bg-input)', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div style={{ width: `${Math.min(yüzde, 100)}%`, height: '100%', background: renk, borderRadius: '3px', transition: 'width 0.5s ease' }} />
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                   </div>
+
 
                   <div style={{ display: 'flex', gap: '8px' }}>
 
@@ -5346,9 +5527,8 @@ function ModelsPage({ models, loadModels, addToast }) {
                     </span>
 
                     <button className="btn btn-sm" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '13px' }} onClick={(e) => { e.stopPropagation(); openEditModal(model); }} title="Düzenle">✏️</button>
-
+                    <button className="btn btn-sm" style={{ background: 'rgba(39,174,96,0.15)', color: '#27ae60', border: '1px solid rgba(39,174,96,0.3)', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '13px' }} onClick={async (e) => { e.stopPropagation(); if (!confirm(`"${model.name}" modelini kopyalamak istiyor musunuz?`)) return; try { const res = await fetch('/api/models', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...model, name: model.name + ' — KOPYA', code: model.code + '-K', id: undefined, created_at: undefined }) }); if (!res.ok) throw new Error('Kopyalama hatası'); await loadModels(); addToast('success', '✅ Model kopyalandı'); } catch (err) { addToast('error', err.message); } }} title="Modeli Kopyala">📋</button>
                     <button className="btn btn-sm" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '6px', padding: '4px 10px', cursor: 'pointer', fontSize: '13px' }} onClick={(e) => { e.stopPropagation(); openAuditHistory(model.id); }} title="Değişiklik Geçmişi">📜</button>
-
                     <button className="btn btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); handleDeleteModel(model.id); }}>🗑️</button>
 
                   </div>
@@ -11379,6 +11559,263 @@ function CostsPage({ models, personnel, addToast }) {
 
 
 
+// ========== ÜRETİM BÖLÜMÜ MUHASEBE DEPARTMANI ==========
+
+function MuhasebeDepartmaniPage({ models, personnel, addToast }) {
+  const [rapor, setRapor] = React.useState(null);
+  const [yukleniyor, setYukleniyor] = React.useState(true);
+  const [aiRapor, setAiRapor] = React.useState('');
+  const [aiYukleniyor, setAiYukleniyor] = React.useState(false);
+  const [aktifBolum, setAktifBolum] = React.useState('ozet');
+
+  React.useEffect(() => {
+    const veriCek = async () => {
+      setYukleniyor(true);
+      try {
+        const bugun = new Date().toISOString().split('T')[0];
+        const [ordersRes, prodRes, costsRes, uretimRes] = await Promise.all([
+          fetch('/api/orders').then(r => r.json()),
+          fetch('/api/production').then(r => r.json()),
+          fetch('/api/costs').then(r => r.json()),
+          fetch(`/api/uretim-ozet?tarih=${bugun}`).then(r => r.json()),
+        ]);
+        const orders = Array.isArray(ordersRes) ? ordersRes : [];
+        const prod = Array.isArray(prodRes) ? prodRes : [];
+        const costs = Array.isArray(costsRes) ? costsRes : [];
+        const uretimOzet = uretimRes || {};
+        const toplamUretim = prod.reduce((s, p) => s + (p.total_produced || 0), 0);
+        const toplamHata = prod.reduce((s, p) => s + (p.defective_count || 0), 0);
+        const toplamMaliyet = costs.reduce((s, c) => s + (c.total || c.amount || 0), 0);
+        setRapor({
+          siparis: {
+            toplam: orders.length,
+            aktif: orders.filter(o => !['tamamlandi', 'iptal'].includes(o.status)).length,
+            gecikmus: orders.filter(o => o.delivery_date && new Date(o.delivery_date) < new Date() && !['tamamlandi', 'iptal'].includes(o.status)).length,
+            tamamlanan: orders.filter(o => o.status === 'tamamlandi').length,
+          },
+          model: { toplam: models.length },
+          uretim: {
+            bugunUretim: uretimOzet.toplam_uretim || 0,
+            hedefYuzdesi: uretimOzet.hedef_yuzdesi || 0,
+            fpy: uretimOzet.fpy || 100,
+            toplamUretim, toplamHata,
+            hataOrani: toplamUretim > 0 ? ((toplamHata / toplamUretim) * 100).toFixed(1) : 0,
+          },
+          personel: {
+            toplam: personnel.length,
+            aktif: personnel.filter(p => p.status === 'active').length,
+          },
+          maliyet: { toplam: toplamMaliyet.toFixed(0) },
+        });
+      } catch (err) { console.error('Muhasebe veri hatası:', err); }
+      finally { setYukleniyor(false); }
+    };
+    veriCek();
+  }, [models, personnel]);
+
+  const aiRaporOlustur = async () => {
+    if (!rapor) return;
+    setAiYukleniyor(true);
+    try {
+      const res = await fetch('/api/chatbot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Fabrika yöneticisi için kapsamlı haftalık rapor hazırla. Veriler:\n- Aktif sipariş: ${rapor.siparis.aktif}, Gecikmiş: ${rapor.siparis.gecikmus}\n- Toplam model: ${rapor.model.toplam}\n- Bugün üretim: ${rapor.uretim.bugunUretim} adet, Hedef: %${rapor.uretim.hedefYuzdesi}, FPY: %${rapor.uretim.fpy}\n- Hata oranı: %${rapor.uretim.hataOrani}\n- Aktif personel: ${rapor.personel.aktif}/${rapor.personel.toplam}\n- Toplam maliyet kaydı: ${rapor.maliyet.toplam} TL\n\nÖnemli bulgular, riskler ve 3 somut öneri ver. Türkçe, özlü, yönetim kurulu düzeyi.`
+        })
+      });
+      const data = await res.json();
+      setAiRapor(data.reply || 'Rapor oluşturulamadı.');
+    } catch { setAiRapor('Rapor oluşturulamadı.'); }
+    finally { setAiYukleniyor(false); }
+  };
+
+  const bolumler = [
+    { id: 'ozet', label: '📊 Genel Özet' },
+    { id: 'siparis', label: '📋 Siparişler' },
+    { id: 'model', label: '👗 Modeller' },
+    { id: 'uretim', label: '🏭 Üretim' },
+    { id: 'personel', label: '👥 Personel' },
+    { id: 'final', label: '🤖 Final Raporu' },
+  ];
+
+  if (yukleniyor) return (
+    <div style={{ padding: '40px', textAlign: 'center' }}>
+      <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
+      <div style={{ fontSize: '18px', color: 'var(--text-muted)' }}>Veriler yükleniyor...</div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div className="topbar">
+        <div>
+          <div className="topbar-title">📊 Üretim Bölümü — Muhasebe Departmanı</div>
+          <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            4 panelin iş analizi — {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </div>
+        </div>
+        <button className="btn btn-primary" onClick={aiRaporOlustur} disabled={aiYukleniyor}>
+          {aiYukleniyor ? '⏳ Hazırlanıyor...' : '🤖 AI Final Raporu Oluştur'}
+        </button>
+      </div>
+
+      <div className="page-content">
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          {bolumler.map(b => (
+            <button key={b.id} onClick={() => setAktifBolum(b.id)} style={{
+              padding: '10px 18px', borderRadius: '10px', cursor: 'pointer', fontFamily: 'inherit',
+              background: aktifBolum === b.id ? 'var(--accent)' : 'var(--bg-card)',
+              color: aktifBolum === b.id ? '#fff' : 'var(--text-primary)',
+              fontWeight: '600', fontSize: '15px',
+              border: `1px solid ${aktifBolum === b.id ? 'var(--accent)' : 'var(--border-color)'}`,
+              transition: 'all 0.2s'
+            }}>{b.label}</button>
+          ))}
+        </div>
+
+        {aktifBolum === 'ozet' && rapor && (
+          <div>
+            <div className="stats-grid">
+              {[
+                { icon: '📋', val: rapor.siparis.aktif, label: 'Aktif Sipariş', sub: rapor.siparis.gecikmus > 0 ? `⚠️ ${rapor.siparis.gecikmus} gecikmiş` : null, subColor: 'var(--danger)' },
+                { icon: '👗', val: rapor.model.toplam, label: 'Toplam Model' },
+                { icon: '🏭', val: rapor.uretim.bugunUretim, label: 'Bugünkü Üretim', sub: `Hedef: %${rapor.uretim.hedefYuzdesi}`, subColor: rapor.uretim.hedefYuzdesi >= 80 ? 'var(--success)' : 'var(--warning)' },
+                { icon: '👥', val: rapor.personel.aktif, label: 'Aktif Personel' },
+                { icon: '✅', val: `%${rapor.uretim.fpy}`, label: 'FPY Verimi' },
+                { icon: '⚠️', val: `%${rapor.uretim.hataOrani}`, label: 'Hata Oranı', valColor: parseFloat(rapor.uretim.hataOrani) > 5 ? 'var(--danger)' : 'var(--success)' },
+              ].map((s, i) => (
+                <div key={i} className="stat-card">
+                  <div className="stat-icon">{s.icon}</div>
+                  <div className="stat-value" style={s.valColor ? { color: s.valColor } : {}}>{s.val}</div>
+                  <div className="stat-label">{s.label}</div>
+                  {s.sub && <div style={{ color: s.subColor, fontSize: '13px', marginTop: '4px' }}>{s.sub}</div>}
+                </div>
+              ))}
+            </div>
+            {rapor.siparis.gecikmus > 0 && (
+              <div style={{ padding: '16px 20px', background: 'var(--danger-bg)', border: '1px solid var(--danger)', borderRadius: 'var(--radius-md)', marginTop: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '28px' }}>🚨</span>
+                <div>
+                  <div style={{ fontWeight: '700', color: 'var(--danger)', fontSize: '16px' }}>{rapor.siparis.gecikmus} Gecikmiş Sipariş!</div>
+                  <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '2px' }}>Müşteri ilişkileri riski — acil aksiyon gerekiyor.</div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {aktifBolum === 'siparis' && rapor && (
+          <div className="card">
+            <div className="card-header"><div className="card-title">📋 Sipariş Analizi</div></div>
+            <div className="stats-grid">
+              {[
+                { label: 'Toplam Sipariş', val: rapor.siparis.toplam },
+                { label: 'Aktif', val: rapor.siparis.aktif },
+                { label: 'Tamamlanan', val: rapor.siparis.tamamlanan },
+                { label: 'Gecikmiş', val: rapor.siparis.gecikmus },
+              ].map((s, i) => (
+                <div key={i} className="stat-card">
+                  <div className="stat-value">{s.val}</div>
+                  <div className="stat-label">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {aktifBolum === 'model' && (
+          <div className="card">
+            <div className="card-header"><div className="card-title">👗 Model Analizi</div></div>
+            <div className="table-wrapper">
+              <table className="table">
+                <thead><tr><th>Model</th><th>Müşteri</th><th>Sipariş Adedi</th><th>Fason Fiyat</th><th>Zorluk</th></tr></thead>
+                <tbody>
+                  {models.slice(0, 15).map(m => (
+                    <tr key={m.id}>
+                      <td><strong>{m.name}</strong><br /><span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{m.code}</span></td>
+                      <td>{m.customer || '—'}</td>
+                      <td>{m.total_order || 0}</td>
+                      <td>{m.fason_price ? m.fason_price + ' ₺' : '—'}</td>
+                      <td>{m.model_difficulty || 5}/10</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {aktifBolum === 'uretim' && rapor && (
+          <div className="card">
+            <div className="card-header"><div className="card-title">🏭 Üretim Performans Analizi</div></div>
+            <div className="stats-grid">
+              {[
+                { label: 'Bugün Üretim', val: rapor.uretim.bugunUretim + ' adet' },
+                { label: 'Hedef', val: '%' + rapor.uretim.hedefYuzdesi },
+                { label: 'FPY', val: '%' + rapor.uretim.fpy },
+                { label: 'Toplam Hata', val: rapor.uretim.toplamHata + ' adet' },
+                { label: 'Hata Oranı', val: '%' + rapor.uretim.hataOrani },
+              ].map((s, i) => (
+                <div key={i} className="stat-card">
+                  <div className="stat-value">{s.val}</div>
+                  <div className="stat-label">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {aktifBolum === 'personel' && (
+          <div className="card">
+            <div className="card-header"><div className="card-title">👥 Personel Analizi</div></div>
+            <div className="stats-grid" style={{ marginBottom: '20px' }}>
+              <div className="stat-card"><div className="stat-value">{personnel.length}</div><div className="stat-label">Toplam</div></div>
+              <div className="stat-card"><div className="stat-value" style={{ color: 'var(--success)' }}>{personnel.filter(p => p.status === 'active').length}</div><div className="stat-label">Aktif</div></div>
+            </div>
+            <div className="table-wrapper">
+              <table className="table">
+                <thead><tr><th>Ad Soyad</th><th>Görev</th><th>Seviye</th><th>Durum</th></tr></thead>
+                <tbody>
+                  {personnel.slice(0, 15).map(p => (
+                    <tr key={p.id}>
+                      <td><strong>{p.name}</strong></td>
+                      <td>{p.role || '—'}</td>
+                      <td>{p.skill_level || 'başlangıç'}</td>
+                      <td><span className={`badge badge-${p.status === 'active' ? 'success' : 'warning'}`}>{p.status === 'active' ? '✅ Aktif' : '⏸ Pasif'}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {aktifBolum === 'final' && (
+          <div className="card">
+            <div className="card-header"><div className="card-title">🤖 AI Destekli Final Raporu</div></div>
+            {!aiRapor ? (
+              <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+                <div style={{ fontSize: '52px', marginBottom: '16px' }}>🤖</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px' }}>Final Raporu Hazır Değil</div>
+                <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '24px' }}>Fabrika verilerini analiz edip yönetim kurulu düzeyinde rapor hazırlayacağım.</div>
+                <button className="btn btn-primary btn-lg" onClick={aiRaporOlustur} disabled={aiYukleniyor}>
+                  {aiYukleniyor ? '⏳ Analiz yapılıyor...' : '🚀 AI Final Raporu Oluştur'}
+                </button>
+              </div>
+            ) : (
+              <div style={{ padding: '24px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', lineHeight: '1.9', fontSize: '15px', whiteSpace: 'pre-wrap' }}>
+                {aiRapor}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 // ========== MAIN APP ==========
 
 export default function Home() {
@@ -11390,6 +11827,8 @@ export default function Home() {
   const [personnel, setPersonnel] = useState([]);
 
   const [toasts, setToasts] = useState([]);
+
+  const [chatbotAcik, setChatbotAcik] = useState(false);
 
 
 
@@ -11457,6 +11896,8 @@ export default function Home() {
 
       case 'costs': return <CostsPage models={models} personnel={personnel} addToast={addToast} />;
 
+      case 'muhasebe': return <MuhasebeDepartmaniPage models={models} personnel={personnel} addToast={addToast} />;
+
       default: return <DashboardPage models={models} personnel={personnel} />;
 
     }
@@ -11469,7 +11910,7 @@ export default function Home() {
 
     <div className="app-layout">
 
-      <Sidebar activePage={activePage} setActivePage={setActivePage} />
+      <Sidebar activePage={activePage} setActivePage={setActivePage} onChatbotToggle={() => setChatbotAcik(prev => !prev)} />
 
       <main className="main-content">
 
@@ -11478,6 +11919,8 @@ export default function Home() {
       </main>
 
       <Toast toasts={toasts} />
+
+      {chatbotAcik && <ChatbotPanel onClose={() => setChatbotAcik(false)} />}
 
     </div>
 

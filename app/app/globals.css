@@ -58,6 +58,7 @@
 html,
 body {
   height: 100%;
+  font-size: 16px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -100,13 +101,13 @@ body {
 }
 
 .sidebar-logo-text {
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 700;
   color: #fff;
 }
 
 .sidebar-logo-sub {
-  font-size: 11px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.45);
   margin-top: 2px;
 }
@@ -118,24 +119,24 @@ body {
 }
 
 .nav-section-title {
-  font-size: 13px;
+  font-size: 14px;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 1.2px;
+  color: rgba(255, 255, 255, 0.4);
   padding: 16px 14px 8px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 13px 14px;
   border-radius: var(--radius-sm);
   color: var(--text-sidebar);
   cursor: pointer;
   transition: all 0.25s ease;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   border: none;
   background: none;
@@ -155,8 +156,8 @@ body {
 }
 
 .nav-item-icon {
-  font-size: 22px;
-  width: 24px;
+  font-size: 24px;
+  width: 28px;
   text-align: center;
 }
 
@@ -180,7 +181,7 @@ body {
 }
 
 .topbar-title {
-  font-size: 21px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -219,19 +220,19 @@ body {
 }
 
 .stat-icon {
-  font-size: 28px;
+  font-size: 32px;
   margin-bottom: 10px;
 }
 
 .stat-value {
-  font-size: 30px;
+  font-size: 34px;
   font-weight: 700;
   color: var(--accent);
   margin-bottom: 4px;
 }
 
 .stat-label {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -258,7 +259,7 @@ body {
 }
 
 .card-title {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -268,9 +269,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
+  padding: 12px 22px;
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.25s ease;
@@ -312,13 +313,13 @@ body {
 }
 
 .btn-sm {
-  padding: 7px 14px;
-  font-size: 13px;
+  padding: 8px 16px;
+  font-size: 14px;
 }
 
 .btn-lg {
-  padding: 14px 28px;
-  font-size: 16px;
+  padding: 16px 30px;
+  font-size: 18px;
 }
 
 /* ===== FORMS ===== */
@@ -328,10 +329,10 @@ body {
 
 .form-label {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-secondary);
-  margin-bottom: 6px;
+  margin-bottom: 7px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -340,12 +341,12 @@ body {
 .form-select,
 .form-textarea {
   width: 100%;
-  padding: 11px 16px;
+  padding: 13px 16px;
   background: var(--bg-input);
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 15px;
   font-family: inherit;
   transition: all 0.25s ease;
   outline: none;
@@ -390,9 +391,9 @@ body {
 
 .table th {
   background: var(--accent-soft);
-  padding: 14px 16px;
+  padding: 15px 18px;
   text-align: left;
-  font-size: 13px;
+  font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
@@ -401,9 +402,9 @@ body {
 }
 
 .table td {
-  padding: 14px 16px;
+  padding: 15px 18px;
   border-bottom: 1px solid rgba(212, 221, 210, 0.5);
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-primary);
 }
 
@@ -419,9 +420,9 @@ body {
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
