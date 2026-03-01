@@ -1,121 +1,137 @@
 ════════════════════════════════════════════════════════════════
-⚔️ MK:4721 — ASKER GÖREVİ — MODELLER BÖLÜMÜ TAM UYGULAMA
-GN:017A-REV | 01 Mart 2026
-YETKİ: Üsteğmen (Antigravity/Claude) tarafından verilmiştir.
-Üsteğmene ulaşmak için: yeni kod yazmadan önce MODELLER-OZELLIK-LISTESI.md dosyasını oku.
+⚔️ MK:4721 — FİNAL ASKER GÖREVİ — MODELLER BÖLÜMÜ
+GN:019-FİNAL | 01 Mart 2026 | Kurul Onaylı
+YETKİ: Üsteğmen + Komutan tarafından verilmiştir.
 ════════════════════════════════════════════════════════════════
 
 PROJE: C:\Users\Admin\Desktop\Kamera-Panel
-DOSYA: app/app/page.js (başlıca)
-SERVER: npm run dev çalışıyor (app/ klasöründe)
+SERVER: npm run dev — app/ klasöründe çalışıyor
 TEST: <http://localhost:3000>
 
 ÖNCELİKLE OKU:
 
-1. MODELLER-OZELLIK-LISTESI.md — Tam özellik listesi
-2. PROJE-AMACI-MK4721.md — Proje amacı ve ekip yapısı
-3. agent-team/KURALLAR.md — Genel kurallar
+- MODELLER-OZELLIK-LISTESI.md (TAM LİSTE — KURUL ONAYLI)
+- PROJE-AMACI-MK4721.md
 
 ════════════════════════
-PAZARTESİ KRİTİK GÖREVLERİN (önce bunları yap):
+📋 PAZARTESİ ZORUNLU — ASKER YAPACAK
 ════════════════════════
 
 ─────────────────────────────────────
-GÖREV 1 — C1: Beden Sayısı TEXT yap
+✅ GÖREV 1 — C1: BEDEN SAYISI TEXT YAP
 ─────────────────────────────────────
-page.js → NewModelModal içinde beden_sayisi:
-  type="number" → type="text" (boşluk kabul etmeli: "S M L XL" veya "36 38 40")
-
-─────────────────────────────────────
-GÖREV 2 — F2: Dikim Operasyonu Makine Tipi Satırları
-─────────────────────────────────────
-NewModelModal içindeki dikim operasyonu bölümünü bul.
-ŞU AN nasıl çalışıyor? (tek input mu, çoklu mu?) → Bul, oku.
-
-OLMASI GEREKEN yapı:
-Her satır = Makine tipi + Adet + Detay + Sil butonu
-Alt kısım = + Satır Ekle butonu
-
-```javascript
-// State
-const [dikimSatirlari, setDikimSatirlari] = useState([
-  { tip: 'duz', adet: 1, detay: '' }
-]);
-
-const makineTipleri = [
-  { key: 'duz', label: '🔵 Düz Makina' },
-  { key: 'overlok', label: '🟢 Overlok' },
-  { key: 'recme', label: '🟡 Reçme' },
-  { key: 'biye', label: '🟠 Biye Makinası' },
-  { key: 'dugme', label: '⚫ Düğme Makinası' },
-  { key: 'elle', label: '🤚 Elle Yapılır' },
-  { key: 'diger', label: '⚪ Diğer' },
-];
-
-// UI
-{dikimSatirlari.map((satir, i) => (
-  <div key={i} style={{display:'flex',gap:'8px',marginBottom:'6px',alignItems:'center'}}>
-    <select className="form-input" style={{flex:'0 0 160px'}} value={satir.tip}
-      onChange={e=>{const yeni=[...dikimSatirlari];yeni[i]={...yeni[i],tip:e.target.value};setDikimSatirlari(yeni);}}>
-      {makineTipleri.map(m=><option key={m.key} value={m.key}>{m.label}</option>)}
-    </select>
-    <input type="number" className="form-input" style={{width:'70px'}} placeholder="Adet" min="1" value={satir.adet}
-      onChange={e=>{const yeni=[...dikimSatirlari];yeni[i]={...yeni[i],adet:e.target.value};setDikimSatirlari(yeni);}} />
-    <input className="form-input" style={{flex:1}} placeholder="İşlem detayı..." value={satir.detay}
-      onChange={e=>{const yeni=[...dikimSatirlari];yeni[i]={...yeni[i],detay:e.target.value};setDikimSatirlari(yeni);}} />
-    <button onClick={()=>setDikimSatirlari(dikimSatirlari.filter((_,ii)=>ii!==i))}
-      style={{padding:'0 10px',height:'36px',background:'rgba(231,76,60,0.15)',border:'none',borderRadius:'6px',cursor:'pointer'}}>✕</button>
-  </div>
-))}
-<button onClick={()=>setDikimSatirlari([...dikimSatirlari,{tip:'duz',adet:1,detay:''}])}
-  style={{padding:'6px 14px',background:'rgba(52,152,219,0.12)',border:'1px dashed rgba(52,152,219,0.4)',borderRadius:'6px',cursor:'pointer',fontSize:'12px'}}>
-  + Makine Satırı Ekle
-</button>
-```
+page.js → NewModelModal → beden_sayisi input:
+  type="number" → type="text"
+  placeholder → "S M L XL  veya  36 38 40 42"
 
 ─────────────────────────────────────
-GÖREV 3 — D1/D2: Parça Listesi
+✅ GÖREV 2 — F2: MAKİNE TİPİ SATIRLARI
 ─────────────────────────────────────
-NewModelModal'da "Parça Listesi" bölümü YOKSA ekle:
+NewModelModal → dikim operasyonu bölümü:
+Her satır: [Makine Tipi Select] [Adet] [Detay] [Sil]
+Alt: + Makine Satırı Ekle butonu
+
+Makine tipleri:
+🔵 Düz Makina | 🟢 Overlok | 🟡 Reçme | 🟠 Biye | ⚫ Düğme | 🤚 Elle | ⚪ Diğer
+
+─────────────────────────────────────
+✅ GÖREV 3 — D1/D2: PARÇA LİSTESİ
+─────────────────────────────────────
+NewModelModal'a parça listesi bölümü ekle:
+Her satır: [Parça adı] [Sil]
+Alt: + Parça Ekle butonu
+
+─────────────────────────────────────
+✅ GÖREV 4 — BOM: HAMMADDE REÇETESİ
+─────────────────────────────────────
+NewModelModal'a "Malzeme" bölümü ekle:
 
 ```jsx
 <div style={{marginTop:'14px',padding:'12px',background:'var(--bg-input)',borderRadius:'8px'}}>
-  <div style={{fontWeight:'700',fontSize:'13px',marginBottom:'8px'}}>🧩 Parça Listesi</div>
-  {(form.parcalar||[]).map((p,i)=>(
-    <div key={i} style={{display:'flex',gap:'8px',marginBottom:'6px'}}>
-      <input className="form-input" style={{flex:1}} placeholder={`Parça ${i+1} (Ön beden, Sol kol...)`}
-        value={p.ad||''} onChange={e=>{const yeni=[...(form.parcalar||[])];yeni[i]={...yeni[i],ad:e.target.value};setForm(f=>({...f,parcalar:yeni}));}} />
-      <button onClick={()=>setForm(f=>({...f,parcalar:(f.parcalar||[]).filter((_,ii)=>ii!==i)}))}
-        style={{padding:'0 10px',background:'rgba(231,76,60,0.15)',border:'none',borderRadius:'6px',cursor:'pointer'}}>✕</button>
+  <div style={{fontWeight:'700',fontSize:'13px',marginBottom:'8px'}}>📦 Hammadde Reçetesi (BOM)</div>
+  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
+    <div>
+      <label style={{fontSize:'11px',color:'var(--text-muted)'}}>Kumaş Miktarı (m/100 adet)</label>
+      <input type="number" step="0.1" className="form-input" placeholder="85.5"
+        value={form.kumas_metre||''} onChange={e=>setForm(f=>({...f,kumas_metre:e.target.value}))} />
     </div>
-  ))}
-  <button onClick={()=>setForm(f=>({...f,parcalar:[...(f.parcalar||[]),{ad:''}]}))}
-    style={{padding:'6px 14px',background:'rgba(52,152,219,0.12)',border:'1px dashed rgba(52,152,219,0.4)',borderRadius:'6px',cursor:'pointer',fontSize:'12px'}}>
-    + Parça Ekle
-  </button>
+    <div>
+      <label style={{fontSize:'11px',color:'var(--text-muted)'}}>Fire Oranı %</label>
+      <input type="number" step="0.1" className="form-input" placeholder="5"
+        value={form.fire_oran||''} onChange={e=>setForm(f=>({...f,fire_oran:e.target.value}))} />
+    </div>
+    <div>
+      <label style={{fontSize:'11px',color:'var(--text-muted)'}}>Düğme Adedi (adet/ürün)</label>
+      <input type="number" className="form-input" placeholder="7"
+        value={form.dugme_adet||''} onChange={e=>setForm(f=>({...f,dugme_adet:e.target.value}))} />
+    </div>
+    <div>
+      <label style={{fontSize:'11px',color:'var(--text-muted)'}}>Fermuar Adedi</label>
+      <input type="number" className="form-input" placeholder="1"
+        value={form.fermuar_adet||''} onChange={e=>setForm(f=>({...f,fermuar_adet:e.target.value}))} />
+    </div>
+  </div>
+  <div style={{marginTop:'8px',fontSize:'12px',color:'var(--accent)',fontWeight:'600'}}>
+    Net kumaş: {form.kumas_metre && form.fire_oran ?
+      ((parseFloat(form.kumas_metre)||0) * (1 + (parseFloat(form.fire_oran)||0)/100)).toFixed(1) + ' m/100 adet (fire dahil)' : '—'}
+  </div>
 </div>
 ```
 
+models tablosuna sütun ekle (lib/db.js veya API içinde):
+kumas_metre REAL, fire_oran REAL, dugme_adet INTEGER, fermuar_adet INTEGER
+
 ─────────────────────────────────────
-GÖREV 4 — E3/E4: Arka fotoğraf alanı
+✅ GÖREV 5 — KK: KALİTE KONTROLEKRİTERLERİ
 ─────────────────────────────────────
-Teknik Föy sekmesinde şu an sadece 1 fotoğraf yükleme varsa:
-Ön görünüş + Arka görünüş + Detay fotoğrafı için 3 ayrı upload alanı ekle.
+NewModelModal'a "Kalite" bölümü ekle:
+
+```jsx
+<div style={{marginTop:'14px',padding:'12px',background:'var(--bg-input)',borderRadius:'8px'}}>
+  <div style={{fontWeight:'700',fontSize:'13px',marginBottom:'8px'}}>✅ Kalite Kriterleri</div>
+  <div>
+    <label style={{fontSize:'11px',color:'var(--text-muted)'}}>Ölçü Toleransı (±cm)</label>
+    <input type="number" step="0.5" className="form-input" style={{width:'80px'}} placeholder="1"
+      value={form.olcu_tolerans||''} onChange={e=>setForm(f=>({...f,olcu_tolerans:e.target.value}))} />
+  </div>
+  <div style={{marginTop:'8px'}}>
+    <label style={{fontSize:'11px',color:'var(--text-muted)'}}>Kabul Edilemez Kusurlar</label>
+    <textarea className="form-input" style={{minHeight:'60px'}} 
+      placeholder="Dikiş ayrılması, renk sapması >1 ton, beden hatası >1cm..."
+      value={form.kusur_kriterleri||''} onChange={e=>setForm(f=>({...f,kusur_kriterleri:e.target.value}))} />
+  </div>
+</div>
+```
+
+models tablosuna: olcu_tolerans REAL, kusur_kriterleri TEXT
+
+════════════════════════
+🧪 TEST YETKİSİ VE SORUMLULUĞU
+════════════════════════
+
+Her görev sonrası HEMEN TEST ET:
+
+1. localhost:3000 → Modeller
+2. Yeni Model Oluştur butonuna bas
+3. İlgili alanı doldur
+4. Kaydet
+5. Listede görünüyor mu? Kontrol et
+6. Aynı modeli düzenle → değişiklik kalıcı mı?
+
+⚠️ KURAL: Testi geçmeyen kod commit edilmez.
 
 ════════════════════════
 RAPOR FORMATI
 ════════════════════════
 
 Her görev için:
-✅/❌ [Görev numarası]: [Ne yaptım] — [Hangi satırda, ne değiştirdim]
+✅ GÖREV [N] TAMAMLANDI
 
-Hata aldıysam:
-❌ [Görev]: [Hata mesajı] — [Ne denedim]
+- Yaptığım: [kısa açıklama]
+- Test sonucu: ✅ Çalışıyor / ❌ Hata: [ne oldu]
+- Commit: [commit hash]
 
-Yapamadıklarım:
-[Görev]: [Neden yapamadım] — [Üsteğmene bildir]
+GİT: git add -A && git commit -m "Modeller-Final: G[N]-[açıklama]" && git push
 
-GİT: git add -A && git commit -m "Modeller: beden-text+makine-tipi+parca-listesi+arka-foto" && git push
-
-TAMAMLAYINCA: "ASKER GN:017A MODELLER PAZARTESİ GÖREVLERİ TAMAMLANDI"
+TAMAMLAYINCA: "ASKER GN:019-FİNAL MODELLER PAZARTESİ GÖREVLERİ TAMAMLANDI"
 ════════════════════════════════════════════════════════════════
