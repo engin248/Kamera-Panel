@@ -456,6 +456,11 @@ function NewModelModal({ onClose, onSave }) {
       total_operations: '',
       op_kesim_count: '', op_kesim_details: '',
       op_dikim_count: '', op_dikim_details: '',
+      op_dikim_rows: [
+        { id: 1, makine: 'Düz Makina', adet: '', detay: '' },
+        { id: 2, makine: 'Overlok', adet: '', detay: '' },
+        { id: 3, makine: 'Reçme', adet: '', detay: '' },
+      ],
       op_utu_paket_count: '', op_utu_paket_details: '',
       op_nakis_count: '', op_nakis_details: '',
       op_yikama_count: '', op_yikama_details: '',
@@ -524,8 +529,15 @@ function NewModelModal({ onClose, onSave }) {
     if (!form.name || !form.code) return;
     setSaving(true);
     try {
+      // Dikim toplam adet — satırlardan otomatik hesapla
+      const dikimToplam = form.op_dikim_rows.reduce((s, r) => s + (parseInt(r.adet) || 0), 0);
+      // Dikim detay özeti — satırlardan oluştur
+      const dikimDetay = form.op_dikim_rows
+        .filter(r => r.makine || r.adet)
+        .map(r => `${r.makine}${r.adet ? ': ' + r.adet + ' adet' : ''}${r.detay ? ' (' + r.detay + ')' : ''}`)
+        .join(', ');
       // Toplam operasyon = alt kırılımların toplamı (otomatik hesapla)
-      const autoTotalOps = (parseInt(form.op_kesim_count) || 0) + (parseInt(form.op_dikim_count) || 0) +
+      const autoTotalOps = (parseInt(form.op_kesim_count) || 0) + dikimToplam +
         (parseInt(form.op_utu_paket_count) || 0) + (parseInt(form.op_nakis_count) || 0) + (parseInt(form.op_yikama_count) || 0);
       await onSave({
         ...form,
@@ -536,7 +548,9 @@ function NewModelModal({ onClose, onSave }) {
         has_interlining: form.has_interlining ? 1 : 0,
         lining_pieces: parseInt(form.lining_pieces) || 0,
         color_count: parseInt(form.color_count) || 0,
-        size_count: parseInt(form.size_count) || 0,
+        size_count: form.size_count,
+        op_dikim_count: dikimToplam,
+        op_dikim_details: dikimDetay,
         total_operations: autoTotalOps || parseInt(form.total_operations) || 0,
         piece_count: parseInt(form.piece_count) || 0,
       });
@@ -1066,7 +1080,7 @@ function NewModelModal({ onClose, onSave }) {
             {/* MADDE 4: Beden Sayısı + Dağılım */}
             <div className="form-group">
               <label className="form-label">📐 Beden Sayısı & Dağılımı</label>
-              {VI('size_count', 'Kaç beden? (rakam)', 'number')}
+              {VI('size_count', 'Kaç beden? (örn: 4)', 'text')}
               <div style={{ marginTop: '6px' }}>{VI('size_distribution', 'Dağılım (örn: S:1, M:2, L:2, XL:1)')}</div>
             </div>
 
@@ -1095,12 +1109,81 @@ function NewModelModal({ onClose, onSave }) {
             </div>
 
             {/* Dikim */}
-            <div style={{ marginBottom: '10px', padding: '10px', background: 'rgba(155,89,182,0.06)', borderRadius: '8px', border: '1px solid rgba(155,89,182,0.15)' }}>
-              <label style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', marginBottom: '6px', display: 'block' }}>🧵 Dikim Operasyonu</label>
-              <div className="form-row" style={{ gap: '8px', marginBottom: '0' }}>
-                <input className="form-input" type="number" placeholder="Adet" value={form.op_dikim_count} onChange={e => setForm({ ...form, op_dikim_count: e.target.value })} style={{ maxWidth: '80px' }} />
-                {VI('op_dikim_details', 'Detay (örn: Düz dikiş, Overlok, Reçme, Çift iğne...)')}
+            <div style={{ marginBottom: '10px', padding: '12px', background: 'rgba(155,89,182,0.06)', borderRadius: '8px', border: '1px solid rgba(155,89,182,0.15)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <label style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', margin: 0 }}>🧵 Dikim Operasyonu</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '12px', color: '#8e44ad', fontWeight: '600' }}>
+                    Toplam: {form.op_dikim_rows.reduce((s, r) => s + (parseInt(r.adet) || 0), 0) || '--'} adet
+                  </span>
+                  <button type="button"
+                    onClick={() => setForm(prev => ({ ...prev, op_dikim_rows: [...prev.op_dikim_rows, { id: Date.now(), makine: '', adet: '', detay: '' }] }))}
+                    style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '6px', border: '1px solid #8e44ad', background: 'rgba(142,68,173,0.12)', color: '#8e44ad', cursor: 'pointer', fontWeight: '700' }}
+                  >+ Satır Ekle</button>
+                </div>
               </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '28px 140px 64px 1fr 28px', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
+                <span></span>
+                <span style={{ fontSize: '11px', color: '#8e44ad', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Makine Tipi</span>
+                <span style={{ fontSize: '11px', color: '#8e44ad', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Adet</span>
+                <span style={{ fontSize: '11px', color: '#8e44ad', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Açıklama / Detay</span>
+                <span></span>
+              </div>
+              {form.op_dikim_rows.map((row, idx) => (
+                <div key={row.id} style={{ display: 'grid', gridTemplateColumns: '28px 140px 64px 1fr 28px', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '13px', color: '#8e44ad', fontWeight: '700', textAlign: 'center' }}>{idx + 1}</span>
+                  <select
+                    className="form-input"
+                    value={row.makine}
+                    onChange={e => {
+                      const rows = form.op_dikim_rows.map((r, i) => i === idx ? { ...r, makine: e.target.value } : r);
+                      setForm({ ...form, op_dikim_rows: rows });
+                    }}
+                    style={{ fontSize: '12px', padding: '6px 8px' }}
+                  >
+                    <option value="">Makine seç...</option>
+                    <option value="Düz Makina">🖥️ Düz Makina</option>
+                    <option value="Overlok">⚙️ Overlok</option>
+                    <option value="Reçme">🔩 Reçme</option>
+                    <option value="Çift İğne">🪡 Çift İğne</option>
+                    <option value="Zincir Dikiş">🔗 Zincir Dikiş</option>
+                    <option value="Nakış Makinesi">✨ Nakış Makinesi</option>
+                    <option value="Diğer">📌 Diğer</option>
+                  </select>
+                  <input
+                    className="form-input"
+                    type="number"
+                    placeholder="Adet"
+                    min="0"
+                    value={row.adet}
+                    onChange={e => {
+                      const rows = form.op_dikim_rows.map((r, i) => i === idx ? { ...r, adet: e.target.value } : r);
+                      setForm({ ...form, op_dikim_rows: rows, op_dikim_count: rows.reduce((s, r) => s + (parseInt(r.adet) || 0), 0).toString() });
+                    }}
+                    style={{ fontSize: '12px', padding: '6px 8px' }}
+                  />
+                  <input
+                    className="form-input"
+                    type="text"
+                    placeholder="Açıklama (örn: Kol birleştirme, Yaka takma)"
+                    value={row.detay}
+                    onChange={e => {
+                      const rows = form.op_dikim_rows.map((r, i) => i === idx ? { ...r, detay: e.target.value } : r);
+                      setForm({ ...form, op_dikim_rows: rows });
+                    }}
+                    style={{ fontSize: '12px', padding: '6px 8px' }}
+                  />
+                  <button type="button"
+                    onClick={() => {
+                      if (form.op_dikim_rows.length === 1) return;
+                      const rows = form.op_dikim_rows.filter((_, i) => i !== idx);
+                      setForm({ ...form, op_dikim_rows: rows, op_dikim_count: rows.reduce((s, r) => s + (parseInt(r.adet) || 0), 0).toString() });
+                    }}
+                    title="Bu satırı sil"
+                    style={{ width: '26px', height: '26px', borderRadius: '50%', border: 'none', background: form.op_dikim_rows.length === 1 ? 'rgba(0,0,0,0.05)' : 'rgba(231,76,60,0.12)', color: form.op_dikim_rows.length === 1 ? '#ccc' : '#e74c3c', cursor: form.op_dikim_rows.length === 1 ? 'not-allowed' : 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >×</button>
+                </div>
+              ))}
             </div>
 
             {/* Ütü & Paket */}
