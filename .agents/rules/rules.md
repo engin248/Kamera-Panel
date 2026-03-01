@@ -65,14 +65,18 @@ Biz yarım bırakmayız. Test etmeden tamam demeyiz.
 
 ## ❌ KESİNLİKLE YAPILMAYACAKLAR
 
-1. **`.env.local` dosyasına dokunulMAZ** — API anahtarları var
-2. **`package.json` değiştirilMEZ** — yeni paket eklenmez (onay gerekir)
-3. **`node_modules/` klasörüne girilMEZ**
-4. **`next.config.mjs` değiştirilMEZ** — onay gerekir
-5. **`lib/db.js` → CREATE TABLE yapıları değiştirilMEZ** — sadece ALTER TABLE
-6. **Mevcut çalışan özellik kaldırılaMAZ** — sadece ekleme yapılır
-7. **Test edilmeden "tamam" denMEZ**
-8. **Rapor yazılmadan bir sonraki adıma geçilMEZ**
+1. **🔴 `git push` ASLA OTOMATİK YAPILMAZ** — Her push öncesi Engin Bey'e mutlaka sorulur
+   - ✅ `git add` → otomatik
+   - ✅ `git commit` → otomatik
+   - 🔴 `git push` → **ÖNCE SOR, ONAY GELİNCE YAP**
+2. **`.env.local` dosyasına dokunulMAZ** — API anahtarları var
+3. **`package.json` değiştirilMEZ** — yeni paket eklenmez (onay gerekir)
+4. **`node_modules/` klasörüne girilMEZ**
+5. **`next.config.mjs` değiştirilMEZ** — onay gerekir
+6. **`lib/db.js` → CREATE TABLE yapıları değiştirilMEZ** — sadece ALTER TABLE
+7. **Mevcut çalışan özellik kaldırılaMAZ** — sadece ekleme yapılır
+8. **Test edilmeden "tamam" denMEZ**
+9. **Rapor yazılmadan bir sonraki adıma geçilMEZ**
 
 ---
 

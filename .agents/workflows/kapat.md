@@ -64,7 +64,7 @@ Değişikliğe göre:
 
 ---
 
-## ADIM 5: GİT COMMIT & PUSH
+## ADIM 5: GİT COMMIT
 
 // turbo
 
@@ -85,12 +85,37 @@ Commit mesajı formatı:
 
 ```powershell
 git commit -m "[Mesaj]"
-git push origin main
 ```
 
 ---
 
-## ADIM 6: KAPANIŞ BİLDİRİMİ
+## ADIM 6: 🔴 PUSH ONAYI — ENGİN BEY'E SOR
+
+> **⚠️ GIT PUSH HİÇBİR ZAMAN OTOMATİK ÇALIŞMAZ.**  
+> Push yapmadan önce Engin Bey'e mutlaka sor.
+
+Kullanıcıya göster:
+
+```
+═══ PUSH ONAYI ═══
+Değişen dosyalar: [git status özeti]
+Commit mesajı: [mesaj]
+
+GitHub'a push yapılsın mı? (Evet / Hayır)
+═════════════════
+```
+
+Onay gelirse:
+
+```powershell
+git push origin main
+```
+
+Onay gelmezse: Push yapma, commit lokalde kalsın.
+
+---
+
+## ADIM 7: KAPANIŞ BİLDİRİMİ
 
 ```
 ✅ GÖREV TAMAMLANDI
@@ -98,6 +123,7 @@ git push origin main
 [Görev adı]
 Tarih: [Tarih]
 Commit: [Hash]
+Push: ✅ Yapıldı / ⏳ Bekliyor (Engin Bey onayı)
 Mimari Güncellendi: ✅
 
 Sonraki görev için /baslat komutu kullanın.
