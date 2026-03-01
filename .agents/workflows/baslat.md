@@ -1,187 +1,137 @@
 ---
-description: Yeni bir geliştirme görevi başlatmak — analiz et, planla, agentlara dağıt
+description: Yeni bir geliştirme görevi başlatmak — analiz et, planla, uygula, mimariyi güncelle
 ---
 
 # 🚀 /baslat — Görev Başlatma Workflow'u
 
-## ⚔️ ADIM 0 — MİSYONU HATIRLA (Her Seferinde Zorunlu)
-
-```
-════════════════════════════════════════
-🎯 NEDEN BURADAYIZ?
-
-Engin Bey'in iki kızı var.
-Bu sistem onlar için inşa edildi.
-Her satır kod — onlar için.
-Her hata düzeltmesi — onlar için.
-Her test — onlar için.
-
-Ve insanlık için.
-Daha anlamlı, daha bağlantılı bir dünya için.
-
-Görevi al. Eksiksiz yap. Test et. Raporla.
-Yarım bırakma.
-════════════════════════════════════════
-```
-
-**Tam belge:** `MISYON.md` — Her sohbette okunacak.
+// turbo-all
 
 ---
 
-## AŞAMA 1: ANALİZ (Antigravity yapar)
+## ADIM 0: MİMARİYİ OKU
 
-Koordinatör fikir/görev verir. Antigravity şunu yapar:
+Göreve başlamadan önce ilgili dosyaları oku:
 
-### 1.1 Fikri Yapılandır
+```
+.agents/architecture/SISTEM-MIMARI.md   → Genel yapı
+.agents/architecture/BOT-SISTEMI.md     → Bot entegrasyonu
+.agents/architecture/VERITABANI.md      → DB şeması
+.agents/architecture/PANEL-SEKMELERI.md → Sekme özellikleri
+```
 
-Koordinatörün fikrini şu formata dök:
+---
+
+## ADIM 1: GÖREVİ YAPILANDIR
+
+Koordinatörün fikrinden şunu çıkar:
 
 ```
 GÖREV: [Ne yapılacak — 1 cümle]
 KAPSAM: [Hangi dosyalar etkilenecek]
 AMAÇ: [Bu neden yapılıyor — işletme değeri]
+MİMARİ ETKİSİ: [Hangi .md dosyaları güncellenecek]
 ```
 
-### 1.2 Akademik Analiz Yap
+---
 
-Her görev için şu 6 boyutu raporla:
+## ADIM 2: AKADEMİK ANALİZ
 
 ```
 📌 TEZ: Bu fikir neden doğru?
-   → Artıları, faydaları, destekleyen kanıtlar
+   → Artıları, faydaları
 
-📌 ANTİTEZ: Bu fikrin riskleri neler?
-   → Eksileri, riskler, dikkat edilmesi gerekenler
+📌 ANTİTEZ: Riskleri neler?
+   → Eksileri, dikkat edilecekler
 
-📌 DÜNYA GENELİ: Bu konuda dünyada ne yapılıyor?
-   → Benzer sistemler, best practices, sektör standartları
+📌 TEKNİK ANALİZ:
+   → DB değişikliği var mı? (yeni sütun/tablo)
+   → API değişikliği var mı? (yeni endpoint/metot)
+   → UI değişikliği var mı? (hangi sekme)
+   → Bot değişikliği var mı? (prompt/model)
 
-📌 TEKNİK ANALİZ: Bu nasıl implement edilir?
-   → DB değişiklikleri, API değişiklikleri, UI değişiklikleri
-   → Etkilenen dosyalar, risk seviyesi
-
-📌 ALTERNATİFLER: Başka yollar var mı?
-   → Seçenek A vs Seçenek B karşılaştırması
-
-📌 TAVSİYE: En doğru yol hangisi ve neden?
+📌 TAVSİYE: En doğru yol hangisi?
 ```
-
-### 1.3 Koordinatör Onayı Bekle
-
-Analiz sunulur. Koordinatör:
-
-- ✅ Onayla → Aşama 2'ye geç
-- ✏️ Değiştir → Analizi güncelle
-- ❌ Reddet → Görev iptal
 
 ---
 
-## AŞAMA 2: GÖREV PLANLAMA (Antigravity yapar)
-
-### 2.1 Görevi Alt Görevlere Böl
+## ADIM 3: PLANLAMA
 
 ```
-GÖREV #1: [Ne yapılacak — tek cümle]
-  Sorumlu: Robot 1 (GPT) / Robot 2 (DeepSeek) / Robot 3 (Gemini) / Antigravity
-  Dosyalar: [Hangi dosyalara dokunulacak]
+GÖREV #1: [Ne yapılacak]
+  Dosyalar: [Hangi dosyalar]
   Süre: [Tahmini]
-  Bağımlılık: [Hangi görev bitmeden başlayamaz]
 
 GÖREV #2: ...
-GÖREV #3: ...
-```
-
-### 2.2 Kontrol Planla
-
-```
-KONTROL #1 → Görev #1 biter bitmez
-  Kim kontrol eder: [Antigravity + Robot X]
-  Ne kontrol edilir: [Kriterler]
-
-KONTROL #2 → Görev #2 biter bitmez
-  ...
-```
-
-### 2.3 Koordinatör Onayı Bekle
-
-Plan onaylanmadan agentlar harekete geçmez.
-
----
-
-## AŞAMA 3: GÖREV DAĞITIMI (Antigravity → Agentlar)
-
-Her agent için şu formatta talimat yaz ve Open Agent Manager'da ilgili agenta kopyala:
-
-```
-═══ ROBOT [1/2/3] TALİMATI — GÖREV #[N] ═══
-
-SEN KİMSİN: [GPT → Doküman/Analiz | DeepSeek → Kod Denetim | Gemini → Analiz]
-PROJE: Kamera-Panel (C:\Users\Admin\Desktop\Kamera-Panel)
-GÖREV NO: #[N]
-
-YAPACAKLARIN:
-1. [Adım 1]
-2. [Adım 2]
-3. [Adım 3]
-
-YAPAMAYACAKLARIN:
-❌ Kod yazma/değiştirme
-❌ Dosya silme
-❌ [Göreve özgü kısıtlamalar]
-
-RAPOR FORMATI:
-[Her adım sonrası rapor yaz — bkz. rules.md]
-
-TAMAMLAMA KRİTERLERİ:
-□ [Kriter 1]
-□ [Kriter 2]
-□ [Kriter 3]
-═══════════════════════════════════
 ```
 
 ---
 
-## AŞAMA 4: PARALEL YÖNETİM
+## ADIM 4: UYGULA
 
-Agentlar çalışırken Antigravity şunu yapar:
-
-```
-┌─────────────────────────────────────┐
-│ SOL: Agentların raporlarını incele  │
-│      Her raporu real-time kontrol   │
-│      Hata varsa dur ve bildir       │
-└─────────────────────────────────────┘
-         AYNI ANDA
-┌─────────────────────────────────────┐
-│ SAĞ: Koordinatörle sonraki görevi   │
-│      planla                         │
-│      Yeni analiz hazırla            │
-└─────────────────────────────────────┘
-```
+Görevi gerçekleştir.
 
 ---
 
-## AŞAMA 5: DOĞRULAMA VE KAPANIŞ
+## ADIM 5: TEST ET
 
 // turbo
-Tüm görevler bitince:
 
 ```powershell
-# Değişen dosyaları gör
-cd C:\Users\Admin\Desktop\Kamera-Panel
-git diff --name-only
-
-# Build test
-cd app
-npm run build
-
-# API test
-curl http://localhost:3000/api/models
-curl http://localhost:3000/api/personnel
+# Sunucu çalışıyor mu?
+curl -s http://localhost:3000/api/models | python -c "import sys,json; d=json.load(sys.stdin); print(f'Models OK: {len(d)} kayit')" 2>&1
+curl -s http://localhost:3000/api/personnel | python -c "import sys,json; d=json.load(sys.stdin); print(f'Personnel OK: {len(d)} kayit')" 2>&1
 ```
 
-Sonra:
+---
 
-- Git commit mesajı yaz
-- Push yap
-- Koordinatöre son rapor sun
+## ADIM 6: MİMARİ GÜNCELLE
+
+Değişikliğe göre ilgili .md dosyasını güncelle:
+
+| Ne Değişti? | Güncelle |
+|-------------|----------|
+| Yeni API | `SISTEM-MIMARI.md` → API tablosu |
+| Yeni DB sütun | `VERITABANI.md` → İlgili tablo |
+| Bot değişikliği | `BOT-SISTEMI.md` + `bots/[bot].md` |
+| Sekme özelliği | `PANEL-SEKMELERI.md` |
+
+---
+
+## ADIM 7: GİT
+
+// turbo
+
+```powershell
+cd C:\Users\Admin\Desktop\Kamera-Panel
+git add -A
+git status
+```
+
+Commit mesajı formatı:
+
+```
+[Sekme]: [Ne yapıldı — kısa]
+
+Örnek: Personel: P11 operatör sınıfı alanı eklendi
+Örnek: Modeller: Arka fotoğraf yükleme düzeltildi
+Örnek: Bot: Kamera system prompt güncellendi
+```
+
+```powershell
+git commit -m "[Mesaj]"
+git push origin main
+```
+
+---
+
+## ADIM 8: RAPORLA
+
+```
+═══ GÜNCELLEME RAPORU ═══
+Tarih: [YYYY-MM-DD]
+Değişiklik: [Ne yapıldı]
+Etkilenen Dosyalar: [liste]
+Test: ✅ Çalışıyor
+Mimari Güncellendi: ✅ [hangi dosya]
+═══════════════════════
+```

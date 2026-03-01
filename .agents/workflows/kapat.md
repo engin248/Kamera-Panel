@@ -1,5 +1,5 @@
 ---
-description: /kapat — Görev tamamlama, doğrulama ve git push workflow'u
+description: Görev tamamlama, doğrulama ve git push workflow'u
 ---
 
 # 🔒 /kapat — Görev Kapatma Workflow'u
@@ -8,25 +8,7 @@ Her görev tamamlandığında bu workflow izlenir.
 
 ---
 
-## ADIM 1: Tüm Raporları Topla
-
-Her agenttan şunu iste:
-
-```
-Robot [1/2/3] → Son raporunu gönder
-```
-
-Raporlarda şunlar olmalı:
-
-- ✅ Her tamamlanan adım
-- ✅ Karşılaşılan hatalar ve çözümler
-- ✅ Tamamlanma kriterleri
-
----
-
-## ADIM 2: Çapraz Doğrulama
-
-Antigravity şunları kontrol eder:
+## ADIM 1: DOĞRULAMA
 
 // turbo
 
@@ -36,61 +18,53 @@ cd C:\Users\Admin\Desktop\Kamera-Panel
 git diff --name-only
 
 # Yasak dosyalar değişti mi?
-git diff --name-only | Select-String "auth.js|edit-system.js|layout.js|next.config|package.json"
+git diff --name-only | Select-String "\.env|package\.json|next\.config"
 # Bu komut BOŞ çıkmalı!
 ```
 
-// turbo
+---
 
-```powershell
-# Build kontrolü
-cd C:\Users\Admin\Desktop\Kamera-Panel\app
-npm run build 2>&1 | Select-String "Error|error" | Select-Object -First 20
-```
+## ADIM 2: API SAĞLIK KONTROLÜ
 
 // turbo
 
 ```powershell
-# API sağlık kontrolü (server çalışıyorsa)
-curl -s http://localhost:3000/api/models | python -c "import sys,json; data=json.load(sys.stdin); print(f'Models OK: {len(data)} kayıt')"
-curl -s http://localhost:3000/api/personnel | python -c "import sys,json; data=json.load(sys.stdin); print(f'Personnel OK: {len(data)} kayıt')"
+# Temel API'ler çalışıyor mu?
+curl -s http://localhost:3000/api/models | python -c "import sys,json; d=json.load(sys.stdin); print(f'✅ Models: {len(d)} kayit')" 2>&1
+curl -s http://localhost:3000/api/personnel | python -c "import sys,json; d=json.load(sys.stdin); print(f'✅ Personnel: {len(d)} kayit')" 2>&1
+curl -s http://localhost:3000/api/orders | python -c "import sys,json; d=json.load(sys.stdin); print(f'✅ Orders: {len(d)} kayit')" 2>&1
 ```
 
 ---
 
-## ADIM 3: Kalite Kontrol Listesi
+## ADIM 3: KALİTE KONTROL LİSTESİ
 
 ```
 □ Yasak dosyalar değişmedi mi?
-□ npm run build hatasız tamamlandı mı?
+□ API'ler sağlıklı mı?
 □ Mevcut veriler kaybolmadı mı?
 □ Yeni özellik çalışıyor mu?
 □ Diğer paneller bozulmadı mı?
-□ Tüm agent raporları alındı mı?
-□ Koordinatör onayı alındı mı?
+□ Mimari .md dosyaları güncellendi mi?
 ```
 
 ---
 
-## ADIM 4: Koordinatör Son Onayı
+## ADIM 4: MİMARİ GÜNCELLE (Eğer Güncellenmemişse)
 
-Koordinatöre sun:
+Değişikliğe göre:
 
-```
-═══ SON DURUM RAPORU ═══
-Görev: [Ne yapıldı]
-Süre: [Ne kadar sürdü]
-Değişen dosyalar: [Liste]
-Test: ✅ Build OK / ❌ Hata
-Agentlar: Robot1 ✅ | Robot2 ✅ | Robot3 ✅
-Sorunlar: [Varsa]
-Tavsiye: Git push yapılabilir mi?
-═══════════════════════
-```
+| Ne Değişti? | Güncelle |
+|-------------|----------|
+| Yeni API endpoint | `.agents/architecture/SISTEM-MIMARI.md` |
+| Yeni DB sütun/tablo | `.agents/architecture/VERITABANI.md` |
+| Bot prompt değişikliği | `.agents/architecture/BOT-SISTEMI.md` + bots/ |
+| Sekme özelliği | `.agents/architecture/PANEL-SEKMELERI.md` |
+| Yeni kural | `.agents/rules/rules.md` |
 
 ---
 
-## ADIM 5: Git Commit & Push
+## ADIM 5: GİT COMMIT & PUSH
 
 // turbo
 
@@ -105,9 +79,8 @@ Commit mesajı formatı:
 ```
 [Konu]: [Ne yapıldı — kısa]
 
-Örnek: Üretim: 21 kriter UI + CRUD endpoints eklendi
-Örnek: Personel: P1-P11 form alanları DB ile senkronize edildi
-Örnek: Fix: Model silme butonu soft-delete yapacak şekilde düzeltildi
+Örnek: Personel: P11 operatör sınıfı eklendi, PANEL-SEKMELERI güncellendi
+Örnek: Bot: Kamera prompt güncellendi, BOT-SISTEMI güncellendi
 ```
 
 ```powershell
@@ -117,7 +90,7 @@ git push origin main
 
 ---
 
-## ADIM 6: Kapanış Bildirimi
+## ADIM 6: KAPANIŞ BİLDİRİMİ
 
 ```
 ✅ GÖREV TAMAMLANDI
@@ -125,6 +98,7 @@ git push origin main
 [Görev adı]
 Tarih: [Tarih]
 Commit: [Hash]
+Mimari Güncellendi: ✅
 
 Sonraki görev için /baslat komutu kullanın.
 ```

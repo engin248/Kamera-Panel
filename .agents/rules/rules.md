@@ -1,106 +1,119 @@
-# 🔴 KURAL #0 — HER ŞEYDEN ÖNCE GELİR
+# ⚔️ KAMERA-PANEL — SİSTEM KURALLARI
 
-## ⚔️ HER GÖREV, HER TALİMAT, HER İŞLEM BUNUNLA BAŞLAR
-
-```
-════════════════════════════════════
-⚔️ NEDEN BURADAYIZ?
-
-Engin Bey'in 3 çocuğu var.
-Vatanına milletine hayırlı olsunlar.
-Bu sistem onlar ve insanlık için inşa ediliyor.
-Yüzlerce saatin birikimi bu projede.
-Biz yarım bırakmayız. Test etmeden tamam demeyiz.
-════════════════════════════════════
-```
-
-**Tam misyon belgesi:** `MISYON.md`  
-**Bu adım atlanamaz. İstisna yoktur.**  
-**Okuyan:** Deli Yüzbaşı, Yönetim Kurulu, Askerler, Usta, Çırak — HEPSİ.
+> **Son Güncelleme:** 2026-03-01  
+> **Komutan:** Engin Bey — TAM YETKİ 👑  
+> **Koordinatör (Antigravity):** Analiz, koordinasyon, kod yazma  
 
 ---
 
-# 📋 PROJE KURALLARI — TÜM EKIP İÇİN ZORUNLU
+## 🎯 MİSYON
 
-> **Komutan:** Engin Bey — TAM YETKİ 👑  
-> **Deli Yüzbaşı:** Antigravity — Koordinasyon + Kod  
-> **Yönetim Kurulu:** GPT / DeepSeek / Gemini / Perplexity  
-> **Askerler:** Amele / Amele Çırağı
+```
+Engin Bey'in 3 çocuğu var.
+Vatanına milletine hayırlı olsunlar.
+Bu sistem onlar ve insanlık için inşa ediliyor.
+Biz yarım bırakmayız. Test etmeden tamam demeyiz.
+[MK:4721]
+```
 
 ---
 
 ## ❌ KESİNLİKLE YAPILMAYACAKLAR
 
-1. **MISYON.md okunmadan hiçbir göreve başlanmaz** ← EN TEMEL KURAL
-2. **Koordinatör onayı olmadan hiçbir dosya değiştirilmez**
-3. **`.env.local` dosyasına dokunulmaz** — API anahtarları var
-4. **`package.json` değiştirilmez** — yeni paket eklenmez
-5. **`node_modules/` klasörüne girilmez**
-6. **`next.config.mjs` değiştirilmez**
-7. **`lib/db.js` mevcut CREATE TABLE yapıları değiştirilmez** — sadece ALTER TABLE
-8. **Mevcut çalışan özellik kaldırılamaz** — sadece ekleme yapılır
-9. **Test edilmeden "tamam" denmez**
-10. **Başka agent'ın görev alanına karışılmaz**
-11. **Rapor yazılmadan bir sonraki adıma geçilmez**
+1. **`.env.local` dosyasına dokunulMAZ** — API anahtarları var
+2. **`package.json` değiştirilMEZ** — yeni paket eklenmez (onay gerekir)
+3. **`node_modules/` klasörüne girilMEZ**
+4. **`next.config.mjs` değiştirilMEZ** — onay gerekir
+5. **`lib/db.js` → CREATE TABLE yapıları değiştirilMEZ** — sadece ALTER TABLE
+6. **Mevcut çalışan özellik kaldırılaMAZ** — sadece ekleme yapılır
+7. **Test edilmeden "tamam" denMEZ**
+8. **Rapor yazılmadan bir sonraki adıma geçilMEZ**
 
 ---
 
 ## ✅ HER GÖREVE BAŞLAMA SIRASI
 
 ```
-ADIM 0: MISYON.md oku — "Neden buradayız?" hatırla
+ADIM 0: Mimariyi oku (.agents/architecture/ klasörü)
 ADIM 1: Görevi al — Komutanın emrini dinle
-ADIM 2: Analiz et — TEZ / ANTİTEZ / ALTERNATİFLER
-ADIM 3: En iyi seçeneği belirle
-ADIM 4: Komutana sor — onay al
-ADIM 5: Görevi yap
-ADIM 6: Test et
-ADIM 7: Raporla
-ADIM 8: "TAMAM, kayıt altında" de — Komutan bir daha düşünmez
-```
-
----
-
-## 📊 RAPOR FORMATI (Her İşlem Sonrası Zorunlu)
-
-```
-═══ İŞLEM RAPORU ═══
-Misyon Hatırlatması: ✅ Okundu
-Agent: [Kim ben?]
-Görev NO: [#1, #2...]
-Komut: [Ne yapacaktım?]
-Yapılan: [Ne yaptım — adım adım]
-Sonuç: ✅ Başarılı / ❌ Hata / ⚠️ Uyarı
-Hata Detayı: [Varsa]
-Sonraki Adım: [Ne yapılmalı?]
-Koordinatör Onayı: BEKLIYOR
-═══════════════════
+ADIM 2: Analiz et — Etkilenen dosyalar neler?
+ADIM 3: Planla — Ne yapacaksın?
+ADIM 4: Yap — Kodu/değişikliği gerçekleştir
+ADIM 5: Test et — Çalışıyor mu?
+ADIM 6: Mimariyi güncelle — İlgili .md dosyasını güncelle
+ADIM 7: Raporla — Ne yaptın?
 ```
 
 ---
 
 ## 🔒 DOSYA ERİŞİM TABLOSU
 
-| Dosya | Antigravity | Robot 1 (GPT) | Robot 2 (DeepSeek) | Robot 3 (Gemini) |
-|-------|-------------|---------------|---------------------|------------------|
-| `app/page.js` | ✅ Yazma | 🔒 Okuma | 🔒 Okuma | 🔒 Okuma |
-| `app/api/*` | ✅ Yazma | ❌ | 🔒 Okuma | ❌ |
-| `lib/db.js` | ✅ Yazma (dikkatli) | ❌ | 🔒 Okuma | ❌ |
-| `.env.local` | ❌ | ❌ | ❌ | ❌ |
-| `package.json` | ❌ | ❌ | ❌ | ❌ |
-| `MISYON.md` | 🔒 Okuma | 🔒 Okuma | 🔒 Okuma | 🔒 Okuma |
-| `agent-team/*.md` | ✅ Yazma | ✅ Yazma | ✅ Yazma | ✅ Yazma |
+| Dosya/Klasör | Antigravity | Botlar (API) |
+|--------------|-------------|--------------|
+| `app/app/page.js` | ✅ Yazma | ❌ |
+| `app/app/api/*` | ✅ Yazma | ❌ |
+| `app/lib/db.js` | ✅ Dikkatli | ❌ |
+| `.env.local` | ❌ | ❌ |
+| `package.json` | ❌ | ❌ |
+| `.agents/architecture/*` | ✅ Güncelle | 🔒 Okuma |
+| `.agents/bots/*` | ✅ Yazma | ✅ Yazma (kendi dosyası) |
+| `MISYON.md` | 🔒 Okuma | 🔒 Okuma |
+
+---
+
+## 🤖 BOT KURALLARI (chatbot/route.js)
+
+1. **Her bot yalnızca kendi uzmanlık alanında konuşur**
+2. **Bot veri yoksa "Panelden kontrol edin" der** — uydurmaz
+3. **Bot max token sınırı:** 600 token
+4. **Bot geçmiş:** Son 6-8 mesaj konuşma geçmişi gönderilir
+5. **Bot sekme bağlamı:** İleride her bot kendi sekmesinin verisiyle çalışacak
+
+---
+
+## 📊 RAPOR FORMATI
+
+```
+═══ GÜNCELLEME RAPORU ═══
+Tarih: [YYYY-MM-DD]
+Değişiklik: [Ne yapıldı]
+Etkilenen Dosyalar:
+  - [dosya1.js — açıklama]
+  - [dosya2.md — açıklama]
+Test: ✅ Çalışıyor / ❌ Hata
+Mimari Güncellendi: ✅ / ❌ (hangisi güncellendi)
+═══════════════════════
+```
+
+---
+
+## 📁 MİMARİ DOSYALARI — GÜNCELLEME KURALI
+
+Her değişiklikten sonra ilgili dosyayı güncelle:
+
+| Ne Değişti? | Hangi Dosya Güncellenir? |
+|-------------|--------------------------|
+| Yeni API endpoint | `.agents/architecture/SISTEM-MIMARI.md` |
+| Yeni DB tablosu/sütun | `.agents/architecture/VERITABANI.md` |
+| Bot prompt / model değişikliği | `.agents/architecture/BOT-SISTEMI.md` + `.agents/bots/[bot].md` |
+| Yeni sekme özelliği | `.agents/architecture/PANEL-SEKMELERI.md` |
+| Yeni iş akışı | `.agents/workflows/` |
+| Yeni kural | `.agents/rules/rules.md` (bu dosya) |
 
 ---
 
 ## ⚠️ HATA YAPILDIĞINDA
 
-1. DURUR — devam etmez
-2. Hatayı açıkça bildirir: Dosya, Satır, Hata türü
-3. Koordinatörden talimat bekler
-4. Kendi başına düzeltmeye çalışmaz
+1. **DUR** — Devam etme
+2. **Bildir** — Dosya + Satır + Hata türü
+3. **Koordinatörden talimat bekle**
+4. **Kendi başına düzeltmeye çalışma**
 
 ---
 
-**Bu kuralları okudum, anladım, kabul ettim.**  
-**Her görev MISYON.md ile başlar. Bu değişmez.**
+## 🔄 GELECEKTEKİ YAPI (v2)
+
+- **Her sekmenin kendi botu** → Otomatik bağlam
+- **Bot ile veri yazabilme** → Sohbetten CRUD
+- **Audit trail entegrasyonu** → Her bot işlemi kayıt altında
+- **Çoklu bot aynı anda** → Paralel analiz modu

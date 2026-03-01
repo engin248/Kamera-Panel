@@ -397,110 +397,134 @@ function SpeechToText() {
 
 
 
-// ========== CHATBOT PANELİ ==========
+// ========== CHATBOT PANELİ  4 BOT ==========
+
+const BOTLAR = [
+  { id: 'gemini',     emoji: '', ad: 'Kamera',   uzmanlik: 'Operasyon',  renk: '#2ecc71', aciklama: 'Anlık üretim, sipariş, personel' },
+  { id: 'gpt',        emoji: '', ad: 'Muhasip',  uzmanlik: 'Muhasebe',   renk: '#3498db', aciklama: 'Maliyet, karlılık, finansal analiz' },
+  { id: 'perplexity', emoji: '', ad: 'Kaşif',    uzmanlik: 'Araştırma',  renk: '#9b59b6', aciklama: 'Piyasa, sektör, kumaş fiyatları' },
+  { id: 'deepseek',   emoji: '', ad: 'Tekniker', uzmanlik: 'Teknik',     renk: '#e67e22', aciklama: 'Model, BOM, dikim, kalite' },
+];
 
 function ChatbotPanel({ onClose }) {
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: '👋 Merhaba! Ben **Kamera**, fabrikanızın AI asistanıyım.\n\nÜretim durumu, siparişler, personel veya maliyet hakkında sorularınızı yanıtlayabilirim.' }
-  ]);
+  const [aktifBot, setAktifBot] = useState('gemini');
+  const [konusmalar, setKonusmalar] = useState({
+    gemini:     [{ role: 'assistant', content: ' Merhaba! Ben **Kamera**, Operasyon Uzmanınız.\n\nBugünkü üretim, aktif siparişler, personel durumu hakkında anlık bilgi verebilirim.' }],
+    gpt:        [{ role: 'assistant', content: ' Merhaba! Ben **Muhasip**, Finans & Muhasebe Uzmanınız.\n\nMaliyet analizi, karlılık hesabı, personel/üretim oranları hakkında sorun.' }],
+    perplexity: [{ role: 'assistant', content: ' Merhaba! Ben **Kaşif**, Araştırma Uzmanınız.\n\nPiyasa fiyatları, kumaş maliyetleri, sektör trendleri hakkında güncel bilgi alabilirim.' }],
+    deepseek:   [{ role: 'assistant', content: ' Merhaba! Ben **Tekniker**, Teknik Uzmanınız.\n\nModel detayları, BOM listesi, dikim sırası, kalite kontrol standartları hakkında sorun.' }],
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
 
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  useEffect(() => scrollToBottom(), [messages]);
+  const bot = BOTLAR.find(b => b.id === aktifBot);
+  const messages = konusmalar[aktifBot] || [];
 
-  const quickCommands = [
-    '📊 Bugünkü üretim?',
-    '📋 Geciken siparişler?',
-    '👥 Personel durumu?',
-    '💰 Bu ay maliyet?',
-  ];
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, aktifBot]);
+
+  const quickCmds = {
+    gemini:     [' Bugünkü üretim?', ' Geciken sipariş?', ' Personel durumu?', ' Aktif model?'],
+    gpt:        [' Bu ay gider?', ' Karlılık analizi?', ' Maaş-üretim oranı?', ' Sipariş başı kar?'],
+    perplexity: [' Pamuk fiyatı?', ' Sektör trendi?', ' Fason fiyatları?', ' Rakip analizi?'],
+    deepseek:   [' BOM nedir?', ' Dikim sırası?', ' Hata analizi?', ' Makine bakım?'],
+  };
 
   const sendMessage = async (text) => {
     const msg = text || input.trim();
     if (!msg || loading) return;
     setInput('');
-    const newHistory = [...messages, { role: 'user', content: msg }];
-    setMessages(newHistory);
+    const yeniMsgs = [...messages, { role: 'user', content: msg }];
+    setKonusmalar(prev => ({ ...prev, [aktifBot]: yeniMsgs }));
     setLoading(true);
     try {
       const res = await fetch('/api/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, history: newHistory.slice(-8) })
+        body: JSON.stringify({ message: msg, history: yeniMsgs.slice(-8), bot: aktifBot })
       });
       const data = await res.json();
-      setMessages(prev => [...prev, { role: 'assistant', content: data.reply || 'Cevap alınamadı.' }]);
+      const cevap = { role: 'assistant', content: data.reply || 'Cevap alinamadi.', botEmoji: bot.emoji };
+      setKonusmalar(prev => ({ ...prev, [aktifBot]: [...yeniMsgs, cevap] }));
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: '❌ Bağlantı hatası. Lütfen tekrar deneyin.' }]);
+      setKonusmalar(prev => ({ ...prev, [aktifBot]: [...yeniMsgs, { role: 'assistant', content: 'Baglanti hatasi.' }] }));
     } finally { setLoading(false); }
   };
 
-  const formatText = (text) => {
-    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
-  };
+  const formatText = (t) => t.replace(/\*\*(.*?)\*\*/g, '<strong></strong>').replace(/\n/g, '<br/>');
 
   return (
     <div style={{
-      position: 'fixed', bottom: '20px', right: '20px', width: '380px', height: '560px',
-      background: '#fff', border: '1px solid var(--border-color)', borderRadius: '20px',
-      boxShadow: '0 20px 60px rgba(44,62,45,0.18)', display: 'flex', flexDirection: 'column',
-      zIndex: 500, overflow: 'hidden', animation: 'slideUp 0.3s ease'
+      position: 'fixed', bottom: '20px', right: '20px', width: '420px', height: '630px',
+      background: 'var(--bg-card)', border: '2px solid ' + bot.renk + '40',
+      borderRadius: '20px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+      display: 'flex', flexDirection: 'column', zIndex: 500, overflow: 'hidden',
+      animation: 'slideUp 0.3s ease'
     }}>
-      {/* Header */}
-      <div style={{
-        padding: '16px 20px', background: 'linear-gradient(135deg, #2c3e2d 0%, #3a5139 100%)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '42px', height: '42px', borderRadius: '50%',
-            background: 'linear-gradient(135deg, #6a9e6e, #5b8ec2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px',
-            boxShadow: '0 0 0 3px rgba(106,158,110,0.3)', animation: 'breathe 3s ease infinite'
-          }}>🤖</div>
-          <div>
-            <div style={{ color: '#fff', fontWeight: '700', fontSize: '15px' }}>Kamera AI</div>
-            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: '6px', height: '6px', background: '#2ecc71', borderRadius: '50%', display: 'inline-block', animation: 'pulse 2s ease infinite' }}></span>
-              Aktif • Fabrika verilerine erişiyor
+      <div style={{ padding: '14px 16px 10px', background: 'linear-gradient(135deg, #1a2e1a, #2c3e2d)', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '50%',
+              background: 'linear-gradient(135deg, ' + bot.renk + '90, ' + bot.renk + '50)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px',
+              boxShadow: '0 0 0 3px ' + bot.renk + '30'
+            }}>{bot.emoji}</div>
+            <div>
+              <div style={{ color: '#fff', fontWeight: '700', fontSize: '15px' }}>
+                {bot.ad} <span style={{ fontSize: '11px', color: bot.renk }}>  {bot.uzmanlik}</span>
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>
+                {bot.aciklama}
+              </div>
             </div>
           </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer', fontSize: '14px' }}>X</button>
         </div>
-        <button onClick={onClose} style={{
-          background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
-          width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer',
-          fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>✕</button>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '4px' }}>
+          {BOTLAR.map(b => (
+            <button key={b.id} onClick={() => setAktifBot(b.id)} style={{
+              padding: '6px 4px', borderRadius: '8px',
+              border: '1px solid ' + (aktifBot === b.id ? b.renk : 'rgba(255,255,255,0.1)'),
+              background: aktifBot === b.id ? b.renk + '25' : 'rgba(255,255,255,0.04)',
+              color: aktifBot === b.id ? b.renk : 'rgba(255,255,255,0.4)',
+              cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px'
+            }}>
+              <span style={{ fontSize: '16px' }}>{b.emoji}</span>
+              <span style={{ fontSize: '9px', fontWeight: aktifBot === b.id ? '700' : '400' }}>{b.uzmanlik}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Mesajlar */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {messages.map((msg, i) => (
           <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
             {msg.role === 'assistant' && (
               <div style={{
-                width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg,#6a9e6e,#5b8ec2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px',
-                flexShrink: 0, marginRight: '8px', marginTop: '2px'
-              }}>🤖</div>
+                width: '26px', height: '26px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, ' + bot.renk + '80, ' + bot.renk + '40)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px',
+                flexShrink: 0, marginRight: '7px', marginTop: '2px'
+              }}>{msg.botEmoji || bot.emoji}</div>
             )}
             <div style={{
-              maxWidth: '78%', padding: '10px 14px', borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
-              background: msg.role === 'user' ? 'linear-gradient(135deg, #6a9e6e, #5b8ec2)' : 'var(--bg-input)',
+              maxWidth: '80%', padding: '9px 13px',
+              borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
+              background: msg.role === 'user' ? 'linear-gradient(135deg, ' + bot.renk + 'cc, ' + bot.renk + '88)' : 'var(--bg-input)',
               color: msg.role === 'user' ? '#fff' : 'var(--text-primary)',
-              fontSize: '13px', lineHeight: '1.5', border: msg.role === 'assistant' ? '1px solid var(--border-color)' : 'none'
+              fontSize: '13px', lineHeight: '1.5',
+              border: msg.role === 'assistant' ? '1px solid ' + bot.renk + '20' : 'none'
             }} dangerouslySetInnerHTML={{ __html: formatText(msg.content) }} />
           </div>
         ))}
         {loading && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg,#6a9e6e,#5b8ec2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🤖</div>
-            <div style={{ padding: '10px 14px', background: 'var(--bg-input)', borderRadius: '4px 18px 18px 18px', border: '1px solid var(--border-color)' }}>
+            <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'linear-gradient(135deg,' + bot.renk + '80,' + bot.renk + '40)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px' }}>{bot.emoji}</div>
+            <div style={{ padding: '9px 13px', background: 'var(--bg-input)', borderRadius: '4px 18px 18px 18px', border: '1px solid ' + bot.renk + '20' }}>
               <div style={{ display: 'flex', gap: '4px' }}>
-                {[0, 1, 2].map(j => <span key={j} style={{ width: '6px', height: '6px', background: 'var(--accent)', borderRadius: '50%', display: 'inline-block', animation: `pulse ${0.8 + j * 0.2}s ease infinite` }}></span>)}
+                {[0,1,2].map(j => <span key={j} style={{ width: '6px', height: '6px', background: bot.renk, borderRadius: '50%', display: 'inline-block', animation: 'pulse ' + (0.8+j*0.2) + 's ease infinite' }}></span>)}
               </div>
             </div>
           </div>
@@ -508,39 +532,39 @@ function ChatbotPanel({ onClose }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Hızlı Komutlar */}
-      <div style={{ padding: '8px 16px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '6px', flexWrap: 'wrap', flexShrink: 0 }}>
-        {quickCommands.map((cmd, i) => (
+      <div style={{ padding: '6px 12px', borderTop: '1px solid ' + bot.renk + '15', display: 'flex', gap: '5px', flexWrap: 'wrap', flexShrink: 0 }}>
+        {(quickCmds[aktifBot] || []).map((cmd, i) => (
           <button key={i} onClick={() => sendMessage(cmd)} style={{
-            padding: '4px 10px', background: 'var(--bg-input)', border: '1px solid var(--border-color)',
-            borderRadius: '12px', cursor: 'pointer', fontSize: '11px', color: 'var(--text-secondary)',
-            fontFamily: 'inherit', transition: 'all 0.2s', whiteSpace: 'nowrap'
+            padding: '3px 8px', background: bot.renk + '10', border: '1px solid ' + bot.renk + '25',
+            borderRadius: '10px', cursor: 'pointer', fontSize: '10px', color: bot.renk,
+            fontFamily: 'inherit', whiteSpace: 'nowrap'
           }}>{cmd}</button>
         ))}
       </div>
 
-      {/* Input */}
-      <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '8px', flexShrink: 0 }}>
+      <div style={{ padding: '10px 14px', borderTop: '1px solid ' + bot.renk + '20', display: 'flex', gap: '8px', flexShrink: 0 }}>
         <input
-          ref={inputRef}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-          placeholder="Sorunuzu yazın..."
+          placeholder={bot.ad + " ile konuş..."}
           style={{
-            flex: 1, padding: '10px 14px', background: 'var(--bg-input)', border: '1.5px solid var(--border-color)',
-            borderRadius: '12px', fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none'
+            flex: 1, padding: '9px 13px', background: 'var(--bg-input)',
+            border: '1.5px solid ' + bot.renk + '30', borderRadius: '12px',
+            fontSize: '13px', color: 'var(--text-primary)', fontFamily: 'inherit', outline: 'none'
           }}
         />
         <button onClick={() => sendMessage()} disabled={loading || !input.trim()} style={{
-          width: '42px', height: '42px', background: 'linear-gradient(135deg, #6a9e6e, #5b8ec2)',
-          border: 'none', borderRadius: '12px', cursor: 'pointer', color: '#fff', fontSize: '18px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: (loading || !input.trim()) ? 0.5 : 1
-        }}>➤</button>
+          width: '40px', height: '40px', background: 'linear-gradient(135deg, ' + bot.renk + ', ' + bot.renk + '80)',
+          border: 'none', borderRadius: '10px', cursor: 'pointer', color: '#fff', fontSize: '17px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          opacity: (loading || !input.trim()) ? 0.45 : 1
+        }}></button>
       </div>
     </div>
   );
 }
+
 
 
 // ========== SIDEBAR ==========

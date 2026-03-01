@@ -25,12 +25,14 @@ YEMİNİMİZ:
    Yarım bırakmayacağım."
 
 ════════════════════════════════════════════════════
-BU BELGEYI OKUDUĞUNU KANITLA:
+SİSTEM MİMARİSİ:
 
-Görev emri dosyasında senden bir MİSYON KODU istenecek.
-Bu kod bu belgenin son satırındadır.
-Kodu bulamıyorsan — belgeyi okumamışsın demektir.
+  Mimari dokümanlar: .agents/architecture/
+  Bot konfigürasyonları: .agents/bots/
+  Sistem kuralları: .agents/rules/rules.md
+  İş akışları: .agents/workflows/
 
 ════════════════════════════════════════════════════
+MİSYON KODU:
 [MK:4721]
 ════════════════════════════════════════════════════
