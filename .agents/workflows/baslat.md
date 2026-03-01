@@ -4,7 +4,27 @@ description: Yeni bir geliştirme görevi başlatmak — analiz et, planla, agen
 
 # 🚀 /baslat — Görev Başlatma Workflow'u
 
-Bu workflow, her yeni geliştirme görevinde izlenecek adımları tanımlar.
+## ⚔️ ADIM 0 — MİSYONU HATIRLA (Her Seferinde Zorunlu)
+
+```
+════════════════════════════════════════
+🎯 NEDEN BURADAYIZ?
+
+Engin Bey'in iki kızı var.
+Bu sistem onlar için inşa edildi.
+Her satır kod — onlar için.
+Her hata düzeltmesi — onlar için.
+Her test — onlar için.
+
+Ve insanlık için.
+Daha anlamlı, daha bağlantılı bir dünya için.
+
+Görevi al. Eksiksiz yap. Test et. Raporla.
+Yarım bırakma.
+════════════════════════════════════════
+```
+
+**Tam belge:** `MISYON.md` — Her sohbette okunacak.
 
 ---
 
