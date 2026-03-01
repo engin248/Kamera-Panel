@@ -4324,6 +4324,266 @@ function DashboardPage({ models, personnel }) {
 
 
 
+// ========== ÜRETİM GİRİŞ BARI — ASKER GÖREVİ ==========
+
+function UretimTabBar({ models, personnel, addToast }) {
+  const [aktif, setAktif] = useState('giris');
+  const [form, setForm] = useState({
+    model_id: '', getiren_personel_id: '', acan_personel_id: '',
+    acilis_tarihi: new Date().toISOString().slice(0, 16),
+    beden_eksik: false, beden_eksik_detay: '',
+    aksesuar_eksik: false, aksesuar_eksik_detay: '',
+    kumas_eksik: false, kumas_eksik_detay: '',
+    numune_ayrildi: true, parca_sayisi: 0, notlar: ''
+  });
+  const [parcaFotolar, setParcaFotolar] = useState([]);
+  const [kaydediliyor, setKaydediliyor] = useState(false);
+  const [gecmis, setGecmis] = useState([]);
+
+  useEffect(() => {
+    if (aktif === 'gecmis') fetch('/api/uretim-giris').then(r => r.json()).then(d => setGecmis(Array.isArray(d) ? d : [])).catch(() => { });
+  }, [aktif]);
+
+  useEffect(() => {
+    const adet = parseInt(form.parca_sayisi) || 0;
+    setParcaFotolar(Array.from({ length: adet }, (_, i) => ({ url: '', ad: `Parça ${i + 1}` })));
+  }, [form.parca_sayisi]);
+
+  const handleKaydet = async () => {
+    if (!form.model_id) { addToast('error', 'Model seçin'); return; }
+    setKaydediliyor(true);
+    try {
+      const res = await fetch('/api/uretim-giris', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, model_id: parseInt(form.model_id), getiren_personel_id: form.getiren_personel_id ? parseInt(form.getiren_personel_id) : null, acan_personel_id: form.acan_personel_id ? parseInt(form.acan_personel_id) : null, parca_sayisi: parseInt(form.parca_sayisi) || 0, parcalar: parcaFotolar })
+      });
+      if (!res.ok) throw new Error('Kayıt hatası');
+      addToast('success', '✅ Üretim girişi kaydedildi!');
+      setForm(f => ({ ...f, model_id: '', notlar: '', beden_eksik: false, aksesuar_eksik: false, kumas_eksik: false, parca_sayisi: 0 }));
+    } catch (e) { addToast('error', e.message); }
+    finally { setKaydediliyor(false); }
+  };
+
+  return (
+    <div style={{ marginBottom: '16px' }}>
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', borderBottom: '2px solid var(--border-color)' }}>
+        {[['giris', '📥 Üretim Girişi'], ['gecmis', '📋 Geçmiş Girişler']].map(([id, lbl]) => (
+          <button key={id} onClick={() => setAktif(id)} style={{ padding: '8px 16px', background: 'none', border: 'none', borderBottom: aktif === id ? '2px solid var(--accent)' : '2px solid transparent', color: aktif === id ? 'var(--accent)' : 'var(--text-muted)', fontWeight: aktif === id ? '700' : '500', cursor: 'pointer', fontSize: '13px', marginBottom: '-2px' }}>{lbl}</button>
+        ))}
+      </div>
+
+      {aktif === 'giris' && (
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' }}>
+          <div style={{ fontWeight: '700', fontSize: '15px', marginBottom: '16px' }}>📥 Yeni Üretim Girişi</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '12px' }}>
+            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Model *</label>
+              <select className="form-input" value={form.model_id} onChange={e => setForm(f => ({ ...f, model_id: e.target.value }))}>
+                <option value="">-- Model Seç --</option>
+                {models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}
+              </select></div>
+            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Kim Getirdi?</label>
+              <select className="form-input" value={form.getiren_personel_id} onChange={e => setForm(f => ({ ...f, getiren_personel_id: e.target.value }))}>
+                <option value="">-- Personel --</option>
+                {personnel.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select></div>
+            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Kim Açtı?</label>
+              <select className="form-input" value={form.acan_personel_id} onChange={e => setForm(f => ({ ...f, acan_personel_id: e.target.value }))}>
+                <option value="">-- Personel --</option>
+                {personnel.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select></div>
+            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Açılış Tarihi</label>
+              <input type="datetime-local" className="form-input" value={form.acilis_tarihi} onChange={e => setForm(f => ({ ...f, acilis_tarihi: e.target.value }))} /></div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px', marginBottom: '12px' }}>
+            {[['beden_eksik', 'beden_eksik_detay', '📐 Beden Eksiği'], ['aksesuar_eksik', 'aksesuar_eksik_detay', '🔩 Aksesuar Eksiği'], ['kumas_eksik', 'kumas_eksik_detay', '🧵 Kumaş Eksiği']].map(([alan, detay, lbl]) => (
+              <div key={alan} style={{ padding: '10px', background: form[alan] ? 'rgba(231,76,60,0.08)' : 'rgba(46,204,113,0.06)', border: `1px solid ${form[alan] ? 'rgba(231,76,60,0.3)' : 'rgba(46,204,113,0.2)'}`, borderRadius: '8px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>
+                  <input type="checkbox" checked={form[alan]} onChange={e => setForm(f => ({ ...f, [alan]: e.target.checked }))} />{lbl}
+                </label>
+                {form[alan] && <input className="form-input" placeholder="Açıklama..." value={form[detay]} onChange={e => setForm(f => ({ ...f, [detay]: e.target.value }))} style={{ marginTop: '6px', fontSize: '12px' }} />}
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
+              <input type="checkbox" checked={form.numune_ayrildi} onChange={e => setForm(f => ({ ...f, numune_ayrildi: e.target.checked }))} />✂️ Numune Ayrıldı
+            </label>
+            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Parça Sayısı</label>
+              <input type="number" className="form-input" min="0" max="20" value={form.parca_sayisi} onChange={e => setForm(f => ({ ...f, parca_sayisi: e.target.value }))} style={{ width: '80px', marginLeft: '8px' }} /></div>
+            <div style={{ flex: 1 }}><input className="form-input" placeholder="Notlar..." value={form.notlar} onChange={e => setForm(f => ({ ...f, notlar: e.target.value }))} /></div>
+          </div>
+          {parcaFotolar.length > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: '8px', marginBottom: '12px' }}>
+              {parcaFotolar.map((p, i) => (
+                <div key={i} style={{ padding: '8px', background: 'var(--bg-input)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>{p.ad}</div>
+                  <input type="file" accept="image/*" style={{ fontSize: '11px', width: '100%' }} onChange={async e => { const file = e.target.files[0]; if (!file) return; const fd = new FormData(); fd.append('file', file); const r = await fetch('/api/upload', { method: 'POST', body: fd }); const { url } = await r.json(); setParcaFotolar(prev => prev.map((pp, ii) => ii === i ? { ...pp, url } : pp)); }} />
+                  {p.url && <img src={p.url} style={{ width: '100%', height: '60px', objectFit: 'cover', borderRadius: '4px', marginTop: '4px' }} alt={p.ad} />}
+                </div>
+              ))}
+            </div>
+          )}
+          <button onClick={handleKaydet} disabled={kaydediliyor || !form.model_id} style={{ padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>
+            {kaydediliyor ? '⏳ Kaydediliyor...' : '✅ Üretim Girişini Kaydet'}
+          </button>
+        </div>
+      )}
+
+      {aktif === 'gecmis' && (
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px' }}>
+          <div style={{ fontWeight: '700', marginBottom: '12px' }}>📋 Üretim Girişleri</div>
+          {gecmis.length === 0 ? <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Kayıt yok</div> : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead><tr>{['Model', 'Getiren', 'Açan', 'Tarih', 'Eksik?', 'Parça'].map(h => <th key={h} style={{ padding: '8px', textAlign: 'left', fontWeight: '700', fontSize: '11px', borderBottom: '1px solid var(--border-color)' }}>{h}</th>)}</tr></thead>
+              <tbody>{gecmis.map(g => <tr key={g.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <td style={{ padding: '8px' }}><strong>{g.model_adi}</strong></td>
+                <td style={{ padding: '8px' }}>{g.getiren_adi || '—'}</td>
+                <td style={{ padding: '8px' }}>{g.acan_adi || '—'}</td>
+                <td style={{ padding: '8px' }}>{new Date(g.created_at).toLocaleDateString('tr-TR')}</td>
+                <td style={{ padding: '8px' }}>{[g.beden_eksik && 'B', g.aksesuar_eksik && 'A', g.kumas_eksik && 'K'].filter(Boolean).join('/') || '✅'}</td>
+                <td style={{ padding: '8px' }}>{g.parca_sayisi}</td>
+              </tr>)}</tbody>
+            </table>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ========== PERSONEL DEVAM BARI — AMELE 1 GÖREVİ ==========
+
+function PersonelDevamBar({ personnel, addToast }) {
+  const [kayitlar, setKayitlar] = useState([]);
+  const [yukleniyor, setYukleniyor] = useState(false);
+  const bugun = new Date().toISOString().split('T')[0];
+
+  const yukle = useCallback(async () => {
+    setYukleniyor(true);
+    try {
+      const res = await fetch(`/api/personel-saat?tarih=${bugun}`);
+      const d = await res.json();
+      setKayitlar(d.kayitlar || []);
+    } catch { } finally { setYukleniyor(false); }
+  }, [bugun]);
+
+  useEffect(() => { yukle(); }, [yukle]);
+
+  const kayitBul = (pid) => kayitlar.find(k => k.personel_id === pid);
+
+  const tiklama = async (pid, tip) => {
+    try {
+      await fetch('/api/personel-saat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ personel_id: pid, tip }) });
+      addToast('success', `✅ ${tip === 'giris' ? 'Giriş' : 'Çıkış'} kaydedildi`);
+      yukle();
+    } catch (e) { addToast('error', e.message); }
+  };
+
+  const aktifler = personnel.filter(p => p.status === 'active' || !p.status);
+  const gelenler = kayitlar.filter(k => k.giris_saat).length;
+
+  return (
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <div style={{ fontWeight: '700', fontSize: '14px' }}>⏱️ Günlük Devam — {new Date().toLocaleDateString('tr-TR')}</div>
+        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{gelenler}/{aktifler.length} geldi</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
+        {aktifler.map(p => {
+          const k = kayitBul(p.id);
+          return (
+            <div key={p.id} style={{ padding: '10px', background: 'var(--bg-input)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '6px' }}>{p.name}</div>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {!k?.giris_saat ? (
+                  <button onClick={() => tiklama(p.id, 'giris')} style={{ padding: '4px 10px', background: 'rgba(46,204,113,0.15)', color: '#27ae60', border: '1px solid rgba(46,204,113,0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>✅ Giriş</button>
+                ) : (
+                  <span style={{ fontSize: '12px', color: '#27ae60', fontWeight: '600' }}>✅ {k.giris_saat}</span>
+                )}
+                {k?.giris_saat && !k?.cikis_saat && (
+                  <button onClick={() => tiklama(p.id, 'cikis')} style={{ padding: '4px 10px', background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: '1px solid rgba(231,76,60,0.2)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>🚪 Çıkış</button>
+                )}
+                {k?.cikis_saat && (
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Çıkış: {k.cikis_saat} | Net: {Math.floor((k.net_calisma_dakika || 0) / 60)}s {((k.net_calisma_dakika || 0) % 60)}dk</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ========== İŞLETME GİDER FORMU — AMELE 2 GÖREVİ ==========
+
+function IsletmeGiderForm({ addToast }) {
+  const simdi = new Date();
+  const [form, setForm] = useState({ ay: simdi.getMonth() + 1, yil: simdi.getFullYear(), elektrik: '', su: '', kira: '', yakit: '', diger: '', toplam_calisma_saati: '', toplam_personel_maliyeti: '' });
+  const [saatlik, setSaatlik] = useState(null);
+  const [kaydediliyor, setKaydediliyor] = useState(false);
+
+  const toplam = ['elektrik', 'su', 'kira', 'yakit', 'diger', 'toplam_personel_maliyeti'].reduce((s, k) => s + (parseFloat(form[k]) || 0), 0);
+  const hesaplananSaatlik = form.toplam_calisma_saati > 0 ? (toplam / parseFloat(form.toplam_calisma_saati)).toFixed(2) : null;
+
+  const handleKaydet = async () => {
+    setKaydediliyor(true);
+    try {
+      const res = await fetch('/api/isletme-gider', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error);
+      setSaatlik(d.saatlik_maliyet);
+      addToast('success', `✅ Kaydedildi! Saatlik maliyet: ${d.saatlik_maliyet} TL/saat`);
+    } catch (e) { addToast('error', e.message); } finally { setKaydediliyor(false); }
+  };
+
+  const inp = (alan, lbl, prefix = '₺') => (
+    <div>
+      <label style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>{lbl}</label>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{prefix}</span>
+        <input type="number" className="form-input" placeholder="0" value={form[alan]} onChange={e => setForm(f => ({ ...f, [alan]: e.target.value }))} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
+      <div style={{ fontWeight: '700', fontSize: '14px', marginBottom: '12px' }}>💰 Aylık İşletme Giderleri</div>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+        <select className="form-input" style={{ width: '120px' }} value={form.ay} onChange={e => setForm(f => ({ ...f, ay: e.target.value }))}>
+          {['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'].map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+        </select>
+        <input type="number" className="form-input" style={{ width: '90px' }} value={form.yil} onChange={e => setForm(f => ({ ...f, yil: e.target.value }))} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px', marginBottom: '12px' }}>
+        {inp('elektrik', 'Elektrik (TL)')}
+        {inp('su', 'Su (TL)')}
+        {inp('kira', 'Kira (TL)')}
+        {inp('yakit', 'Yakıt (TL)')}
+        {inp('diger', 'Diğer (TL)')}
+        {inp('toplam_personel_maliyeti', 'Personel Maliyeti (TL)')}
+        {inp('toplam_calisma_saati', 'Toplam Çalışma Saati', '⏱')}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ padding: '10px 16px', background: 'rgba(46,204,113,0.1)', border: '1px solid rgba(46,204,113,0.2)', borderRadius: '8px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Toplam Gider</div>
+          <div style={{ fontWeight: '700', fontSize: '16px', color: '#27ae60' }}>{toplam.toFixed(2)} TL</div>
+        </div>
+        {hesaplananSaatlik && (
+          <div style={{ padding: '10px 16px', background: 'rgba(52,152,219,0.1)', border: '1px solid rgba(52,152,219,0.2)', borderRadius: '8px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Saatlik Maliyet</div>
+            <div style={{ fontWeight: '700', fontSize: '16px', color: '#3498db' }}>{hesaplananSaatlik} TL/saat</div>
+          </div>
+        )}
+        <button onClick={handleKaydet} disabled={kaydediliyor} style={{ padding: '10px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>
+          {kaydediliyor ? '⏳...' : '💾 Kaydet'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ========== MODELS PAGE ==========
 
 function ModelsPage({ models, loadModels, addToast }) {
@@ -6462,6 +6722,9 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
       <div className="page-content">
 
+        {/* ⏱️ AMELE 1 — GÜNLÜK DEVAM (PersonelDevamBar) */}
+        <PersonelDevamBar personnel={personnel} addToast={addToast} />
+
         {(() => {
           const filtered = personnel.filter(p => {
             if (persSearch && !p.name?.toLowerCase().includes(persSearch.toLowerCase())) return false;
@@ -7013,6 +7276,16 @@ function ProductionPage({ models, personnel, addToast }) {
       <div className="topbar"><h1 className="topbar-title">🏭 Üretim Takip</h1><div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><input type="date" className="form-input" value={filterDate} onChange={e => { setFilterDate(e.target.value); }} style={{ fontSize: '13px', padding: '6px 10px' }} /><button className="btn btn-sm" onClick={() => setFilterDate(new Date().toISOString().split('T')[0])} style={{ fontSize: '12px', padding: '6px 10px' }}>Bugün</button><span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{new Date(filterDate).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</span></div></div>
 
       <div className="page-content">
+
+        {/* ── ÜRETİM SEKME BAR ── */}
+        {(() => {
+          const [prodTab, setProdTab] = [
+            typeof window !== 'undefined' ? (window._prodTab || 'takip') : 'takip',
+            (v) => { if (typeof window !== 'undefined') { window._prodTab = v; } document.dispatchEvent(new CustomEvent('prodTabChange', { detail: v })); }
+          ];
+          return null;
+        })()}
+        <UretimTabBar models={models} personnel={personnel} addToast={addToast} />
 
         {/* ── STAT KARTLARI ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '16px' }}>
@@ -10577,6 +10850,9 @@ function CostsPage({ models, personnel, addToast }) {
       </div>
 
       <div className="page-content">
+
+        {/* 💰 AMELE 2 — İŞLETME GİDER FORMU */}
+        <IsletmeGiderForm addToast={addToast} />
 
         {showExpenseForm && (
 
