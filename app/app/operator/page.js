@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { t, setLanguage, getLanguage } from '@/lib/i18n';
+import VoiceCommandPanel from '@/components/VoiceCommandPanel';
 
 // ========================================
 // OPERATÖR TABLET GÖRÜNÜMÜ
@@ -575,6 +576,18 @@ export default function OperatorPage() {
 
                     {/* ANA BUTONLAR */}
                     <div style={{ display: 'grid', gap: '10px', marginBottom: '16px' }}>
+
+                        {/* 🎙️ SESLİ KOMUT PANELİ */}
+                        {step === 'working' && (
+                            <VoiceCommandPanel
+                                onLogAdded={(log) => {
+                                    if (log?.total_produced) {
+                                        setProducedCount(prev => prev + (log.total_produced || 0));
+                                    }
+                                }}
+                            />
+                        )}
+
                         {/* ADET ARTIR BUTONU */}
                         {step === 'working' && (
                             <button onClick={incrementCount}
