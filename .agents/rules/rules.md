@@ -2,6 +2,51 @@
 
 > **Son Güncelleme:** 2026-03-01  
 > **Komutan:** Engin Bey — TAM YETKİ 👑  
+
+---
+
+## 🔴 KURAL #0 — OTOMATİK MİMARİ GÜNCELLEME (EN YÜKSEK ÖNCELİK)
+
+> **Bu kural hiçbir zaman atlanamaz. İstisna yoktur.**
+
+**Her sohbette yeni bir özellik eklendiğinde, değiştirildiğinde veya kaldırıldığında:**  
+Antigravity, kullanıcıdan sormadan ve onay beklemeden ilgili `.md` dosyasını günceller.
+
+### 📋 Otomatik Güncelleme Tablosu
+
+| Sohbette Ne Oldu? | Hangi Dosya Güncellenir? | Nasıl? |
+|-------------------|--------------------------|--------|
+| Yeni sekme özelliği eklendi | `PANEL-SEKMELERI.md` | `[ ]` → `[x]` veya yeni satır ekle |
+| Yeni TODO tespit edildi | `PANEL-SEKMELERI.md` | `[ ] TODO: ...` olarak ekle |
+| Yeni API endpoint oluşturuldu | `SISTEM-MIMARI.md` | API tablosuna satır ekle |
+| Yeni DB tablosu/sütun eklendi | `VERITABANI.md` | İlgili tabloya sütun ekle |
+| Bot prompt değiştirildi | `BOT-SISTEMI.md` + `bots/[bot].md` | Prompt bölümünü güncelle |
+| Yeni bot eklendi | `BOT-SISTEMI.md` + `bots/` | Yeni bot dosyası oluştur |
+| Sekme-bot eşleşmesi değişti | `BOT-SISTEMI.md` | Eşleşme haritasını güncelle |
+| Yeni kural belirlendi | `rules/rules.md` | Kural olarak ekle |
+| Yeni iş akışı tanımlandı | `workflows/` | Yeni .md dosyası oluştur |
+| Mevcut özellik kaldırıldı | `PANEL-SEKMELERI.md` | `[x]` → `~~[x]~~` + not ekle |
+| Teknoloji/paket değişikliği | `SISTEM-MIMARI.md` | Teknik yığın tablosunu güncelle |
+| Yeni kullanıcı rolü/kuralı | `SISTEM-MIMARI.md` | Yetki tablosunu güncelle |
+
+### ⚡ UYGULAMA KURALI
+
+```
+1. Sohbet sırasında değişiklik yapıldı
+2. Kod/API/DB değişikliği tamamlandı
+3. → Antigravity ANINDA ilgili .md dosyasını günceller
+4. → Kullanıcıya "✅ Mimari güncellendi: [dosya adı]" bilgisi verilir
+5. → Git commit'e mimari güncelleme dahil edilir
+```
+
+**YASAK:**
+
+- ❌ "Mimariyi güncelleyeyim mi?" diye sormak
+- ❌ Bir sonraki sohbete bırakmak
+- ❌ Küçük değişikliği önemsiz saymak — her şey kaydedilir
+
+---
+
 > **Koordinatör (Antigravity):** Analiz, koordinasyon, kod yazma  
 
 ---
