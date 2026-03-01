@@ -85,6 +85,146 @@ function useVoiceInput(formSetter) {
 
 }
 
+// ========== GN:013 — GÜNLÜK HEDEF + PARTİ BAĞLANTISI ==========
+
+function GunlukHedefBar({ tarih }) {
+  const [ozet, setOzet] = useState(null);
+  useEffect(() => { fetch(`/api/uretim-ozet?tarih=${tarih}`).then(r => r.json()).then(setOzet).catch(() => { }); }, [tarih]);
+  if (!ozet || !ozet.kayit_sayisi) return null;
+  return (
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 16px', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+        <span style={{ fontWeight: '700', fontSize: '13px' }}>📈 Günlük Hedef</span>
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{ozet.toplam_uretim} / {ozet.hedef} — %{ozet.hedef_yuzdesi}</span>
+      </div>
+      <div style={{ height: '8px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${ozet.hedef_yuzdesi}%`, background: ozet.hedef_yuzdesi >= 80 ? '#27ae60' : ozet.hedef_yuzdesi >= 50 ? '#f39c12' : '#e74c3c', borderRadius: '4px', transition: 'width 0.5s' }} />
+      </div>
+      <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
+        <span>FPY: <strong style={{ color: '#27ae60' }}>{ozet.fpy}%</strong></span>
+        <span>Aktif: <strong>{ozet.aktif_personel} kişi</strong></span>
+        <span>Değer: <strong>{parseFloat(ozet.toplam_deger || 0).toFixed(0)} ₺</strong></span>
+      </div>
+    </div>
+  );
+}
+
+function PartiBaglantisi({ seciliModel, onSecim }) {
+  const [partiler, setPartiler] = useState([]);
+  useEffect(() => {
+    if (!seciliModel) return;
+    fetch('/api/uretim-giris').then(r => r.json()).then(d => { setPartiler(Array.isArray(d) ? d.filter(p => p.model_id === parseInt(seciliModel)) : []); }).catch(() => { });
+  }, [seciliModel]);
+  if (!seciliModel || partiler.length === 0) return null;
+  return (
+    <div style={{ marginBottom: '8px' }}>
+      <label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>📦 Üretim Partisi</label>
+      <select className="form-input" onChange={e => onSecim(e.target.value)} defaultValue="">
+        <option value="">-- Parti Seç (opsiyonel) --</option>
+        {partiler.map(p => <option key={p.id} value={p.id}>{p.parti_no || 'Parti #' + p.id} — {new Date(p.created_at).toLocaleDateString('tr-TR')}</option>)}
+      </select>
+    </div>
+  );
+}
+
+// ========== GN:012A — SESLİ KOMUT MOTORU ==========
+
+function parseVoiceCommand(transcript, models, personnel) {
+  const t = transcript.toLowerCase().trim();
+  const adetMatch = t.match(/(.+?)\s+(\d+)\s+adet\s+tamamla/);
+  if (adetMatch) {
+    const person = personnel.find(p => p.name.toLowerCase().includes(adetMatch[1]));
+    return { action: 'production_add', params: { personnel_id: person?.id, total_produced: parseInt(adetMatch[2]), personAdi: adetMatch[1] } };
+  }
+  const girisMatch = t.match(/(.+?)\s+giriş\s+yaptı/);
+  if (girisMatch) {
+    const person = personnel.find(p => p.name.toLowerCase().includes(girisMatch[1]));
+    return { action: 'personel_giris', params: { personel_id: person?.id, personAdi: girisMatch[1] } };
+  }
+  const cikisMatch = t.match(/(.+?)\s+çıkış\s+yaptı/);
+  if (cikisMatch) {
+    const person = personnel.find(p => p.name.toLowerCase().includes(cikisMatch[1]));
+    return { action: 'personel_cikis', params: { personel_id: person?.id, personAdi: cikisMatch[1] } };
+  }
+  if (t.includes('bugünkü üretim')) return { action: 'uretim_sorgu', params: {} };
+  if (t.includes('vardiya')) return { action: 'vardiya', params: {} };
+  return null;
+}
+
+async function executeVoiceCommand(parsed, addToast) {
+  if (!parsed) { addToast('warning', '🎙️ Komut anlaşılamadı'); return; }
+  const { action, params } = parsed;
+  if (action === 'production_add') {
+    await fetch('/api/production', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ personnel_id: params.personnel_id, total_produced: params.total_produced, defective_count: 0 }) });
+    addToast('success', `✅ ${params.personAdi}: ${params.total_produced} adet kaydedildi`);
+  } else if (action === 'personel_giris') {
+    await fetch('/api/personel-saat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ personel_id: params.personel_id, tip: 'giris' }) });
+    addToast('success', `✅ ${params.personAdi} giriş kaydedildi`);
+  } else if (action === 'personel_cikis') {
+    await fetch('/api/personel-saat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ personel_id: params.personel_id, tip: 'cikis' }) });
+    addToast('success', `✅ ${params.personAdi} çıkış kaydedildi`);
+  } else if (action === 'uretim_sorgu') {
+    const r = await fetch('/api/production?date=' + new Date().toISOString().split('T')[0]);
+    const d = await r.json();
+    addToast('info', `📊 Bugün: ${Array.isArray(d) ? d.reduce((s, l) => s + (l.total_produced || 0), 0) : 0} adet`);
+  } else if (action === 'vardiya') {
+    addToast('info', '🔄 Vardiya değişimi');
+  }
+}
+
+function SesliKomutButonu({ models, personnel, addToast }) {
+  const [aktif, setAktif] = React.useState(false);
+  const [sonKomut, setSonKomut] = React.useState('');
+  const baslat = () => {
+    setAktif(true);
+    const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    rec.lang = 'tr-TR'; rec.interimResults = false;
+    rec.onresult = async (e) => {
+      const t = e.results[0][0].transcript;
+      setSonKomut(t);
+      const parsed = parseVoiceCommand(t, models, personnel);
+      await executeVoiceCommand(parsed, addToast);
+      setAktif(false);
+    };
+    rec.onerror = () => setAktif(false);
+    rec.onend = () => setAktif(false);
+    rec.start();
+  };
+  return (
+    <>
+      <button onClick={baslat} disabled={aktif} style={{ width: '44px', height: '44px', borderRadius: '50%', background: aktif ? '#e74c3c' : 'var(--accent)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '20px' }}>
+        {aktif ? '⏹' : '🎙️'}
+      </button>
+      <div>
+        <div style={{ fontWeight: '700', fontSize: '13px' }}>Sesli Komut {aktif && <span style={{ color: '#e74c3c' }}>● Dinliyor...</span>}</div>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sonKomut || '"Ahmet 5 adet tamamladı" — "Mehmet giriş yaptı"'}</div>
+      </div>
+    </>
+  );
+}
+
+// ========== GN:012C — FASON HESAP MİNİ ==========
+
+function FasonHesapMini({ addToast }) {
+  const [kar, setKar] = React.useState(20);
+  const [malzeme, setMalzeme] = React.useState(0);
+  const [sonuc, setSonuc] = React.useState(null);
+  const hesapla = async () => {
+    const r = await fetch('/api/fason-fiyat-hesapla', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kar_marji_yuzde: kar, ek_malzeme_tl: malzeme }) });
+    setSonuc(await r.json());
+  };
+  return (
+    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+      <div><label style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Kâr %</label><input type="number" className="form-input" style={{ width: '70px' }} value={kar} onChange={e => setKar(e.target.value)} /></div>
+      <div><label style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ek Malzeme ₺</label><input type="number" className="form-input" style={{ width: '100px' }} value={malzeme} onChange={e => setMalzeme(e.target.value)} /></div>
+      <button onClick={hesapla} style={{ padding: '8px 14px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700' }}>Hesapla</button>
+      {sonuc && <div style={{ padding: '8px 12px', background: sonuc.kar_zarar_sinyal === 'karli' ? 'rgba(46,204,113,0.15)' : 'rgba(231,76,60,0.1)', borderRadius: '8px', fontSize: '13px', fontWeight: '700' }}>
+        {sonuc.kar_zarar_sinyal === 'karli' ? '✅' : '⚠️'} Fason: {sonuc.fason_fiyat}₺ | Birim: {sonuc.birim_fiyat}₺
+      </div>}
+    </div>
+  );
+}
+
 
 
 function VoiceBtn({ fieldKey, listeningField, voiceLang, startVoice, toggleLang }) {
@@ -4450,6 +4590,8 @@ function UretimTabBar({ models, personnel, addToast }) {
 function PersonelDevamBar({ personnel, addToast }) {
   const [kayitlar, setKayitlar] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [aktifSekme, setAktifSekme] = useState('gunluk');
+  const [ozet, setOzet] = useState([]);
   const bugun = new Date().toISOString().split('T')[0];
 
   const yukle = useCallback(async () => {
@@ -4461,7 +4603,16 @@ function PersonelDevamBar({ personnel, addToast }) {
     } catch { } finally { setYukleniyor(false); }
   }, [bugun]);
 
+  const yukleHaftalik = useCallback(async () => {
+    try {
+      const res = await fetch('/api/personel-haftalik');
+      const d = await res.json();
+      setOzet(d.personel || []);
+    } catch { }
+  }, []);
+
   useEffect(() => { yukle(); }, [yukle]);
+  useEffect(() => { if (aktifSekme === 'haftalik') yukleHaftalik(); }, [aktifSekme, yukleHaftalik]);
 
   const kayitBul = (pid) => kayitlar.find(k => k.personel_id === pid);
 
@@ -4479,32 +4630,68 @@ function PersonelDevamBar({ personnel, addToast }) {
   return (
     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <div style={{ fontWeight: '700', fontSize: '14px' }}>⏱️ Günlük Devam — {new Date().toLocaleDateString('tr-TR')}</div>
-        <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{gelenler}/{aktifler.length} geldi</div>
+        <div style={{ fontWeight: '700', fontSize: '14px' }}>⏱️ Personel Devam</div>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button onClick={() => setAktifSekme('gunluk')} style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '12px', background: aktifSekme === 'gunluk' ? 'var(--accent)' : 'var(--bg-input)', color: aktifSekme === 'gunluk' ? '#fff' : 'var(--text-muted)' }}>📅 Günlük</button>
+          <button onClick={() => setAktifSekme('haftalik')} style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '12px', background: aktifSekme === 'haftalik' ? 'var(--accent)' : 'var(--bg-input)', color: aktifSekme === 'haftalik' ? '#fff' : 'var(--text-muted)' }}>📊 Haftalık Özet</button>
+          <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>{gelenler}/{aktifler.length} geldi</div>
+        </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
-        {aktifler.map(p => {
-          const k = kayitBul(p.id);
-          return (
-            <div key={p.id} style={{ padding: '10px', background: 'var(--bg-input)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-              <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '6px' }}>{p.name}</div>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {!k?.giris_saat ? (
-                  <button onClick={() => tiklama(p.id, 'giris')} style={{ padding: '4px 10px', background: 'rgba(46,204,113,0.15)', color: '#27ae60', border: '1px solid rgba(46,204,113,0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>✅ Giriş</button>
-                ) : (
-                  <span style={{ fontSize: '12px', color: '#27ae60', fontWeight: '600' }}>✅ {k.giris_saat}</span>
-                )}
-                {k?.giris_saat && !k?.cikis_saat && (
-                  <button onClick={() => tiklama(p.id, 'cikis')} style={{ padding: '4px 10px', background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: '1px solid rgba(231,76,60,0.2)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>🚪 Çıkış</button>
-                )}
-                {k?.cikis_saat && (
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Çıkış: {k.cikis_saat} | Net: {Math.floor((k.net_calisma_dakika || 0) / 60)}s {((k.net_calisma_dakika || 0) % 60)}dk</span>
-                )}
+
+      {aktifSekme === 'gunluk' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
+          {aktifler.map(p => {
+            const k = kayitBul(p.id);
+            return (
+              <div key={p.id} style={{ padding: '10px', background: 'var(--bg-input)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '6px' }}>{p.name}</div>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {!k?.giris_saat ? (
+                    <button onClick={() => tiklama(p.id, 'giris')} style={{ padding: '4px 10px', background: 'rgba(46,204,113,0.15)', color: '#27ae60', border: '1px solid rgba(46,204,113,0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>✅ Giriş</button>
+                  ) : (
+                    <span style={{ fontSize: '12px', color: '#27ae60', fontWeight: '600' }}>✅ {k.giris_saat}</span>
+                  )}
+                  {k?.giris_saat && !k?.cikis_saat && (
+                    <button onClick={() => tiklama(p.id, 'cikis')} style={{ padding: '4px 10px', background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: '1px solid rgba(231,76,60,0.2)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>🚪 Çıkış</button>
+                  )}
+                  {k?.cikis_saat && (
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Çıkış: {k.cikis_saat} | Net: {Math.floor((k.net_calisma_dakika || 0) / 60)}s {((k.net_calisma_dakika || 0) % 60)}dk</span>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
+
+      {aktifSekme === 'haftalik' && (
+        <div style={{ overflowX: 'auto' }}>
+          {ozet.length === 0 ? (
+            <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>Bu hafta kayıt yok.</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid var(--border-color)' }}>
+                  <th style={{ textAlign: 'left', padding: '8px', fontWeight: '700' }}>Ad</th>
+                  <th style={{ textAlign: 'right', padding: '8px', fontWeight: '700' }}>Saat</th>
+                  <th style={{ textAlign: 'right', padding: '8px', fontWeight: '700' }}>Mesai</th>
+                  <th style={{ textAlign: 'right', padding: '8px', fontWeight: '700', color: '#27ae60' }}>Net Maaş</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ozet.map(p => (
+                  <tr key={p.personel_id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={{ padding: '8px', fontWeight: '600' }}>{p.ad}</td>
+                    <td style={{ padding: '8px', textAlign: 'right' }}>{p.normal_saat}s</td>
+                    <td style={{ padding: '8px', textAlign: 'right', color: '#e67e22' }}>{p.mesai_saat}s</td>
+                    <td style={{ padding: '8px', textAlign: 'right', fontWeight: '700', color: '#27ae60' }}>{p.net_maas} ₺</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -4573,6 +4760,10 @@ function IsletmeGiderForm({ addToast }) {
         <button onClick={handleKaydet} disabled={kaydediliyor} style={{ padding: '10px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>
           {kaydediliyor ? '⏳...' : '💾 Kaydet'}
         </button>
+      </div>
+      <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(52,152,219,0.06)', border: '1px solid rgba(52,152,219,0.2)', borderRadius: '8px' }}>
+        <div style={{ fontWeight: '700', fontSize: '13px', marginBottom: '8px' }}>🧮 Fason Fiyat Hesapla</div>
+        <FasonHesapMini addToast={addToast} />
       </div>
     </div>
   );
@@ -6990,6 +7181,7 @@ function ProductionPage({ models, personnel, addToast }) {
   const [selectedModel, setSelectedModel] = useState('');
   const [selectedOperation, setSelectedOperation] = useState('');
   const [selectedPerson, setSelectedPerson] = useState('');
+  const [seciliPartiId, setSeciliPartiId] = useState('');
   const [operations, setOperations] = useState([]);
   const [activeSession, setActiveSession] = useState(() => {
     try { const s = typeof window !== 'undefined' && sessionStorage.getItem('activeSession'); return s ? JSON.parse(s) : null; } catch { return null; }
@@ -7209,6 +7401,7 @@ function ProductionPage({ models, personnel, addToast }) {
       model_id: parseInt(selectedModel), operation_id: parseInt(selectedOperation),
       personnel_id: parseInt(selectedPerson), model_name: model?.name, model_code: model?.code,
       operation_name: op?.name, personnel_name: person?.name, unit_price: op?.unit_price || 0,
+      parti_id: seciliPartiId ? parseInt(seciliPartiId) : null,
       start_time: new Date().toISOString()
     });
     setTimer(0);
@@ -7280,6 +7473,9 @@ function ProductionPage({ models, personnel, addToast }) {
           return null;
         })()}
         <UretimTabBar models={models} personnel={personnel} addToast={addToast} />
+
+        {/* 📈 #4 GÜNLÜK HEDEF BAR */}
+        <GunlukHedefBar tarih={filterDate} />
 
         {/* ── STAT KARTLARI ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '16px' }}>
