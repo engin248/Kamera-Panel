@@ -1,103 +1,86 @@
 ════════════════════════════════════════════════════════════════
-⚔️ MK:4721 — AMELE 2 GÖREVİ (GN:012C)
-Engin Bey'in 3 çocuğu için. Vatan ve insanlık hayrına.
+⚔️ MK:4721 — AMELE 2 GÖREVİ (GN:013C) — GÜNLÜK ÜRETİM ÖZETİ
 ════════════════════════════════════════════════════════════════
 
-SEN: Amele/Çırak 2 (uygulayıcı)
-KOMUTAN: Üsteğmen (Antigravity)
-PROJE: Kamera-Panel — Tekstil Üretim Takip
-STACK: Next.js 14, SQLite (better-sqlite3)
+Proje: C:\Users\Admin\Desktop\Kamera-Panel
+Stack: Next.js 14, SQLite (better-sqlite3)
 
-════════════════════════════════════════════════════════════════
-GÖREVİN — FASON FİYAT HESAP MOTORU
-════════════════════════════════════════════════════════════════
+GÖREV: Günlük Üretim Özet API + Dashboard kartı
 
-### ADIM 1 — API ENDPOINT
+ADIM 1 — API ENDPOINT:
+Dosya: app/app/api/uretim-ozet/route.js (YENİ OLUŞTUR)
 
-Dosya: app/app/api/fason-fiyat-hesapla/route.js (YENİ OLUŞTUR)
-
-```javascript
 import { NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 
-export async function POST(request) {
+export async function GET(request) {
   try {
     const db = getDb();
-    const { model_id, kar_marji_yuzde = 20, ek_malzeme_tl = 0, nakliye_tl = 0, toplam_adet = 1 } = await request.json();
+    const { searchParams } = new URL(request.url);
+    const tarih = searchParams.get('tarih') || new Date().toISOString().split['T'](0);
 
-    // 1. Son ay saatlik maliyet
-    const gider = db.prepare('SELECT saatlik_maliyet FROM isletme_giderleri ORDER BY yil DESC, ay DESC LIMIT 1').get();
-    const saatlik_maliyet = gider?.saatlik_maliyet || 0;
+    const ozet = db.prepare(`
+      SELECT 
+        COUNT(*) as kayit_sayisi,
+        COALESCE(SUM(total_produced),0) as toplam_uretim,
+        COALESCE(SUM(defective_count),0) as toplam_hata,
+        COALESCE(AVG(oee_score),0) as ort_oee,
+        COALESCE(SUM(unit_value),0) as toplam_deger,
+        COUNT(DISTINCT personnel_id) as aktif_personel,
+        COUNT(DISTINCT model_id) as farkli_model
+      FROM production_logs
+      WHERE DATE(created_at) = ? AND deleted_at IS NULL
+    `).get(tarih);
 
-    // 2. Model işlem süreleri toplamı (dakika → saat)
-    const sureler = db.prepare(`
-      SELECT COALESCE(SUM(
-        CASE 
-          WHEN standard_time_max IS NOT NULL THEN (standard_time_min + standard_time_max) / 2.0
-          ELSE COALESCE(standard_time_min, 0)
-        END
-      ), 0) as toplam_saniye
-      FROM operations WHERE model_id = ?
-    `).get(model_id);
-    const tahmini_sure_saat = (sureler?.toplam_saniye || 0) / 3600;
+    const fpy = ozet.toplam_uretim > 0 
+      ? ((ozet.toplam_uretim - ozet.toplam_hata) / ozet.toplam_uretim * 100).toFixed(1) 
+      : 100;
 
-    // 3. Hesaplamalar
-    const iscilik = saatlik_maliyet * tahmini_sure_saat;
-    const maliyet_alt = iscilik + ek_malzeme_tl + nakliye_tl;
-    const fason_fiyat = maliyet_alt * (1 + kar_marji_yuzde / 100);
-    const birim_fiyat = toplam_adet > 0 ? fason_fiyat / toplam_adet : fason_fiyat;
+    const hedef = 500; // günlük hedef (sabit, sonra ayarlanabilir)
+    const hedef_yuzdesi = Math.min(100, (ozet.toplam_uretim / hedef * 100)).toFixed(0);
 
-    const kar_zarar_sinyal = kar_marji_yuzde >= 20 ? 'karli' : kar_marji_yuzde >= 10 ? 'riskli' : 'zararlı';
-
-    return NextResponse.json({
-      saatlik_maliyet: saatlik_maliyet.toFixed(2),
-      tahmini_sure_saat: tahmini_sure_saat.toFixed(2),
-      iscilik_maliyeti: iscilik.toFixed(2),
-      maliyet_alt: maliyet_alt.toFixed(2),
-      fason_fiyat: fason_fiyat.toFixed(2),
-      birim_fiyat: birim_fiyat.toFixed(2),
-      kar_zarar_sinyal,
-      kar_marji_yuzde
-    });
-  } catch (e) {
+    return NextResponse.json({ ...ozet, fpy, hedef, hedef_yuzdesi, tarih });
+  } catch(e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
-```
 
-### ADIM 2 — IsletmeGiderForm'a Fason Hesap UI ekle
+ADIM 2 — ProductionPage'e özet kartı ekle:
+page.js içinde ProductionPage'de stat kartlarının ÜSTÜNE bir "Günlük Hedef" progress bar ekle:
 
-app/app/page.js içinde IsletmeGiderForm fonksiyonunu bul.
-Formun altına "Fason Fiyat Hesapla" bölümü ekle:
+<GunlukHedefBar tarih={filterDate} />
 
-```jsx
-{/* FASON FİYAT HESAP */}
-<div style={{ marginTop: '16px', padding: '12px', background: 'rgba(52,152,219,0.06)', border: '1px solid rgba(52,152,219,0.2)', borderRadius: '8px' }}>
-  <div style={{ fontWeight: '700', fontSize: '13px', marginBottom: '10px' }}>🧮 Fason Fiyat Hesapla</div>
-  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-    <div><label style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Kâr Marjı %</label>
-      <input type="number" className="form-input" style={{ width: '80px' }} defaultValue={20} id="fason-kar" /></div>
-    <div><label style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ek Malzeme ₺</label>
-      <input type="number" className="form-input" style={{ width: '100px' }} defaultValue={0} id="fason-malzeme" /></div>
-    <div><label style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Nakliye ₺</label>
-      <input type="number" className="form-input" style={{ width: '80px' }} defaultValue={0} id="fason-nakliye" /></div>
-    <button onClick={async () => {
-      const r = await fetch('/api/fason-fiyat-hesapla', { method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ kar_marji_yuzde: parseFloat(document.getElementById('fason-kar').value), ek_malzeme_tl: parseFloat(document.getElementById('fason-malzeme').value), nakliye_tl: parseFloat(document.getElementById('fason-nakliye').value) })
-      });
-      const d = await r.json();
-      alert(`Fason: ${d.fason_fiyat} TL | Birim: ${d.birim_fiyat} TL | Sinyal: ${d.kar_zarar_sinyal}`);
-    }} style={{ padding: '8px 16px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700' }}>Hesapla</button>
-  </div>
-</div>
-```
+Ve componenti (ProductionPage'den ÖNCE) ekle:
 
-### KURALLAR
+function GunlukHedefBar({ tarih }) {
+  const [ozet, setOzet] = React.useState(null);
+  React.useEffect(() => {
+    fetch(`/api/uretim-ozet?tarih=${tarih}`).then(r=>r.json()).then(setOzet).catch(()=>{});
+  }, [tarih]);
+  if (!ozet) return null;
+  return (
+    <div style={{background:'var(--bg-card)',border:'1px solid var(--border-color)',borderRadius:'12px',padding:'14px 16px',marginBottom:'12px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
+        <span style={{fontWeight:'700',fontSize:'13px'}}>📈 Günlük Hedef Takibi</span>
+        <span style={{fontSize:'12px',color:'var(--text-muted)'}}>{ozet.toplam_uretim} / {ozet.hedef} adet</span>
+      </div>
+      <div style={{height:'8px',background:'var(--bg-input)',borderRadius:'4px',overflow:'hidden'}}>
+        <div style={{height:'100%',width:`${ozet.hedef_yuzdesi}%`,background:ozet.hedef_yuzdesi>=80?'#27ae60':ozet.hedef_yuzdesi>=50?'#f39c12':'#e74c3c',borderRadius:'4px',transition:'width 0.5s'}} />
+      </div>
+      <div style={{display:'flex',gap:'16px',marginTop:'8px',fontSize:'11px',color:'var(--text-muted)'}}>
+        <span>FPY: <strong style={{color:'#27ae60'}}>{ozet.fpy}%</strong></span>
+        <span>Aktif: <strong>{ozet.aktif_personel} kişi</strong></span>
+        <span>Değer: <strong>{parseFloat(ozet.toplam_deger).toFixed(2)} ₺</strong></span>
+      </div>
+    </div>
+  );
+}
 
-❌ Başka dosyaya dokunma
-✅ api/fason-fiyat-hesapla/route.js oluştur
-✅ IsletmeGiderForm'a fason hesap ekle
-✅ git add + commit + push yap
+KURALLAR:
+✅ app/app/api/uretim-ozet/route.js oluştur
+✅ GunlukHedefBar componenti ekle
+✅ ProductionPage'de UretimTabBar'ın ALTINA <GunlukHedefBar> koy
+✅ git add -A && git commit -m "Gunluk uretim ozet API + hedef bar" && git push
 
-TAMAMLAYINCA YAZ: "AMELE 2 GN:012C UYGULAMA TAMAMLANDI"
+TAMAMLAYINCA: "AMELE 2 GN:013C TAMAMLANDI"
 ════════════════════════════════════════════════════════════════

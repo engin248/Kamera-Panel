@@ -1,88 +1,44 @@
 ════════════════════════════════════════════════════════════════
-⚔️ MK:4721 — AMELE 1 GÖREVİ (GN:012B)
-Engin Bey'in 3 çocuğu için. Vatan ve insanlık hayrına.
+⚔️ MK:4721 — AMELE 1 GÖREVİ (GN:013B) — ÜRETİM TAKİP TABLO
 ════════════════════════════════════════════════════════════════
 
-SEN: Amele/Çırak 1 (uygulayıcı)
-KOMUTAN: Üsteğmen (Antigravity)
-PROJE: Kamera-Panel — Tekstil Üretim Takip
-STACK: Next.js 14, SQLite (better-sqlite3)
+Proje: C:\Users\Admin\Desktop\Kamera-Panel
+Dosya: app/app/page.js → ProductionPage
+Stack: Next.js 14, React, SQLite
 
-════════════════════════════════════════════════════════════════
-GÖREVİN — PERSONEL HAFTALIK ÖZET + MAAŞ HESABI
-════════════════════════════════════════════════════════════════
+GÖREV: Üretim kayıtları tablosuna 3 yeni sütun ekle
 
-### ADIM 1 — API ENDPOINT
+Mevcut tablo: filteredLogs üzerinde döngü var.
+Her satırda: personel, model, işlem, üretilen, hatalı, süre, FPY%, OEE, değer
 
-Dosya: app/app/api/personel-haftalik/route.js (YENİ OLUŞTUR)
+EKLENECEK 3 SÜTUN:
 
-```javascript
-import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+1. Parti No — log.parti_no (API'den gelmesi lazım)
+2. Birim Süre — (duration_seconds / total_produced).toFixed(1) + "s"
+3. Durum badge — FPY >= 95 → 🟢 İyi | 85-95 → 🟡 Dikkat | <85 → 🔴 Müdahale
 
-export async function GET(request) {
-  try {
-    const db = getDb();
-    const { searchParams } = new URL(request.url);
-    const hafta = searchParams.get('hafta') || (() => {
-      const d = new Date();
-      const start = new Date(d.setDate(d.getDate() - d.getDay() + 1));
-      return start.toISOString().split('T')[0];
-    })();
+ADIM 1: /api/production/route.js dosyasına bak.
+SELECT sorgusuna ekle: ug.parti_no (LEFT JOIN uretim_girisleri ug ON ug.model_id = pl.model_id)
 
-    // Haftanın başı ve sonu
-    const haftaBaslangic = hafta;
-    const haftaSonu = new Date(new Date(hafta).getTime() + 6*24*60*60*1000).toISOString().split('T')[0];
+ADIM 2: Tablodaki satırlarda şu 3 hücreyi ekle:
+<td style={{padding:'6px 10px'}}>{log.parti_no || '—'}</td>
+<td style={{padding:'6px 10px'}}>{log.total_produced > 0 ? ((log.duration_seconds||0)/log.total_produced).toFixed(1)+'s' : '—'}</td>
+<td style={{padding:'6px 10px'}}>
+  <span style={{padding:'2px 8px',borderRadius:'12px',fontSize:'11px',fontWeight:'700',
+    background: (log.first_pass_yield||100)>=95?'rgba(46,204,113,0.15)':(log.first_pass_yield||100)>=85?'rgba(243,156,18,0.15)':'rgba(231,76,60,0.15)',
+    color: (log.first_pass_yield||100)>=95?'#27ae60':(log.first_pass_yield||100)>=85?'#f39c12':'#e74c3c'
+  }}>
+    {(log.first_pass_yield||100)>=95?'🟢 İyi':(log.first_pass_yield||100)>=85?'🟡 Dikkat':'🔴 Müdahale'}
+  </span>
+</td>
 
-    const kayitlar = db.prepare(`
-      SELECT 
-        psk.personel_id,
-        p.name as ad,
-        p.daily_wage,
-        SUM(psk.net_calisma_dakika) as toplam_dk,
-        SUM(psk.mesai_dakika) as mesai_dk,
-        COUNT(psk.id) as gun_sayisi
-      FROM personel_saat_kayitlari psk
-      JOIN personnel p ON p.id = psk.personel_id
-      WHERE psk.tarih BETWEEN ? AND ?
-      GROUP BY psk.personel_id
-      ORDER BY p.name
-    `).all(haftaBaslangic, haftaSonu);
+ADIM 3: Tablo başlığına da ekle:
+<th>Parti</th><th>Birim Süre</th><th>Durum</th>
 
-    // Maaş hesapla
-    const sonuc = kayitlar.map(k => {
-      const saatlikUcret = (k.daily_wage || 0) / 8;
-      const normalSaat = (k.toplam_dk || 0) / 60;
-      const mesaiSaat = (k.mesai_dk || 0) / 60;
-      const netMaas = (normalSaat * saatlikUcret) + (mesaiSaat * saatlikUcret * 1.5);
-      return { ...k, saatlikUcret: saatlikUcret.toFixed(2), normalSaat: normalSaat.toFixed(1), mesaiSaat: mesaiSaat.toFixed(1), netMaas: netMaas.toFixed(2) };
-    });
+KURALLAR:
+❌ Mevcut sütun silme
+✅ Sadece 3 sütun ekle
+✅ git add -A && git commit -m "Uretim tablosuna parti+birim sure+durum sutunlari" && git push
 
-    return NextResponse.json({ hafta: haftaBaslangic, bitis: haftaSonu, personel: sonuc });
-  } catch (e) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
-  }
-}
-```
-
-### ADIM 2 — PersonelDevamBar'a "Haftalık Özet" sekmesi ekle
-
-app/app/page.js içinde PersonelDevamBar fonksiyonunu bul.
-useState'e `[haftalikTab, setHaftalikTab] = useState('gunluk')` ekle.
-2 sekme butonu ekle: "Günlük Devam" ve "📊 Haftalık Özet".
-
-Haftalık özet sekmesinde tablo:
-
-- Sütunlar: Ad | Bu Hafta Saat | Mesai | Net Maaş Tahmini
-- useEffect ile `/api/personel-haftalik` çağır
-- Yeşil badge: net maaş tutarı
-
-### KURALLAR
-
-❌ Başka dosyaya dokunma
-✅ api/personel-haftalik/route.js oluştur
-✅ PersonelDevamBar'a haftalık sekme ekle
-✅ git add + commit + push yap
-
-TAMAMLAYINCA YAZ: "AMELE 1 GN:012B UYGULAMA TAMAMLANDI"
+TAMAMLAYINCA: "AMELE 1 GN:013B TAMAMLANDI"
 ════════════════════════════════════════════════════════════════
