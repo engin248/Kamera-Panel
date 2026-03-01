@@ -5404,6 +5404,92 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                         </div>
 
+                        {/* 🤖 GPT-4o VİSİON — OTOMATİK FÖY OKUMA */}
+                        <div style={{
+                          background: 'linear-gradient(135deg, rgba(52,152,219,0.1), rgba(41,128,185,0.05))',
+                          border: '1px solid rgba(52,152,219,0.3)',
+                          borderRadius: '12px',
+                          padding: '16px',
+                          marginBottom: '20px'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                            <span style={{ fontSize: '20px' }}>🤖</span>
+                            <div>
+                              <div style={{ fontWeight: '700', fontSize: '14px' }}>Otomatik Teknik Föy Okuma</div>
+                              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Fotoğraf yükle → GPT-4o Vision okusun → Bilgiler otomatik gelsin</div>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                            <label style={{
+                              display: 'flex', alignItems: 'center', gap: '6px',
+                              padding: '8px 16px', background: 'rgba(52,152,219,0.15)',
+                              border: '1px dashed rgba(52,152,219,0.4)', borderRadius: '8px',
+                              cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: '#3498db'
+                            }}>
+                              <input type="file" accept="image/*" style={{ display: 'none' }}
+                                onChange={async (e) => {
+                                  const file = e.target.files[0];
+                                  if (!file) return;
+                                  // Base64'e çevir
+                                  const reader = new FileReader();
+                                  reader.onload = async (ev) => {
+                                    const base64 = ev.target.result.split(',')[1];
+                                    addToast('info', '🤖 GPT-4o föyü okuyor...');
+                                    try {
+                                      const res = await fetch('/api/model-vision', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ image_base64: base64 })
+                                      });
+                                      const data = await res.json();
+                                      if (data.success && data.data) {
+                                        const d = data.data;
+                                        // Sonucu göster
+                                        const bilgiStr = [
+                                          d.model_adi && `Model: ${d.model_adi}`,
+                                          d.bedenler?.length && `Bedenler: ${d.bedenler.join(', ')}`,
+                                          d.parca_sayisi && `Parça: ${d.parca_sayisi}`,
+                                          d.islemler?.length && `${d.islemler.length} işlem bulundu`,
+                                          d.aksesuarlar?.length && `Aksesuarlar: ${d.aksesuarlar.join(', ')}`,
+                                        ].filter(Boolean).join(' | ');
+                                        addToast('success', `✅ ${bilgiStr}`);
+                                        // İşlem sırasını kaydet
+                                        if (d.islemler?.length) {
+                                          await fetch('/api/model-operasyonlar', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                              model_id: model.id,
+                                              islemler: d.islemler.map((op, i) => ({
+                                                sira_no: op.sira || i + 1,
+                                                islem_adi: op.islem_adi,
+                                                makine_tipi: op.makine || '',
+                                                zorluk_derecesi: op.zorluk || 3
+                                              }))
+                                            })
+                                          });
+                                          addToast('success', `🧵 ${d.islemler.length} işlem "Dikim İşlem Sırası" sekmesine kaydedildi`);
+                                        }
+                                      } else {
+                                        addToast('error', '❌ Okuma başarısız: ' + (data.error || 'Bilinmeyen hata'));
+                                      }
+                                    } catch (err) {
+                                      addToast('error', '❌ ' + err.message);
+                                    }
+                                  };
+                                  reader.readAsDataURL(file);
+                                  e.target.value = '';
+                                }}
+                              />
+                              📄 Teknik Föy Fotoğrafı Seç
+                            </label>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', paddingTop: '10px' }}>
+                              JPG / PNG — Firma tarafından gelen ölçü ve işlem tablosunun fotoğrafı
+                            </div>
+                          </div>
+                        </div>
+
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
 
                           {[
