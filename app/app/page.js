@@ -5682,6 +5682,67 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                         </div>
 
+                        {/* 🎙️ SESLİ HIZLI EKLEME */}
+                        <div style={{
+                          background: 'linear-gradient(135deg, rgba(46,204,113,0.08), rgba(39,174,96,0.04))',
+                          border: '1px solid rgba(46,204,113,0.25)',
+                          borderRadius: '10px', padding: '12px', marginBottom: '14px'
+                        }}>
+                          <div style={{ fontSize: '12px', fontWeight: '700', color: '#2ecc71', marginBottom: '8px' }}>
+                            🎙️ Sesli Hızlı İşlem Ekleme — Modelci konuşsun, işlem listeye girersin
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <input
+                              id={`voice-islem-${model.id}`}
+                              type="text"
+                              placeholder='Örnek: "Yaka çatımı — Overlok — zorluk 3"'
+                              style={{
+                                flex: 1, minWidth: '200px', padding: '8px 12px',
+                                background: 'var(--bg-input)', border: '1px solid var(--border-color)',
+                                borderRadius: '8px', fontSize: '13px', color: 'var(--text-primary)'
+                              }}
+                              onKeyDown={async (e) => {
+                                if (e.key === 'Enter' && e.target.value.trim()) {
+                                  const val = e.target.value.trim();
+                                  const ops = modelOperations[model.id] || [];
+                                  try {
+                                    await fetch(`/api/models/${model.id}/operations`, {
+                                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ name: val, order_number: ops.length + 1, difficulty: 3 })
+                                    });
+                                    await loadOperations(model.id);
+                                    e.target.value = '';
+                                    addToast('success', `✅ "${val}" eklendi`);
+                                  } catch (err) { addToast('error', err.message); }
+                                }
+                              }}
+                            />
+                            <button
+                              style={{
+                                padding: '8px 12px', borderRadius: '8px', border: 'none',
+                                background: 'rgba(46,204,113,0.2)', color: '#2ecc71',
+                                cursor: 'pointer', fontSize: '18px', fontWeight: '700'
+                              }}
+                              onClick={() => {
+                                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                                if (!SR) { addToast('error', 'Chrome/Edge kullanın'); return; }
+                                const rec = new SR(); rec.lang = 'tr-TR'; rec.start();
+                                addToast('info', '🎙️ Dinliyor...');
+                                rec.onresult = (ev) => {
+                                  const text = ev.results[0][0].transcript;
+                                  const inp = document.getElementById(`voice-islem-${model.id}`);
+                                  if (inp) inp.value = text;
+                                };
+                                rec.onerror = () => addToast('error', 'Ses alınamadı');
+                              }}
+                              title="Sesle söyle"
+                            >🎤</button>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                              Enter ile ekle veya 🎤 basıp söyle
+                            </div>
+                          </div>
+                        </div>
+
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '16px', padding: '10px', background: 'rgba(39,174,96,0.06)', borderRadius: '8px', border: '1px solid rgba(39,174,96,0.15)' }}>
                           📌 Her işlem için <strong>makine tipi</strong> (Overlok/Singer/Reçme/Kollu/Çift İğne/Kontöre), <strong>iplik</strong>, <strong>iğne</strong>, <strong>vuruş/cm</strong> ve <strong>nasıl yapılacağını</strong> detaylı belirtin. İmalatçıya inisiyatif bırakmayın.
                         </div>
