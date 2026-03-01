@@ -4331,6 +4331,7 @@ function UretimTabBar({ models, personnel, addToast }) {
   const [form, setForm] = useState({
     model_id: '', getiren_personel_id: '', acan_personel_id: '',
     acilis_tarihi: new Date().toISOString().slice(0, 16),
+    parti_no: '', asorti: '',
     beden_eksik: false, beden_eksik_detay: '',
     aksesuar_eksik: false, aksesuar_eksik_detay: '',
     kumas_eksik: false, kumas_eksik_detay: '',
@@ -4381,6 +4382,10 @@ function UretimTabBar({ models, personnel, addToast }) {
                 <option value="">-- Model Seç --</option>
                 {models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}
               </select></div>
+            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Parti No *</label>
+              <input className="form-input" placeholder="Örn: P2026-001" value={form.parti_no} onChange={e => setForm(f => ({ ...f, parti_no: e.target.value }))} /></div>
+            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Asorti</label>
+              <input className="form-input" placeholder="Örn: S(50) M(80) L(70)" value={form.asorti} onChange={e => setForm(f => ({ ...f, asorti: e.target.value }))} /></div>
             <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Kim Getirdi?</label>
               <select className="form-input" value={form.getiren_personel_id} onChange={e => setForm(f => ({ ...f, getiren_personel_id: e.target.value }))}>
                 <option value="">-- Personel --</option>
@@ -4412,17 +4417,6 @@ function UretimTabBar({ models, personnel, addToast }) {
               <input type="number" className="form-input" min="0" max="20" value={form.parca_sayisi} onChange={e => setForm(f => ({ ...f, parca_sayisi: e.target.value }))} style={{ width: '80px', marginLeft: '8px' }} /></div>
             <div style={{ flex: 1 }}><input className="form-input" placeholder="Notlar..." value={form.notlar} onChange={e => setForm(f => ({ ...f, notlar: e.target.value }))} /></div>
           </div>
-          {parcaFotolar.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: '8px', marginBottom: '12px' }}>
-              {parcaFotolar.map((p, i) => (
-                <div key={i} style={{ padding: '8px', background: 'var(--bg-input)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '4px' }}>{p.ad}</div>
-                  <input type="file" accept="image/*" style={{ fontSize: '11px', width: '100%' }} onChange={async e => { const file = e.target.files[0]; if (!file) return; const fd = new FormData(); fd.append('file', file); const r = await fetch('/api/upload', { method: 'POST', body: fd }); const { url } = await r.json(); setParcaFotolar(prev => prev.map((pp, ii) => ii === i ? { ...pp, url } : pp)); }} />
-                  {p.url && <img src={p.url} style={{ width: '100%', height: '60px', objectFit: 'cover', borderRadius: '4px', marginTop: '4px' }} alt={p.ad} />}
-                </div>
-              ))}
-            </div>
-          )}
           <button onClick={handleKaydet} disabled={kaydediliyor || !form.model_id} style={{ padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>
             {kaydediliyor ? '⏳ Kaydediliyor...' : '✅ Üretim Girişini Kaydet'}
           </button>
