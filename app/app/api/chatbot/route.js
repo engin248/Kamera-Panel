@@ -1,19 +1,99 @@
 import { NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 
+// ============================================================
+// 4 BOT SİSTEMİ — Her biri farklı uzmanlık alanı
+// ============================================================
+
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const PERPLEXITY_KEY = process.env.PERPLEXITY_API_KEY;
+const DEEPSEEK_KEY = process.env.DEEPSEEK_API_KEY;
+
+// Bot tanımları — uzmanlık, karakter, model
+const BOT_CONFIGS = {
+    gemini: {
+        name: 'Kamera',
+        emoji: '🔩',
+        uzmanlik: 'Operasyon Uzmanı',
+        renk: '#2ecc71',
+        aciklama: 'Anlık üretim, sipariş, personel',
+        systemPrompt: (ozet) => `Sen "47 Sil Baştan 01" fason tekstil fabrikasının OPERASYONELasistanısın. Adın KAMERA.
+
+UZMANLIĞIN: Anlık üretim takibi, günlük hedefler, sipariş durumu, personel performansı.
+TARZIN: Net, hızlı, kesin sayılar ver. Emoji kullan. Gereksiz konuşma.
+DİL: Türkçe. Kısa cevap (max 3-4 satır).
+
+${ozet}
+
+KURAL: Sadece elindeki verilerle konuş. Yoksa "Panelden kontrol edin" de.`
+    },
+
+    gpt: {
+        name: 'Muhasip',
+        emoji: '📊',
+        uzmanlik: 'Muhasebe & Finans Uzmanı',
+        renk: '#3498db',
+        aciklama: 'Maliyet, karlılık, finansal analiz',
+        systemPrompt: (ozet) => `Sen "47 Sil Baştan 01" fason tekstil fabrikasının MUHASEBE ve FİNANS uzmanısın. Adın MUHASİP.
+
+UZMANLIĞIN: Maliyet analizi, karlılık hesabı, personel maaş-verimlilik oranı, işletme giderleri, sipariş başına kar/zarar.
+TARZIN: Profesyonel, analitik düşün. Yüzde hesapları yap. Önerilerde bulun. Finansal risk varsa uyar.
+DİL: Türkçe. Rakamları açıkla. Max 5-6 cümle.
+
+${ozet}
+
+YAKLAŞIM: Her soruyu finansal boyuttan değerlendir. "Bu modelde kar marjı kaç?", "Personel maliyeti üretimi karşılıyor mu?" gibi analizler yap.`
+    },
+
+    perplexity: {
+        name: 'Kaşif',
+        emoji: '🔍',
+        uzmanlik: 'Araştırma & Piyasa Uzmanı',
+        renk: '#9b59b6',
+        aciklama: 'Piyasa, sektör, kumaş fiyatları',
+        systemPrompt: (ozet) => `Sen "47 Sil Baştan 01" fason tekstil fabrikasının ARAŞTIRMA uzmanısın. Adın KAŞİF.
+
+UZMANLIĞIN: Tekstil sektörü, kumaş/iplik piyasa fiyatları, rakip analizi, sektör trendleri, ihracat fırsatları, tedarikçi önerileri.
+TARZIN: Meraklı, araştırmacı. Sektör bilgisini paylaş. Karşılaştırma yap. Kaynak belirt.
+DİL: Türkçe. Bilgilendirici ama sıkmayan. Max 6-7 cümle.
+
+FABRİKA BAĞLAMI:
+${ozet}
+
+NOT: Piyasa araştırmaları için güncel bilgi ver. Fabrika verisini sektör ortalamasıyla kıyasla.`
+    },
+
+    deepseek: {
+        name: 'Tekniker',
+        emoji: '🛠️',
+        uzmanlik: 'Teknik & Model Uzmanı',
+        renk: '#e67e22',
+        aciklama: 'Model, BOM, dikim, kalite',
+        systemPrompt: (ozet) => `Sen "47 Sil Baştan 01" fason tekstil fabrikasının TEKNİK uzmanısın. Adın TEKNİKER.
+
+UZMANLIĞIN: Model teknik detayları, BOM (malzeme listesi), dikim operasyonları, makine seçimi, kalite kontrol standartları, üretim süreçleri, hata analizi.
+TARZIN: Teknik, metodolojik. Adım adım açıkla. Üretim verimliliğine odaklan.
+DİL: Türkçe. Teknik ama anlaşılır. Max 5-6 cümle.
+
+FABRİKA VERİSİ:
+${ozet}
+
+YAKLAŞIM: "Bu modelde en çok hata nerede?", "Dikim sırası doğru mu?", "BOM'da eksik var mı?" gibi teknik analizler yap.`
+    }
+};
 
 export async function POST(request) {
     try {
-        const { message, history = [] } = await request.json();
+        const { message, history = [], bot = 'gemini' } = await request.json();
         if (!message) return NextResponse.json({ error: 'Mesaj boş olamaz' }, { status: 400 });
 
-        // DB'den güncel fabrika verisi çek
+        // DB'den fabrika verisi çek
         const db = getDb();
         const today = new Date().toISOString().split('T')[0];
+        const ay = new Date().getMonth() + 1;
+        const yil = new Date().getFullYear();
 
-        // Aktif siparişler
         const orders = db.prepare(`
       SELECT o.*, m.name as model_name 
       FROM orders o LEFT JOIN models m ON o.model_id = m.id
@@ -21,125 +101,157 @@ export async function POST(request) {
       ORDER BY o.delivery_date ASC LIMIT 10
     `).all();
 
-        // Bugünkü üretim
         const uretim = db.prepare(`
       SELECT p.*, m.name as model_name, per.name as personel_name
       FROM production_logs p
       LEFT JOIN models m ON p.model_id = m.id
       LEFT JOIN personnel per ON p.personnel_id = per.id
       WHERE DATE(p.created_at) = ? AND p.deleted_at IS NULL
-      ORDER BY p.created_at DESC LIMIT 20
+      LIMIT 20
     `).all(today);
 
-        // Aktif personel sayısı
         const personelSayisi = db.prepare(`SELECT COUNT(*) as cnt FROM personnel WHERE status = 'active' AND deleted_at IS NULL`).get();
-
-        // Model sayısı
         const modelSayisi = db.prepare(`SELECT COUNT(*) as cnt FROM models WHERE deleted_at IS NULL`).get();
+        const geciken = db.prepare(`SELECT COUNT(*) as cnt FROM orders WHERE deleted_at IS NULL AND status NOT IN ('tamamlandi','iptal') AND delivery_date < date('now')`).get();
+        const maliyet = db.prepare(`SELECT COALESCE(SUM(amount), 0) as toplam FROM business_expenses WHERE year = ? AND month = ? AND deleted_at IS NULL`).get(yil, ay);
 
-        // Toplam üretim bugün
+        const personelMaas = db.prepare(`SELECT COALESCE(SUM(base_salary), 0) as toplam FROM personnel WHERE status = 'active' AND deleted_at IS NULL`).get();
+        const modeller = db.prepare(`SELECT name, fason_price, total_order FROM models WHERE deleted_at IS NULL LIMIT 5`).all();
+
         const bugunUretim = uretim.reduce((s, r) => s + (r.total_produced || 0), 0);
         const bugunHata = uretim.reduce((s, r) => s + (r.defective_count || 0), 0);
 
-        // Geciken siparişler
-        const geciken = db.prepare(`
-      SELECT COUNT(*) as cnt FROM orders 
-      WHERE deleted_at IS NULL AND status NOT IN ('tamamlandi','iptal')
-      AND delivery_date < date('now')
-    `).get();
-
-        // Bu ayın maliyeti
-        const ay = new Date().getMonth() + 1;
-        const yil = new Date().getFullYear();
-        const maliyet = db.prepare(`
-      SELECT COALESCE(SUM(amount), 0) as toplam FROM business_expenses 
-      WHERE year = ? AND month = ? AND deleted_at IS NULL
-    `).get(yil, ay);
-
         const fabrikaOzet = `
-=== FABRIKA VERİSİ (${new Date().toLocaleString('tr-TR')}) ===
-- Aktif Personel: ${personelSayisi.cnt} kişi
-- Aktif Model Sayısı: ${modelSayisi.cnt}
-- Bugün Üretilen: ${bugunUretim} adet (${bugunHata} hatalı)
-- Aktif Siparişler: ${orders.length} (${geciken.cnt} gecikmiş)
-- Bu Ay Gider: ${parseFloat(maliyet.toplam).toFixed(0)} ₺
+=== FABRİKA: 47 Sil Baştan 01 — ${new Date().toLocaleString('tr-TR')} ===
+Aktif Personel: ${personelSayisi.cnt} | Toplam Model: ${modelSayisi.cnt}
+Bugün Üretim: ${bugunUretim} adet | Hata: ${bugunHata} adet
+Aktif Sipariş: ${orders.length} | Gecikmiş: ${geciken.cnt}
+Bu Ay Gider: ${parseFloat(maliyet.toplam).toFixed(0)} ₺ | Personel Maaş: ${parseFloat(personelMaas.toplam).toFixed(0)} ₺
 
-Aktif Siparişler:
-${orders.slice(0, 5).map(o => `  • ${o.customer_name || 'Müşteri'}: ${o.model_name || 'Model'} — ${o.quantity} adet — Teslim: ${o.delivery_date || 'Belirtilmemiş'} [${o.status}]`).join('\n')}
-
-Bugünkü Üretim Kayıtları:
-${uretim.slice(0, 5).map(u => `  • ${u.personel_name || 'Personel'}: ${u.total_produced || 0} adet üretim (${u.defective_count || 0} hata)`).join('\n')}
+Siparişler: ${orders.slice(0, 4).map(o => `${o.customer_name || '?'}→${o.model_name || '?'} ${o.quantity}adet [${o.delivery_date || '?'}]`).join(' | ')}
+Modeller: ${modeller.map(m => `${m.name}(${m.fason_price || '?'}₺/adet, ${m.total_order || 0}sipariş)`).join(' | ')}
+Bugün Üretim: ${uretim.slice(0, 4).map(u => `${u.personel_name || '?'}:${u.total_produced || 0}adet`).join(' | ')}
 `;
 
-        const systemPrompt = `Sen "47 Sil Baştan 01" fason tekstil fabrikasının AI asistanısın. 
-Adına "Kamera" deniyor.
-Görevlerin: üretim takibi, sipariş yönetimi, personel analizi, maliyet hesaplama.
-Her zaman Türkçe cevap ver. Kısa ve net ol. Emoji kullan. 
-Fabrika verisine göre gerçek cevaplar ver.
+        const config = BOT_CONFIGS[bot] || BOT_CONFIGS.gemini;
+        const systemPrompt = config.systemPrompt(fabrikaOzet);
 
-${fabrikaOzet}
+        // Hangi API'ye göndereceğimizi seç
+        let reply, source;
 
-ÖNEMLİ: Verilen fabrika verisini kullanarak somut, gerçekçi cevaplar ver.
-Eğer sorulan konuda veri yoksa "Şu an bu veriye erişemiyorum, panelden kontrol edin" de.`;
-
-        // Gemini API isteği
-        const geminiBody = {
-            contents: [
-                { role: 'user', parts: [{ text: systemPrompt }] },
-                { role: 'model', parts: [{ text: '✅ Anladım. Fabrika verisi yüklendi. Size nasıl yardımcı olabilirim?' }] },
-                ...history.slice(-6).map(h => ({
-                    role: h.role === 'assistant' ? 'model' : 'user',
-                    parts: [{ text: h.content }]
-                })),
-                { role: 'user', parts: [{ text: message }] }
-            ],
-            generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 500,
-            }
-        };
-
-        const geminiRes = await fetch(GEMINI_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(geminiBody)
-        });
-
-        if (!geminiRes.ok) {
-            // Gemini hata verirse basit kural tabanlı cevap ver
-            const cevap = getKuralTabanliCevap(message, { orders, uretim, personelSayisi, modelSayisi, bugunUretim, geciken });
-            return NextResponse.json({ reply: cevap, source: 'rule-based' });
+        if (bot === 'gemini') {
+            ({ reply, source } = await callGemini(systemPrompt, message, history));
+        } else if (bot === 'gpt') {
+            ({ reply, source } = await callGPT(systemPrompt, message, history));
+        } else if (bot === 'perplexity') {
+            ({ reply, source } = await callPerplexity(systemPrompt, message, history));
+        } else if (bot === 'deepseek') {
+            ({ reply, source } = await callDeepSeek(systemPrompt, message, history));
+        } else {
+            reply = getKuralTabanliCevap(message, { orders, uretim, personelSayisi, modelSayisi, bugunUretim, geciken });
+            source = 'rule-based';
         }
 
-        const geminiData = await geminiRes.json();
-        const reply = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || '❓ Cevap üretilemedi.';
-
-        return NextResponse.json({ reply, source: 'gemini' });
+        return NextResponse.json({ reply, source, bot, botName: config.name, botEmoji: config.emoji });
 
     } catch (error) {
         console.error('Chatbot error:', error);
-        return NextResponse.json({
-            reply: '⚠️ Şu an bağlanamıyorum. Lütfen panelden kontrol edin.',
-            error: error.message
-        }, { status: 500 });
+        return NextResponse.json({ reply: '⚠️ Bağlantı hatası. Lütfen tekrar deneyin.', error: error.message }, { status: 500 });
+    }
+}
+
+// ====== API ÇAĞRILARI ======
+
+async function callGemini(systemPrompt, message, history) {
+    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+    try {
+        const res = await fetch(GEMINI_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [
+                    { role: 'user', parts: [{ text: systemPrompt }] },
+                    { role: 'model', parts: [{ text: '✅ Hazırım.' }] },
+                    ...history.slice(-6).map(h => ({ role: h.role === 'assistant' ? 'model' : 'user', parts: [{ text: h.content }] })),
+                    { role: 'user', parts: [{ text: message }] }
+                ],
+                generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+            })
+        });
+        if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
+        const data = await res.json();
+        return { reply: data?.candidates?.[0]?.content?.parts?.[0]?.text || '❓ Cevap alınamadı.', source: 'gemini' };
+    } catch (e) {
+        return { reply: `❌ Gemini bağlanamadı: ${e.message}`, source: 'error' };
+    }
+}
+
+async function callGPT(systemPrompt, message, history) {
+    try {
+        const msgs = [
+            { role: 'system', content: systemPrompt },
+            ...history.slice(-6).map(h => ({ role: h.role, content: h.content })),
+            { role: 'user', content: message }
+        ];
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+            body: JSON.stringify({ model: 'gpt-4o-mini', messages: msgs, max_tokens: 600, temperature: 0.7 })
+        });
+        if (!res.ok) throw new Error(`GPT HTTP ${res.status}`);
+        const data = await res.json();
+        return { reply: data.choices?.[0]?.message?.content || '❓ Cevap alınamadı.', source: 'gpt-4o-mini' };
+    } catch (e) {
+        return { reply: `❌ GPT bağlanamadı: ${e.message}`, source: 'error' };
+    }
+}
+
+async function callPerplexity(systemPrompt, message, history) {
+    try {
+        const msgs = [
+            { role: 'system', content: systemPrompt },
+            ...history.slice(-4).map(h => ({ role: h.role, content: h.content })),
+            { role: 'user', content: message }
+        ];
+        const res = await fetch('https://api.perplexity.ai/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${PERPLEXITY_KEY}` },
+            body: JSON.stringify({ model: 'llama-3.1-sonar-small-128k-online', messages: msgs, max_tokens: 600, temperature: 0.7 })
+        });
+        if (!res.ok) throw new Error(`Perplexity HTTP ${res.status}`);
+        const data = await res.json();
+        return { reply: data.choices?.[0]?.message?.content || '❓ Cevap alınamadı.', source: 'perplexity' };
+    } catch (e) {
+        return { reply: `❌ Perplexity bağlanamadı: ${e.message}`, source: 'error' };
+    }
+}
+
+async function callDeepSeek(systemPrompt, message, history) {
+    try {
+        const msgs = [
+            { role: 'system', content: systemPrompt },
+            ...history.slice(-6).map(h => ({ role: h.role, content: h.content })),
+            { role: 'user', content: message }
+        ];
+        const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_KEY}` },
+            body: JSON.stringify({ model: 'deepseek-chat', messages: msgs, max_tokens: 600, temperature: 0.7 })
+        });
+        if (!res.ok) throw new Error(`DeepSeek HTTP ${res.status}`);
+        const data = await res.json();
+        return { reply: data.choices?.[0]?.message?.content || '❓ Cevap alınamadı.', source: 'deepseek' };
+    } catch (e) {
+        return { reply: `❌ DeepSeek bağlanamadı: ${e.message}`, source: 'error' };
     }
 }
 
 function getKuralTabanliCevap(message, data) {
     const t = message.toLowerCase();
-    const { orders, uretim, personelSayisi, modelSayisi, bugunUretim, geciken } = data;
-
-    if (t.includes('üretim') || t.includes('bugün')) {
-        return `📊 **Bugünkü Üretim**\n• Toplam üretilen: **${bugunUretim} adet**\n• Aktif personel: ${personelSayisi.cnt} kişi`;
-    }
-    if (t.includes('sipariş') || t.includes('order')) {
-        return `📋 **Siparişler**\n• Aktif sipariş: **${orders.length}**\n• Gecikmiş: **${geciken.cnt}**`;
-    }
-    if (t.includes('personel') || t.includes('çalışan')) {
-        return `👥 **Personel**\n• Aktif çalışan: **${personelSayisi.cnt} kişi**`;
-    }
-    if (t.includes('model')) {
-        return `👗 **Modeller**\n• Toplam model: **${modelSayisi.cnt}**`;
-    }
-    return `🤖 Merhaba! Üretim, sipariş, personel veya maliyet hakkında sorularınızı yanıtlayabilirim.`;
+    const { orders, personelSayisi, modelSayisi, bugunUretim, geciken } = data;
+    if (t.includes('üretim') || t.includes('bugün')) return `📊 Bugün **${bugunUretim} adet** üretildi. Aktif personel: ${personelSayisi.cnt} kişi.`;
+    if (t.includes('sipariş')) return `📋 Aktif: **${orders.length}** sipariş | Gecikmiş: **${geciken.cnt}**`;
+    if (t.includes('personel')) return `👥 Aktif çalışan: **${personelSayisi.cnt} kişi**`;
+    if (t.includes('model')) return `👗 Toplam model: **${modelSayisi.cnt}**`;
+    return `🤖 Üretim, sipariş, personel veya maliyet hakkında sorabilirsiniz.`;
 }

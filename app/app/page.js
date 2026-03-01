@@ -400,16 +400,16 @@ function SpeechToText() {
 // ========== CHATBOT PANELİ ==========
 
 function ChatbotPanel({ onClose }) {
-  const [messages, setMessages] = React.useState([
+  const [messages, setMessages] = useState([
     { role: 'assistant', content: '👋 Merhaba! Ben **Kamera**, fabrikanızın AI asistanıyım.\n\nÜretim durumu, siparişler, personel veya maliyet hakkında sorularınızı yanıtlayabilirim.' }
   ]);
-  const [input, setInput] = React.useState('');
-  const [loading, setLoading] = React.useState(false);
-  const messagesEndRef = React.useRef(null);
-  const inputRef = React.useRef(null);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  React.useEffect(() => scrollToBottom(), [messages]);
+  useEffect(() => scrollToBottom(), [messages]);
 
   const quickCommands = [
     '📊 Bugünkü üretim?',
@@ -547,8 +547,8 @@ function ChatbotPanel({ onClose }) {
 
 function Sidebar({ activePage, setActivePage, onChatbotToggle }) {
 
-  const [uretimAcik, setUretimAcik] = React.useState(true);
-  const [digerAcik, setDigerAcik] = React.useState(false);
+  const [uretimAcik, setUretimAcik] = useState(true);
+  const [digerAcik, setDigerAcik] = useState(false);
 
   const uretimItems = [
     { id: 'models', icon: '👗', label: 'Modeller' },
@@ -618,10 +618,11 @@ function Sidebar({ activePage, setActivePage, onChatbotToggle }) {
         {/* ÜRETİM DEPARTMANI — Accordion kutu */}
         <div style={{
           marginTop: '8px',
-          border: `1px solid ${uretimAktif || uretimAcik ? 'rgba(212,168,71,0.4)' : 'rgba(212,168,71,0.15)'}`,
+          border: `2px solid ${uretimAktif || uretimAcik ? 'rgba(212,168,71,0.75)' : 'rgba(212,168,71,0.35)'}`,
           borderRadius: '14px',
           overflow: 'hidden',
-          background: 'rgba(212,168,71,0.04)',
+          background: 'rgba(212,168,71,0.06)',
+          boxShadow: uretimAktif || uretimAcik ? '0 0 12px rgba(212,168,71,0.15), inset 0 1px 0 rgba(212,168,71,0.1)' : 'none',
           transition: 'all 0.3s ease',
         }}>
 
@@ -5062,7 +5063,23 @@ function ModelsPage({ models, loadModels, addToast }) {
 
   const [newMeasureSize, setNewMeasureSize] = useState('');
 
+  // ── BOM (Malzeme Listesi) State ──
+  const [bomRows, setBomRows] = useState([]);
+  const [newBomRow, setNewBomRow] = useState({
+    malzeme: '', tip: 'Kumaş', renk_kodu: '', gramaj: '', tedarikci: '', birim: 'metre', miktar: '', birim_fiyat: '', notlar: ''
+  });
+  const [editBomIdx, setEditBomIdx] = useState(null);
+  const [editBomRow, setEditBomRow] = useState({});
+
+  // ── Onay Zinciri State ──
+  const [onayZinciri, setOnayZinciri] = useState([]);
+  const [newOnay, setNewOnay] = useState({ kisi: '', unvan: 'Modelist', durum: 'Bekliyor', not: '' });
+  const [editOnayIdx, setEditOnayIdx] = useState(null);
+  const [editOnayRow, setEditOnayRow] = useState({});
+  const [onayArama, setOnayArama] = useState('');
+
   // Etiket state
+
 
   const [labelInfo, setLabelInfo] = useState({
 
@@ -5346,14 +5363,17 @@ function ModelsPage({ models, loadModels, addToast }) {
   const detailTabs = [
     { id: 'genel', label: '📋 Genel' },
     { id: 'olcu', label: '📏 Ölçü Tablosu' },
+    { id: 'bom', label: '📦 Malzeme (BOM)' },
     { id: 'akis', label: '🗺️ Üretim Akış Planı' },
     { id: 'kesim', label: '✂️ Kesim & Ön İşlem' },
     { id: 'islemler', label: '🧵 Dikim İşlem Sırası' },
     { id: 'aksesuar', label: '🔧 Aksesuar & Son İşlem' },
     { id: 'etiket', label: '🏷️ Etiket & Yıkama' },
     { id: 'teknikfoy', label: '🔄 Teknik Föy' },
+    { id: 'onay', label: '✅ Onay Zinciri' },
     { id: 'sesnotu', label: '🎤 Ses Notu' },
   ];
+
 
 
 
@@ -6555,6 +6575,246 @@ function ModelsPage({ models, loadModels, addToast }) {
 
 
 
+
+                    {/* ===== BOM — MALZEME LİSTESİ TAB ===== */}
+                    {detailTab === 'bom' && (
+                      <div style={{ padding: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                          <h4 style={{ fontSize: '15px', fontWeight: '700' }}>📦 BOM — Malzeme Listesi ({model.name})</h4>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Toplam {bomRows.length} malzeme | Toplam: {bomRows.reduce((s, r) => s + (parseFloat(r.miktar || 0) * parseFloat(r.birim_fiyat || 0)), 0).toFixed(2)} ₺</div>
+                        </div>
+
+                        {/* YENİ SATIR EKLEME FORMU */}
+                        <div style={{ padding: '14px', background: 'rgba(52,152,219,0.05)', borderRadius: '10px', border: '1px solid rgba(52,152,219,0.2)', marginBottom: '16px' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '700', color: '#2980b9', marginBottom: '10px' }}>➕ Yeni Malzeme Ekle</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 1fr', gap: '6px', marginBottom: '8px' }}>
+                            <input className="form-input" placeholder="Malzeme Adı *" style={{ fontSize: '12px' }} value={newBomRow.malzeme} onChange={e => setNewBomRow({ ...newBomRow, malzeme: e.target.value })} />
+                            <select className="form-select" style={{ fontSize: '12px' }} value={newBomRow.tip} onChange={e => setNewBomRow({ ...newBomRow, tip: e.target.value })}>
+                              {['Kumaş', 'Astar', 'Tela', 'İplik', 'Düğme', 'Fermuar', 'Etiket', 'Ambalaj', 'Aksesuarlar', 'Diğer'].map(t => <option key={t}>{t}</option>)}
+                            </select>
+                            <input className="form-input" placeholder="Renk Kodu" style={{ fontSize: '12px' }} value={newBomRow.renk_kodu} onChange={e => setNewBomRow({ ...newBomRow, renk_kodu: e.target.value })} />
+                            <input className="form-input" placeholder="Gramaj (g/m²)" style={{ fontSize: '12px' }} value={newBomRow.gramaj} onChange={e => setNewBomRow({ ...newBomRow, gramaj: e.target.value })} />
+                            <input className="form-input" placeholder="Tedarikçi" style={{ fontSize: '12px' }} value={newBomRow.tedarikci} onChange={e => setNewBomRow({ ...newBomRow, tedarikci: e.target.value })} />
+                            <input className="form-input" placeholder="Miktar" type="number" style={{ fontSize: '12px' }} value={newBomRow.miktar} onChange={e => setNewBomRow({ ...newBomRow, miktar: e.target.value })} />
+                            <input className="form-input" placeholder="Birim Fiyat ₺" type="number" style={{ fontSize: '12px' }} value={newBomRow.birim_fiyat} onChange={e => setNewBomRow({ ...newBomRow, birim_fiyat: e.target.value })} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr auto', gap: '6px' }}>
+                            <input className="form-input" placeholder="Not / Açıklama" style={{ fontSize: '12px' }} value={newBomRow.notlar} onChange={e => setNewBomRow({ ...newBomRow, notlar: e.target.value })} />
+                            <select className="form-select" style={{ fontSize: '12px' }} value={newBomRow.birim} onChange={e => setNewBomRow({ ...newBomRow, birim: e.target.value })}>
+                              {['metre', 'kg', 'adet', 'top', 'rulo', 'gram'].map(b => <option key={b}>{b}</option>)}
+                            </select>
+                            <button className="btn btn-primary" style={{ fontSize: '13px', padding: '8px 20px' }} onClick={() => {
+                              if (!newBomRow.malzeme) { alert('Malzeme adı zorunlu!'); return; }
+                              setBomRows([...bomRows, { ...newBomRow, id: Date.now() }]);
+                              setNewBomRow({ malzeme: '', tip: 'Kumaş', renk_kodu: '', gramaj: '', tedarikci: '', birim: 'metre', miktar: '', birim_fiyat: '', notlar: '' });
+                            }}>➕ Ekle</button>
+                          </div>
+                        </div>
+
+                        {/* BOM TABLOSU */}
+                        {bomRows.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                            📦 Henüz malzeme eklenmedi. Yukarıdan ekleyin.
+                          </div>
+                        ) : (
+                          <div className="table-wrapper">
+                            <table className="table" style={{ fontSize: '12px' }}>
+                              <thead>
+                                <tr>
+                                  <th style={{ background: 'var(--accent)', color: '#fff' }}>#</th>
+                                  <th style={{ background: 'var(--accent)', color: '#fff' }}>Malzeme</th>
+                                  <th style={{ background: 'var(--accent)', color: '#fff' }}>Tip</th>
+                                  <th style={{ background: 'var(--accent)', color: '#fff' }}>Renk Kodu</th>
+                                  <th style={{ background: 'var(--accent)', color: '#fff' }}>Gramaj</th>
+                                  <th style={{ background: 'var(--accent)', color: '#fff' }}>Tedarikçi</th>
+                                  <th style={{ background: 'var(--accent)', color: '#fff', textAlign: 'center' }}>Miktar</th>
+                                  <th style={{ background: 'var(--accent)', color: '#fff', textAlign: 'center' }}>Birim</th>
+                                  <th style={{ background: 'var(--accent)', color: '#fff', textAlign: 'right' }}>Birim Fiyat</th>
+                                  <th style={{ background: 'var(--accent)', color: '#fff', textAlign: 'right' }}>Toplam</th>
+                                  <th style={{ background: 'var(--accent)', color: '#fff' }}>Not</th>
+                                  <th style={{ background: '#e74c3c', color: '#fff' }}>İşlem</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {bomRows.map((row, idx) => (
+                                  <tr key={row.id || idx} style={{ background: idx % 2 === 0 ? 'var(--bg-input)' : 'transparent' }}>
+                                    {editBomIdx === idx ? (
+                                      <>
+                                        <td>{idx + 1}</td>
+                                        <td><input className="form-input" style={{ fontSize: '11px', padding: '3px 6px' }} value={editBomRow.malzeme} onChange={e => setEditBomRow({ ...editBomRow, malzeme: e.target.value })} /></td>
+                                        <td><select className="form-select" style={{ fontSize: '11px', padding: '3px' }} value={editBomRow.tip} onChange={e => setEditBomRow({ ...editBomRow, tip: e.target.value })}>
+                                          {['Kumaş', 'Astar', 'Tela', 'İplik', 'Düğme', 'Fermuar', 'Etiket', 'Ambalaj', 'Aksesuarlar', 'Diğer'].map(t => <option key={t}>{t}</option>)}
+                                        </select></td>
+                                        <td><input className="form-input" style={{ fontSize: '11px', padding: '3px 6px', width: '80px' }} value={editBomRow.renk_kodu} onChange={e => setEditBomRow({ ...editBomRow, renk_kodu: e.target.value })} /></td>
+                                        <td><input className="form-input" style={{ fontSize: '11px', padding: '3px 6px', width: '70px' }} value={editBomRow.gramaj} onChange={e => setEditBomRow({ ...editBomRow, gramaj: e.target.value })} /></td>
+                                        <td><input className="form-input" style={{ fontSize: '11px', padding: '3px 6px' }} value={editBomRow.tedarikci} onChange={e => setEditBomRow({ ...editBomRow, tedarikci: e.target.value })} /></td>
+                                        <td><input className="form-input" type="number" style={{ fontSize: '11px', padding: '3px 6px', width: '60px' }} value={editBomRow.miktar} onChange={e => setEditBomRow({ ...editBomRow, miktar: e.target.value })} /></td>
+                                        <td><select className="form-select" style={{ fontSize: '11px' }} value={editBomRow.birim} onChange={e => setEditBomRow({ ...editBomRow, birim: e.target.value })}>
+                                          {['metre', 'kg', 'adet', 'top', 'rulo', 'gram'].map(b => <option key={b}>{b}</option>)}
+                                        </select></td>
+                                        <td><input className="form-input" type="number" style={{ fontSize: '11px', padding: '3px 6px', width: '70px' }} value={editBomRow.birim_fiyat} onChange={e => setEditBomRow({ ...editBomRow, birim_fiyat: e.target.value })} /></td>
+                                        <td style={{ textAlign: 'right', fontWeight: '700' }}>{((editBomRow.miktar || 0) * (editBomRow.birim_fiyat || 0)).toFixed(2)} ₺</td>
+                                        <td><input className="form-input" style={{ fontSize: '11px', padding: '3px 6px' }} value={editBomRow.notlar} onChange={e => setEditBomRow({ ...editBomRow, notlar: e.target.value })} /></td>
+                                        <td style={{ display: 'flex', gap: '4px' }}>
+                                          <button className="btn btn-success btn-sm" style={{ fontSize: '11px', padding: '3px 8px' }} onClick={() => { const n = [...bomRows]; n[idx] = { ...editBomRow, id: row.id }; setBomRows(n); setEditBomIdx(null); }}>💾</button>
+                                          <button className="btn btn-sm" style={{ fontSize: '11px', padding: '3px 8px', background: 'var(--bg-input)' }} onClick={() => setEditBomIdx(null)}>✕</button>
+                                        </td>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <td style={{ fontWeight: '700' }}>{idx + 1}</td>
+                                        <td style={{ fontWeight: '600' }}>{row.malzeme}</td>
+                                        <td><span style={{ padding: '2px 6px', borderRadius: '4px', background: 'rgba(52,152,219,0.1)', color: '#2980b9', fontSize: '11px' }}>{row.tip}</span></td>
+                                        <td>{row.renk_kodu && <span style={{ padding: '2px 8px', borderRadius: '4px', background: '#f1f3f4', fontSize: '11px', fontFamily: 'monospace' }}>{row.renk_kodu}</span>}</td>
+                                        <td>{row.gramaj && `${row.gramaj} g/m²`}</td>
+                                        <td>{row.tedarikci}</td>
+                                        <td style={{ textAlign: 'center', fontWeight: '700' }}>{row.miktar}</td>
+                                        <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{row.birim}</td>
+                                        <td style={{ textAlign: 'right' }}>{row.birim_fiyat && `${parseFloat(row.birim_fiyat).toFixed(2)} ₺`}</td>
+                                        <td style={{ textAlign: 'right', fontWeight: '700', color: '#27ae60' }}>{((row.miktar || 0) * (row.birim_fiyat || 0) > 0) ? `${((row.miktar || 0) * (row.birim_fiyat || 0)).toFixed(2)} ₺` : '—'}</td>
+                                        <td style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{row.notlar}</td>
+                                        <td>
+                                          <div style={{ display: 'flex', gap: '4px' }}>
+                                            <button style={{ background: 'rgba(52,152,219,0.1)', border: 'none', borderRadius: '4px', padding: '3px 8px', cursor: 'pointer', fontSize: '11px', color: '#2980b9' }} onClick={() => { setEditBomIdx(idx); setEditBomRow({ ...row }); }} title="Düzenle">✏️</button>
+                                            <button style={{ background: 'rgba(231,76,60,0.1)', border: 'none', borderRadius: '4px', padding: '3px 8px', cursor: 'pointer', fontSize: '11px', color: '#e74c3c' }} onClick={() => { if (confirm('Bu satırı silmek istiyor musunuz?')) setBomRows(bomRows.filter((_, i) => i !== idx)); }} title="Sil">🗑️</button>
+                                          </div>
+                                        </td>
+                                      </>
+                                    )}
+                                  </tr>
+                                ))}
+                                {/* TOPLAM SATIRI */}
+                                <tr style={{ background: 'rgba(39,174,96,0.08)', fontWeight: '700' }}>
+                                  <td colSpan={9} style={{ textAlign: 'right', fontSize: '13px' }}>💰 TOPLAM MALİYET:</td>
+                                  <td style={{ textAlign: 'right', fontSize: '14px', color: '#27ae60' }}>{bomRows.reduce((s, r) => s + (parseFloat(r.miktar || 0) * parseFloat(r.birim_fiyat || 0)), 0).toFixed(2)} ₺</td>
+                                  <td colSpan={2}></td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                          <button className="btn btn-primary" onClick={() => handleSaveTabInfo(model.id, 'bom_data', bomRows)} style={{ padding: '10px 28px', fontWeight: '700' }}>💾 BOM Listesini Kaydet</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ===== ONAY ZİNCİRİ TAB ===== */}
+                    {detailTab === 'onay' && (
+                      <div style={{ padding: '20px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                          <h4 style={{ fontSize: '15px', fontWeight: '700' }}>✅ Onay Zinciri — {model.name}</h4>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input className="form-input" placeholder="🔍 Ara..." value={onayArama} onChange={e => setOnayArama(e.target.value)} style={{ width: '160px', fontSize: '12px' }} />
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                              ✅ {onayZinciri.filter(o => o.durum === 'Onaylandı').length} / {onayZinciri.length}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Açıklama */}
+                        <div style={{ padding: '10px 14px', background: 'rgba(52,152,219,0.06)', borderRadius: '8px', marginBottom: '16px', fontSize: '12px', color: '#2980b9', border: '1px solid rgba(52,152,219,0.15)' }}>
+                          ℹ️ Onay zinciri esnektir. Modelist, Bölüm Şefi, Müdür veya İç Yönetim — dilediğiniz kişiyi ekleyebilir, düzenleyebilir, silebilirsiniz. Onay sırasının şart değildir.
+                        </div>
+
+                        {/* YENİ ONAY EKLEME */}
+                        <div style={{ padding: '14px', background: 'rgba(39,174,96,0.05)', borderRadius: '10px', border: '1px solid rgba(39,174,96,0.2)', marginBottom: '16px' }}>
+                          <div style={{ fontSize: '12px', fontWeight: '700', color: '#27ae60', marginBottom: '10px' }}>➕ Onay Adımı Ekle</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 2fr auto', gap: '8px', alignItems: 'end' }}>
+                            <div>
+                              <label style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Kişi Adı *</label>
+                              <input className="form-input" placeholder="örn: Hakan Bey" style={{ fontSize: '12px' }} value={newOnay.kisi} onChange={e => setNewOnay({ ...newOnay, kisi: e.target.value })} />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Ünvan</label>
+                              <select className="form-select" style={{ fontSize: '12px' }} value={newOnay.unvan} onChange={e => setNewOnay({ ...newOnay, unvan: e.target.value })}>
+                                {['Modelist', 'Bölüm Şefi', 'Üretim Müdürü', 'Genel Müdür', 'İşletme Sahibi', 'Kalite Kontrol', 'Fason Sorumlusu', 'İç Yönetim', 'Müşteri'].map(u => <option key={u}>{u}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Durum</label>
+                              <select className="form-select" style={{ fontSize: '12px' }} value={newOnay.durum} onChange={e => setNewOnay({ ...newOnay, durum: e.target.value })}>
+                                {['Bekliyor', 'Onaylandı', 'Reddedildi', 'Düzeltme İstedi', 'Bilgi İçin'].map(d => <option key={d}>{d}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Not</label>
+                              <input className="form-input" placeholder="Onay notu..." style={{ fontSize: '12px' }} value={newOnay.not} onChange={e => setNewOnay({ ...newOnay, not: e.target.value })} />
+                            </div>
+                            <button className="btn btn-success" style={{ fontSize: '13px', padding: '10px 16px' }} onClick={() => {
+                              if (!newOnay.kisi) { alert('Kişi adı zorunlu!'); return; }
+                              setOnayZinciri([...onayZinciri, { ...newOnay, id: Date.now(), tarih: new Date().toLocaleDateString('tr-TR') }]);
+                              setNewOnay({ kisi: '', unvan: 'Modelist', durum: 'Bekliyor', not: '' });
+                            }}>➕ Ekle</button>
+                          </div>
+                        </div>
+
+                        {/* ONAY ZİNCİRİ LİSTESİ */}
+                        {onayZinciri.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', fontSize: '13px' }}>
+                            ✅ Henüz onay adımı eklenmedi.
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {onayZinciri
+                              .filter(o => !onayArama || o.kisi.toLowerCase().includes(onayArama.toLowerCase()) || o.unvan.toLowerCase().includes(onayArama.toLowerCase()))
+                              .map((onay, idx) => {
+                                const durumRenk = { 'Onaylandı': '#27ae60', 'Reddedildi': '#e74c3c', 'Bekliyor': '#f39c12', 'Düzeltme İstedi': '#e67e22', 'Bilgi İçin': '#3498db' };
+                                const durumBg = { 'Onaylandı': 'rgba(39,174,96,0.1)', 'Reddedildi': 'rgba(231,76,60,0.1)', 'Bekliyor': 'rgba(243,156,18,0.1)', 'Düzeltme İstedi': 'rgba(230,126,34,0.1)', 'Bilgi İçin': 'rgba(52,152,219,0.1)' };
+                                const renk = durumRenk[onay.durum] || '#95a5a6';
+                                const bg = durumBg[onay.durum] || 'rgba(149,165,166,0.1)';
+                                return (
+                                  <div key={onay.id || idx} style={{ padding: '12px 16px', background: bg, borderRadius: '10px', border: `1px solid ${renk}30`, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    {editOnayIdx === idx ? (
+                                      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 2fr auto', gap: '8px' }}>
+                                        <input className="form-input" style={{ fontSize: '12px' }} value={editOnayRow.kisi} onChange={e => setEditOnayRow({ ...editOnayRow, kisi: e.target.value })} />
+                                        <select className="form-select" style={{ fontSize: '12px' }} value={editOnayRow.unvan} onChange={e => setEditOnayRow({ ...editOnayRow, unvan: e.target.value })}>
+                                          {['Modelist', 'Bölüm Şefi', 'Üretim Müdürü', 'Genel Müdür', 'İşletme Sahibi', 'Kalite Kontrol', 'Fason Sorumlusu', 'İç Yönetim', 'Müşteri'].map(u => <option key={u}>{u}</option>)}
+                                        </select>
+                                        <select className="form-select" style={{ fontSize: '12px' }} value={editOnayRow.durum} onChange={e => setEditOnayRow({ ...editOnayRow, durum: e.target.value })}>
+                                          {['Bekliyor', 'Onaylandı', 'Reddedildi', 'Düzeltme İstedi', 'Bilgi İçin'].map(d => <option key={d}>{d}</option>)}
+                                        </select>
+                                        <input className="form-input" style={{ fontSize: '12px' }} value={editOnayRow.not} onChange={e => setEditOnayRow({ ...editOnayRow, not: e.target.value })} />
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                          <button className="btn btn-success btn-sm" style={{ fontSize: '11px' }} onClick={() => { const n = [...onayZinciri]; n[idx] = { ...editOnayRow, id: onay.id }; setOnayZinciri(n); setEditOnayIdx(null); }}>💾</button>
+                                          <button className="btn btn-sm" style={{ fontSize: '11px', background: 'var(--bg-input)' }} onClick={() => setEditOnayIdx(null)}>✕</button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: renk, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '700', flexShrink: 0 }}>
+                                          {idx + 1}
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                          <div style={{ fontWeight: '700', fontSize: '14px' }}>{onay.kisi}</div>
+                                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{onay.unvan} {onay.tarih && `· ${onay.tarih}`}</div>
+                                          {onay.not && <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>"{onay.not}"</div>}
+                                        </div>
+                                        <span style={{ padding: '4px 12px', borderRadius: '20px', background: renk, color: '#fff', fontSize: '11px', fontWeight: '700', flexShrink: 0 }}>{onay.durum}</span>
+                                        {/* EYLEM BUTONLARI */}
+                                        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                                          <button style={{ background: 'rgba(39,174,96,0.15)', border: '1px solid rgba(39,174,96,0.3)', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '11px', color: '#27ae60' }}
+                                            onClick={() => { const n = [...onayZinciri]; n[idx] = { ...n[idx], durum: 'Onaylandı' }; setOnayZinciri(n); addToast('success', `✅ ${onay.kisi} onayladı`); }} title="İzin Ver / Onayla">✅ Onayla</button>
+                                          <button style={{ background: 'rgba(52,152,219,0.1)', border: 'none', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '11px', color: '#2980b9' }}
+                                            onClick={() => { setEditOnayIdx(idx); setEditOnayRow({ ...onay }); }} title="Düzenle">✏️</button>
+                                          <button style={{ background: 'rgba(231,76,60,0.1)', border: 'none', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', fontSize: '11px', color: '#e74c3c' }}
+                                            onClick={() => { if (confirm(`"${onay.kisi}" onay adımını silmek istiyor musunuz?`)) setOnayZinciri(onayZinciri.filter((_, i) => i !== idx)); }} title="Sil">🗑️</button>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        )}
+
+                        <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                          <button className="btn btn-primary" onClick={() => handleSaveTabInfo(model.id, 'approval_chain', onayZinciri)} style={{ padding: '10px 28px', fontWeight: '700' }}>💾 Onay Zincirini Kaydet</button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* ===== SES NOTU TAB ===== */}
 
                     {detailTab === 'sesnotu' && (
@@ -6570,6 +6830,7 @@ function ModelsPage({ models, loadModels, addToast }) {
                       </div>
 
                     )}
+
 
                   </div>
 
@@ -11562,13 +11823,13 @@ function CostsPage({ models, personnel, addToast }) {
 // ========== ÜRETİM BÖLÜMÜ MUHASEBE DEPARTMANI ==========
 
 function MuhasebeDepartmaniPage({ models, personnel, addToast }) {
-  const [rapor, setRapor] = React.useState(null);
-  const [yukleniyor, setYukleniyor] = React.useState(true);
-  const [aiRapor, setAiRapor] = React.useState('');
-  const [aiYukleniyor, setAiYukleniyor] = React.useState(false);
-  const [aktifBolum, setAktifBolum] = React.useState('ozet');
+  const [rapor, setRapor] = useState(null);
+  const [yukleniyor, setYukleniyor] = useState(true);
+  const [aiRapor, setAiRapor] = useState('');
+  const [aiYukleniyor, setAiYukleniyor] = useState(false);
+  const [aktifBolum, setAktifBolum] = useState('ozet');
 
-  React.useEffect(() => {
+  useEffect(() => {
     const veriCek = async () => {
       setYukleniyor(true);
       try {
