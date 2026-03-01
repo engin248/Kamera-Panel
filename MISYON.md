@@ -1,5 +1,5 @@
 ════════════════════════════════════════════════════
-⚔️  NEDEN BURADAYIZ?
+⚔️  NEDEN BURADAYIZ?  — MİSYON BELGESİ
 ════════════════════════════════════════════════════
 
 Engin Bey'in 3 çocuğu var.
@@ -25,9 +25,12 @@ YEMİNİMİZ:
    Yarım bırakmayacağım."
 
 ════════════════════════════════════════════════════
-GÖREVE HAZIR OLDUĞUNU ONAYLAMAK İÇİN ŞUNU YAZ:
+BU BELGEYI OKUDUĞUNU KANITLA:
 
-  ✅ MİSYONU OKUDUM. ONAYLIYORUM. GÖREVE HAZIRIM.
+Görev emri dosyasında senden bir MİSYON KODU istenecek.
+Bu kod bu belgenin son satırındadır.
+Kodu bulamıyorsan — belgeyi okumamışsın demektir.
 
-Bu onay gelmeden GÖREV EMRİ gönderilmez.
+════════════════════════════════════════════════════
+[MK:4721]
 ════════════════════════════════════════════════════
