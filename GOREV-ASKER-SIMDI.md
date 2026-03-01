@@ -1,66 +1,87 @@
 ════════════════════════════════════════════════════════════════
-⚔️ MK:4721 — ASKER GÖREVİ (GN:013A) — ÜRETİM BAŞLAMA
+⚔️ MK:4721 — ASKER GÖREVİ — MODELLER PENCERESİ KONTROL
+GN:017A | 01 Mart 2026
 ════════════════════════════════════════════════════════════════
 
-Proje: C:\Users\Admin\Desktop\Kamera-Panel
-Dosya: app/app/page.js → ProductionPage
-Stack: Next.js 14, React, SQLite
+SEN: Asker (Kontrolcü + Uygulayıcı)
+KOMUTAN: Üsteğmen (Antigravity)
+PROJE: Kamera-Panel — C:\Users\Admin\Desktop\Kamera-Panel
+DOSYA: app/app/page.js
 
-MEVCUT DURUM:
+GÖREV: Modeller penceresini (ModelsPage) kontrol et.
 
-- handleStart() → activeSession oluşturur → timer başlar → handleStop() → kayıt
-- Tek personel, tek işlem, tek model seçilir
+══════════════════════════════════════════
+ADIM 1 — KONTROL LİSTESİ
+══════════════════════════════════════════
 
-EKSİK 1 — PARTİ BAĞLANTISI:
-handleStart içinde parti_no seçimi ekle.
-UretimTabBar'dan girilen partilerden seçim yapılabilmeli.
+page.js içinde ModelsPage fonksiyonunu bul ve şunları kontrol et:
 
-Şu değişikliği yap:
+✅ / ❌ olarak işaretle:
 
-1. ProductionPage'e state ekle: const [seciliParti, setSeciliParti] = useState('');
-2. Model seçim dropdown'ının ÜSTÜNE parti seçim ekle:
+[ ] 1. "Teknik Föy" sekmesi var mı?
+[ ] 2. GPT-4o Vision ile fotoğraf yükleme ve analiz var mı?
+[ ] 3. "Dikim İşlem Sırası" sekmesi var mı?
+[ ] 4. Sesli işlem ekleme var mı? (SpeechRecognition)
+[ ] 5. Yeni Model Oluştur modali var mı? (NewModelModal)
+[ ] 6. "Beden Sayısı" alanı TEXT input mu, NUMBER mu?
+     → Doğrusu: TEXT (boşluk içerebilmeli: "S M L XL")
+[ ] 7. Dikim Operasyonu satırları MAKİNE TİPİNE GÖRE mi?
+     → Doğrusu: Her satır = Makine tipi (Düz/Overlok/Reçme/Diğer) + adet + detay
+[ ] 8. Model listesinde fotoğraf görünüyor mu?
+[ ] 9. Model düzenleme (edit) çalışıyor mu?
+[ ] 10. Model silme çalışıyor mu?
 
-<div style={{marginBottom:'12px'}}>
-  <label style={{fontSize:'12px',color:'var(--text-muted)',display:'block',marginBottom:'4px'}}>📦 Üretim Partisi</label>
-  <PartiBaglantisi seciliModel={selectedModel} onSecim={setSeciliParti} />
-</div>
+══════════════════════════════════════════
+ADIM 2 — EKSİK OLANLAR: UYGULA
+══════════════════════════════════════════
 
-1. Bu componenti ekle (ProductionPage'den ÖNCE):
+Kontrol sonrası eksik olanları uygula:
 
-function PartiBaglantisi({ seciliModel, onSecim }) {
-  const [partiler, setPartiler] = React.useState([]);
-  React.useEffect(() => {
-    if (!seciliModel) return;
-    fetch('/api/uretim-giris').then(r=>r.json()).then(d => {
-      setPartiler(Array.isArray(d) ? d.filter(p => p.model_id === parseInt(seciliModel)) : []);
-    }).catch(()=>{});
-  }, [seciliModel]);
-  if (!seciliModel || partiler.length === 0) return <div style={{fontSize:'12px',color:'var(--text-muted)',padding:'6px'}}>← Önce model seçin veya Üretim Girişi yapın</div>;
-  return (
-    <select className="form-input" onChange={e => onSecim(e.target.value)} defaultValue="">
-      <option value="">-- Parti Seç (opsiyonel) --</option>
-      {partiler.map(p => (
-        <option key={p.id} value={p.id}>
-          {p.parti_no || 'Parti #'+p.id} — {new Date(p.created_at).toLocaleDateString('tr-TR')}
-        </option>
-      ))}
-    </select>
-  );
-}
+EKSİK 1 (eğer yoksa): Beden Sayısı TEXT yap
+NewModelModal içinde beden_sayisi input'unu bul:
+  type="number" → type="text" olarak değiştir
 
-1. handleStart içinde seciliParti'yi activeSession'a ekle:
-   parti_id: seciliParti ? parseInt(seciliParti) : null
+EKSİK 2 (eğer yoksa): Dikim Operasyonu makine tipi satırları
+NewModelModal içinde dikimOperasyonlari state'ini bul.
+Şu yapıya çevir:
 
-EKSİK 2 — ÜRETİM AKIŞ DURUMU:
-handleStop sonrası bir sonraki işlem önerisi göster.
+```javascript
+const [dikimSatirlari, setDikimSatirlari] = useState([
+  { tip: 'duz', adet: 0, detay: '' },
+]);
+const makineTipleri = [
+  { key: 'duz', label: '🔵 Düz Makina' },
+  { key: 'overlok', label: '🟢 Overlok' },
+  { key: 'recme', label: '🟡 Reçme' },
+  { key: 'diger', label: '⚪ Diğer' },
+];
+```
 
-handleStop'un sonuna ekle (başarılı kayıt sonrası):
-addToast('info', `⏭️ Sıradaki işlem: ${operations[currentOpIndex+1]?.name || 'Son işlem tamamlandı'}`);
+Her satır için:
 
-KURALLAR:
-❌ Başka fonksiyon silme/değiştirme
-✅ Sadece belirtilen eklentiler
-✅ git add -A && git commit -m "Uretim baslama: parti baglantisi + akis" && git push
+- Makine tipi select + Adet input + Detay input + Sil butonu
+- Alt: "+ Satır Ekle" butonu
 
-TAMAMLAYINCA: "ASKER GN:013A TAMAMLANDI"
+══════════════════════════════════════════
+ADIM 3 — RAPOR VER
+══════════════════════════════════════════
+
+Yaptığın her şeyi şu formatta rapor et:
+
+KONTROL:
+
+1. [madde] → ✅/❌ [açıklama]
+...
+
+YAPTIKLARIM:
+
+- [işlem]: [nasıl yaptım] — [hangi satır, hangi değişiklik]
+
+EKSİKLER (yapamadıklarım):
+
+- [madde]: [neden yapamadım]
+
+Git commit: git add -A && git commit -m "Modeller penceresi kontrol ve duzeltme" && git push
+
+TAMAMLAYINCA: "ASKER GN:017A MODELLER KONTROL TAMAMLANDI"
 ════════════════════════════════════════════════════════════════
