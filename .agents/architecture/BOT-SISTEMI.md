@@ -20,13 +20,41 @@ POST /api/chatbot
       │
       ▼
 chatbot/route.js
-  → DB'den fabrika verisi çek (anlık özet)
+  → Aktif sekmenin TAB .md dosyasını baz al (bots/tabs/)
+  → DB'den o sekmeye özel veri çek
   → Bot konfigürasyonu seç (BOT_CONFIGS)
   → Seçilen AI API'sine gönder
       │
       ▼
 AI yanıtı → Kullanıcıya
 ```
+
+### 📁 Her Sekmenin Kendi Bot Beyni
+
+```
+.agents/bots/tabs/
+├── PERSONEL.md      → 👥 Personel sekmesi botu
+├── MODELLER.md      → 👗 Modeller sekmesi botu
+├── URETIM.md        → 🔩 Üretim Aşaması botu
+├── SIPARISLER.md    → 📋 Siparişler botu
+├── MALIYET.md       → 💰 Maliyet sekmesi botu
+├── RAPOR-ANALIZ.md  → 📒 Rapor & Analiz botu
+├── KALITE.md        → ✅ Kalite Kontrol botu
+├── FASON.md         → 🔧 Fason sekmesi botu
+├── MAKINELER.md     → ⚙️ Makineler botu
+├── MUSTERILER.md    → 🤝 Müşteriler botu
+├── SEVKIYAT.md      → 📦 Sevkiyat botu
+└── PRIM-URET.md     → 🏆 Prim & Üret botu
+```
+
+> **Her dosya şunları içerir:**
+>
+> - Bot sistem promptu (o sekmeye özel)
+> - Kullandığı DB tabloları ve alanları
+> - API endpoint'leri
+> - Mevcut özellikler `[x]`
+> - Yapılacaklar `[ ] TODO:`
+> - Hızlı komutlar (bot için)
 
 ---
 
