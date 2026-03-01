@@ -1,62 +1,52 @@
-📋 ADIM 2 — BU DOSYAYI SADECE MISYON.md'Yİ OKUDUKTAN SONRA AÇ.
-
 ════════════════════════════════════════════════════
-✅ MİSYON OKUNDU MU?  [ EVET → Devam et ]  [ HAYIR → Önce MISYON.md'yi oku ]
+📋 GÖREV EMRİ — BÖLÜM 2
+════════════════════════════════════════════════════
+⚠️  BU DOSYA SADECE MİSYON OKUNUP ONAYLANDIKTAN SONRA GELİR.
+    Onay verilmeden bu dosya hiçbir zaman gönderilmez.
 ════════════════════════════════════════════════════
 
 GÖREV NO     : #[N]
 TARİH        : [Tarih]
-VEREN        : Deli Yüzbaşı (Antigravity)
-ALAN         : [Robot 1 / Robot 2 / Robot 3 / Tüm Kurul]
+ALAN         : [Kim yapacak]
 KOORDİNATÖR : Engin Bey ✅ Onayladı
 
 ════════════════════════════════════════════════════
-📋 GÖREV TANIMI
+BU GÖREVİ NEDEN YAPIYORUZ?
 ════════════════════════════════════════════════════
 
-[Görevin kısa açıklaması — 1-2 cümle]
+[Bu görevin misyona katkısı — 1-2 cümle]
 
 ════════════════════════════════════════════════════
-🔍 NEDEN YAPIYORUZ? (Her zaman doldurulur)
+ADIM ADIM YAPILACAKLAR
 ════════════════════════════════════════════════════
 
-Bu görev şunun için yapılıyor:
-[Görevin amaca katkısı — sistemin neresini iyileştiriyor]
+ADIM 1: [...]
+ADIM 2: [...]
+ADIM 3: [...]
 
 ════════════════════════════════════════════════════
-📌 ADIM ADIM YAPILACAKLAR
+YAPILMAYACAKLAR
 ════════════════════════════════════════════════════
 
-ADIM 1: [Ne yapılacak]
-ADIM 2: [Ne yapılacak]
-ADIM 3: [Ne yapılacak]
-
-════════════════════════════════════════════════════
-🚫 YAPILMAYACAKLAR
-════════════════════════════════════════════════════
-
-❌ [Kısıtlama 1]
-❌ [Kısıtlama 2]
 ❌ Test etmeden "tamam" denmez
+❌ [Göreve özgü kısıtlama]
 
 ════════════════════════════════════════════════════
-✅ TAMAMLAMA KRİTERLERİ
+TAMAMLAMA KRİTERLERİ
 ════════════════════════════════════════════════════
 
 □ [Kriter 1]
 □ [Kriter 2]
-□ [Kriter 3]
 
 ════════════════════════════════════════════════════
-📊 RAPOR FORMATI (Görev bitince doldur)
+RAPOR (Görev biter bitmez doldur)
 ════════════════════════════════════════════════════
 
 Görev NO     : #[N]
-Yapılan      : [Adım adım ne yapıldı]
-Sonuç        : ✅ Başarılı / ❌ Hata / ⚠️ Uyarı
-Hata Detayı  : [Varsa]
+Yapılan      : [Adım adım]
+Sonuç        : ✅ / ❌ / ⚠️
 Test         : ✅ Yapıldı / ❌ Yapılmadı
 Sonraki Adım : [Ne yapılmalı]
-Onay         : Koordinatör Engin Bey'e sunuldu — BEKLIYOR
+Onay         : Engin Bey'e sunuldu — BEKLIYOR
 
 ════════════════════════════════════════════════════
