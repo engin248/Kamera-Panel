@@ -5,7 +5,11 @@ export async function POST(request) {
     try {
         const db = getDb();
         const { model_id, kar_marji_yuzde = 20, ek_malzeme_tl = 0, nakliye_tl = 0, toplam_adet = 1 } = await request.json();
-        const gider = db.prepare('SELECT saatlik_maliyet FROM isletme_giderleri ORDER BY yil DESC, ay DESC LIMIT 1').get();
+        // GN015 validasyon
+        if (toplam_adet <= 0) return NextResponse.json({ error: 'toplam_adet sıfırdan büyük olmalı' }, { status: 400 });
+        if (kar_marji_yuzde < -100) return NextResponse.json({ error: 'Geçersiz kâr marjı' }, { status: 400 });
+        const db2 = db;
+        const gider = db2.prepare('SELECT saatlik_maliyet FROM isletme_giderleri ORDER BY yil DESC, ay DESC LIMIT 1').get();
         const saatlik_maliyet = gider?.saatlik_maliyet || 0;
         const sureler = model_id ? db.prepare("SELECT COALESCE(SUM(COALESCE(standard_time_max,standard_time_min,0)),0) as toplam FROM operations WHERE model_id=?").get(model_id) : { toplam: 0 };
         const tahmini_sure_saat = (sureler?.toplam || 0) / 3600;

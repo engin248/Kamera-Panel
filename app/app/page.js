@@ -131,22 +131,26 @@ function PartiBaglantisi({ seciliModel, onSecim }) {
 
 function parseVoiceCommand(transcript, models, personnel) {
   const t = transcript.toLowerCase().trim();
-  const adetMatch = t.match(/(.+?)\s+(\d+)\s+adet\s+tamamla/);
+  // Türkçe karakter destekli regex (GPT+Perplexity kurul raporu GN015)
+  const adetMatch = t.match(/([a-zşıöüçğ\s]+?)\s+(\d+)\s+adet\s+tamamla/i);
   if (adetMatch) {
-    const person = personnel.find(p => p.name.toLowerCase().includes(adetMatch[1]));
-    return { action: 'production_add', params: { personnel_id: person?.id, total_produced: parseInt(adetMatch[2]), personAdi: adetMatch[1] } };
+    const kisi = adetMatch[1].trim();
+    const person = personnel.find(p => p.name.toLowerCase().includes(kisi));
+    return { action: 'production_add', params: { personnel_id: person?.id, total_produced: parseInt(adetMatch[2]), personAdi: kisi } };
   }
-  const girisMatch = t.match(/(.+?)\s+giriş\s+yaptı/);
+  const girisMatch = t.match(/([a-zşıöüçğ\s]+?)\s+giriş\s+yaptı/i);
   if (girisMatch) {
-    const person = personnel.find(p => p.name.toLowerCase().includes(girisMatch[1]));
-    return { action: 'personel_giris', params: { personel_id: person?.id, personAdi: girisMatch[1] } };
+    const kisi = girisMatch[1].trim();
+    const person = personnel.find(p => p.name.toLowerCase().includes(kisi));
+    return { action: 'personel_giris', params: { personel_id: person?.id, personAdi: kisi } };
   }
-  const cikisMatch = t.match(/(.+?)\s+çıkış\s+yaptı/);
+  const cikisMatch = t.match(/([a-zşıöüçğ\s]+?)\s+çıkış\s+yaptı/i);
   if (cikisMatch) {
-    const person = personnel.find(p => p.name.toLowerCase().includes(cikisMatch[1]));
-    return { action: 'personel_cikis', params: { personel_id: person?.id, personAdi: cikisMatch[1] } };
+    const kisi = cikisMatch[1].trim();
+    const person = personnel.find(p => p.name.toLowerCase().includes(kisi));
+    return { action: 'personel_cikis', params: { personel_id: person?.id, personAdi: kisi } };
   }
-  if (t.includes('bugünkü üretim')) return { action: 'uretim_sorgu', params: {} };
+  if (t.includes('bugünkü üretim') || t.includes('üretim kaç')) return { action: 'uretim_sorgu', params: {} };
   if (t.includes('vardiya')) return { action: 'vardiya', params: {} };
   return null;
 }
@@ -7477,8 +7481,14 @@ function ProductionPage({ models, personnel, addToast }) {
         {/* 📈 #4 GÜNLÜK HEDEF BAR */}
         <GunlukHedefBar tarih={filterDate} />
 
+        {/* ── SESLİ KOMUT BUTONU ── */}
+        <div style={{ background: 'rgba(52,152,219,0.08)', border: '1px solid rgba(52,152,219,0.2)', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <SesliKomutButonu models={models} personnel={personnel} addToast={addToast} />
+        </div>
+
         {/* ── STAT KARTLARI ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+
           <div className="stat-card">
             <div className="stat-icon" style={{ background: 'rgba(52,152,219,0.15)', color: '#3498db' }}>📦</div>
             <div><div className="stat-value">{todayProduced}</div><div className="stat-label">Bugün Üretilen</div></div>
