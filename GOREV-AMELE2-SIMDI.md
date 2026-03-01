@@ -1,71 +1,94 @@
 ════════════════════════════════════════════════════════════════
-⚔️ MK:4721 — AMELE 2 GÖREVİ — MODELLER TEST + YÖNETİM KURULUNA RAPOR
-GN:017C | 01 Mart 2026
+⚔️ MK:4721 — AMELE 2 GÖREVİ — MODELLER BÖLÜMÜ TEST + KURUL RAPORU
+GN:017C-REV | 01 Mart 2026
+YETKİ: Üsteğmen (Antigravity/Claude)
 ════════════════════════════════════════════════════════════════
 
-SEN: Amele 2 (Test + Rapor Yazıcı)
-KOMUTAN: Üsteğmen (Antigravity)
-PROJE: Kamera-Panel — localhost:3000
+PROJE: C:\Users\Admin\Desktop\Kamera-Panel
+ÖNCELİKLE OKU: MODELLER-OZELLIK-LISTESI.md
 
-GÖREV: Asker ve Amele 1 işlerini bitirince modeller bölümünü TEST et.
-Sonuçları raporla. Yönetim kuruluna ilet.
+GÖREVİN: Asker ve Amele 1 işlerini bitirince localhost:3000'de TÜM MODELLER BÖLÜMÜNÜ test et.
 
-══════════════════════════════════════════
+════════════════════════
 TEST LİSTESİ
-══════════════════════════════════════════
+════════════════════════
 
-Tarayıcıda localhost:3000 aç. Modeller sekmesine git.
+MODELLER-OZELLIK-LISTESI.md dosyasındaki her maddeyi test et.
+Her madde için: ✅ Çalışıyor / ❌ Çalışmıyor / ⚠️ Kısmen / 🔲 Test edilmedi
 
-TEST 1 — Yeni Model Oluştur
-[ ] "Yeni Model" butonuna bas
-[ ] Ad, Kod, Kategori gir
-[ ] Beden Sayısı alanına "S M L XL" yaz (boşluk kabul ediyor mu?)
-[ ] Dikim operasyonu satırlarını doldur
-[ ] Kumaş cinsi, gramaj, sezon al (yeni alanlar var mı?)
-[ ] Parça listesine "Ön beden, Arka beden" ekle
-[ ] Kaydet → Model listede görünüyor mu?
+A GRUBU — Model Temel Bilgileri:
+[ ] A1. Model Adı giriliyor ve kaydediliyor
+[ ] A2. Model Kodu otomatik veya manuel
+[ ] A3. Kategori dropdown çalışıyor
+[ ] A4. Müşteri/Marka alanı var ve kaydediliyor
+[ ] A5. Sezon seçimi çalışıyor
+[ ] A7. Aktif/Pasif durumu değiştirilebiliyor
 
-TEST 2 — Teknik Föy Sekmesi
-[ ] Kaydedilen modeli aç
-[ ] "Teknik Föy" sekmesine geç
-[ ] Fotoğraf yükle butonunu bul
-[ ] GPT analiz butonu var mı?
+B GRUBU — Kumaş/Malzeme:
+[ ] B1. Kumaş cinsi giriliyor
+[ ] B2. Gramaj giriliyor
 
-TEST 3 — Dikim İşlem Sırası
-[ ] "Dikim İşlem Sırası" sekmesine geç
-[ ] Yeni işlem ekle
-[ ] Sesli ekleme butonu var mı?
+C GRUBU — Beden:
+[ ] C1. Beden alanı TEXT — "S M L XL" yazılabiliyor, boşluk kabul ediyor
+[ ] C2. Asorti bilgisi
 
-TEST 4 — Düzenleme
-[ ] Model listesinde düzenle butonu
-[ ] Değişiklik yap, kaydet
-[ ] Değişiklik kalıcı mı?
+D GRUBU — Parça:
+[ ] D1. Parça sayısı
+[ ] D2. Parça adları listesi girilebiliyor ve kaydediliyor
 
-══════════════════════════════════════════
-RAPOR FORMATI — YÖNETİM KURULUNA
-══════════════════════════════════════════
+E GRUBU — Teknik Föy:
+[ ] E1. Fotoğraf yüklenebiliyor
+[ ] E2. GPT analiz butonu var ve çalışıyor
+[ ] E3. Ön görünüş fotoğrafı
+[ ] E4. Arka görünüş fotoğrafı alanı var
 
-MODELLER BÖLÜMü TEST RAPORU
-Tarih: [tarih]
+F GRUBU — Dikim İşlem Sırası:
+[ ] F1. İşlem eklenebiliyor
+[ ] F2. Makine tipi seçimi (Düz/Overlok/Reçme...) var
+[ ] F3. Standart süre girilebiliyor
+[ ] F8. Sesli ekleme çalışıyor
+
+G GRUBU — Hesaplamalar:
+[ ] G1. Toplam süre gösteriliyor
+[ ] G3. Tahmini fason fiyat hesaplanıyor
+[ ] G4. Kâr/zarar sinyali var
+
+I GRUBU — Liste:
+[ ] I5. Arama çalışıyor
+[ ] I1. Model listesi düzgün görünüyor
+
+════════════════════════
+KURUL RAPORU FORMATI
+════════════════════════
+
+Testar bitince şu formatla rapor yaz:
+
+---
+MODELLER BÖLÜMÜ TEST RAPORU
+Tarih: 01 Mart 2026
 Test Eden: Amele 2
 
-TEST SONUÇLARI:
+ÖZET:
 
-| Test | Durum | Açıklama |
-|------|-------|----------|
-| Yeni Model | ✅/❌ | ... |
-| Beden text | ✅/❌ | ... |
-| Dikim satırları | ✅/❌ | ... |
-| Kumaş/Sezon | ✅/❌ | ... |
-| Parça listesi | ✅/❌ | ... |
-| Teknik Föy | ✅/❌ | ... |
-| GPT Vision | ✅/❌ | ... |
-| İşlem Sırası | ✅/❌ | ... |
-| Sesli ekleme | ✅/❌ | ... |
+- Toplam test: X madde
+- Başarılı: X (✅)
+- Başarısız: X (❌)
+- Kısmen: X (⚠️)
 
-KRİTİK HATALAR: [varsa listele]
-EKSİKLER: [varsa listele]
-ÖNERİ: [varsa]
+DETAY:
+[Her madde için ✅/❌/⚠️ + açıklama]
 
-TAMAMLAYINCA: "AMELE 2 GN:017C TEST RAPORU TAMAMLANDI"
+KRİTİK HATALAR (Pazartesi engelleyen):
+[Varsa listele]
+
+ÖNEMLİ EKSİKLER (Bu hafta içinde):
+[Varsa listele]
+
+ÜSTEĞMENİN YAPMASI GEREKEN:
+[Asker/Amelelerin yapamadığı, üsteğmenin yapması gereken]
+
+YÖNETİM KURULUNA SUNULMUŞTUR
+---
+
+TAMAMLAYINCA: "AMELE 2 GN:017C TEST RAPORU YÖNETİM KURULUNA SUNULDU"
 ════════════════════════════════════════════════════════════════
