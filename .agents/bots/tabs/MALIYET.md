@@ -135,6 +135,65 @@ Hesaplama:
 
 ---
 
+## 🔗 CROSS-TAB ENTEGRASYON
+
+| İlişki | Nasıl Bağlı |
+|--------|-------------|
+| **Modeller** | `model_id` FK — her maliyet kalemi bir modele ait |
+| **Üretim** | `unit_value` → production_logs üzerinden maliyet hesabına girer |
+| **Personel** | `daily_wage` × gün → personel maliyeti kategorisinde kullanılır |
+| **Siparişler** | `unit_price` → fason fiyatı karşılaştırması için |
+
+---
+
+## 🏗️ COMPONENT MİMARİSİ (page.js)
+
+```
+MaliyetSekmesi
+  ├── FasonHesapModal     → fason birim fiyatı hesapla
+  ├── MaliyetKalemiFormu  → POST /api/cost-entries
+  ├── IsletmeGiderleri     → GET/POST /api/expenses
+  └── KarAnaliziPanel     → GET /api/maliyet-ozet
+```
+
+> **Önemlı:** Fason fiyatı = (personel + genel gider + kar) / toplam adet. Hesaplama page.js içinde yapılır.
+
+---
+
+## 🤖 CODING AGENT TALİMATLARI
+
+### Yeni Maliyet Kategorisi Eklemek
+
+1. **DB:** `cost_entries.category` TEXT — yeni kategori adı direkt girilir, migration gerekmez
+2. **UI:** `page.js` MaliyetSekmesi içindeki kategori dropdown'una yeni seçenek ekle
+3. **API:** `/api/cost-entries/route.js` — mevcut POST yeterli
+
+### Yeni İşletme Gideri Alanı Eklemek
+
+1. `db.js` alterStatements: `ALTER TABLE business_expenses ADD COLUMN yeni_alan`
+2. `/api/expenses/route.js` SELECT/POST güncelle
+3. `page.js` MaliyetSekmesi'nde form alanı ekle
+
+---
+
+## 🔄 VERİ AKIŞI
+
+```
+Form → POST /api/cost-entries (maliyet kalemi)
+Form → POST /api/expenses (işletme gideri)
+Hesap paneli → GET /api/maliyet-ozet → fason ort./kar mar. hesapla
+```
+
+---
+
+## ⚠️ ÖNEMLİ KISITLAMALAR
+
+- `cost_entries` soft-delete: `deleted_at` sütunu var
+- Fason fiyatı `models.fason_price` alanından okunur
+- KDV ve döviz hesabı şu an yok (ileriye planlı)
+
+---
+
 ## 📝 BOT GÜNCELLEME KURALI
 
 **Bu dosyayı şu durumlarda güncelle:**

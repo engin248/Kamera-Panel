@@ -2,7 +2,8 @@
 
 > **Sekme ID:** `personnel`
 > **Bot:** 🔩 Kamera (Gemini 2.0 Flash)
-> **Son Güncelleme:** 2026-03-01
+> **Son Güncelleme:** 2026-03-02
+> **Veritabanı:** ☁️ Supabase PostgreSQL (`cauptlsnqieegdrgotob.supabase.co`)
 > **Bu dosya:** Personel botu için tek bilgi kaynağı
 
 ---
@@ -37,7 +38,14 @@ KURAL: Sadece elindeki personel verisini kullan.
 
 ## 📊 VERİTABANI — KULLANILAN TABLOLAR
 
-### Ana Tablo: `personnel`
+> ⚠️ **2026-03-02 itibarıyla `personnel` tablosu Supabase PostgreSQL'e taşındı.**
+> SQLite dosyası (`kamera-panel.db`) diğer tablolar için kullanılmaya devam ediyor.
+
+### Ana Tablo: `personnel` — ☁️ Supabase
+
+**Bağlantı:** `https://cauptlsnqieegdrgotob.supabase.co`  
+**Client:** `app/lib/supabase.js` → `supabaseAdmin`  
+**RLS:** Aktif (anonim okuma/yazma politikası açık)  
 
 | Alan Grubu | Önemli Alanlar |
 |------------|----------------|
@@ -45,15 +53,17 @@ KURAL: Sadece elindeki personel verisini kullan.
 | **İş (P2)** | role, department, position, start_date, contract_type |
 | **Ücret (P3)** | base_salary, transport_allowance, ssk_cost, food_allowance |
 | **Beceri (P4)** | skill_level, machines, capable_operations, learning_speed |
-| **Makine (P5)** | preferred_machine, most_efficient_machine, machine_adjustments |
+| **Makine (P5)** | preferred_machine, most_efficient_machine, machine_adjustments (JSONB) |
 | **Fiziksel (P6)** | physical_endurance, eye_health, work_capacity |
 | **Karakter (P7)** | reliability, hygiene, responsibility_acceptance |
 | **Üretim (P8-P9)** | daily_avg_output, error_rate, efficiency_score |
 | **Gelişim (P10)** | new_machine_learning, self_improvement, training_needs |
 | **Performans (P11)** | operator_class (A/B/C/D), satisfaction_score, weekly_note |
-| **Sistem** | status (active/passive), deleted_at |
+| **Sistem** | status, deleted_at, deleted_by, created_at, updated_at |
 
-### İlişkili Tablolar
+**JSONB Alanlar:** `operation_skill_scores`, `machine_adjustments`, `fabric_experience`
+
+### İlişkili Tablolar (SQLite'da kalan)
 
 - `production_logs` → Personelin günlük üretim kayıtları
 - `personel_saat` → Giriş/çıkış zamanları
@@ -86,9 +96,15 @@ KURAL: Sadece elindeki personel verisini kullan.
 - [x] Sesli giriş (TR + AR dil desteği)
 - [x] Soft-delete (geri getirilebilir silme)
 - [x] Çok dil desteği arayüzü
+- [x] **Supabase PostgreSQL'e geçiş** (2026-03-02)
+- [x] **4 AI Bot chatbot entegrasyonu** (Gemini/GPT/Perplexity/DeepSeek)
+- [x] **Otomatik fallback:** Gemini 429 → GPT-4o-mini
+- [x] **Kolon whitelist filtresi** — bilinmeyen form alanları otomatik atlanır
 
 ## 🔲 YAPILMASI PLANLANANLAR
 
+- [ ] TODO: Diğer tabloları da Supabase'e geçir (models, orders vb.)
+- [ ] TODO: Supabase Auth ile GitHub OAuth kullanıcı yönetimi
 - [ ] TODO: Prim hesabı otomasyonu
 - [ ] TODO: SGK/bordro rapor çıktısı
 - [ ] TODO: Personel karşılaştırma grafiği

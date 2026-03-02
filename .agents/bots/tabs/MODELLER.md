@@ -119,6 +119,79 @@ KURAL: Model verisini detaylı analiz et. Eksik varsa söyle.
 
 ---
 
+## 🔗 CROSS-TAB ENTEGRASYON
+
+| İlişki | Tablo | Nasıl Bağlı |
+|--------|-------|-------------|
+| **Üretim** | `production_logs` | `model_id` ile hangi model üretildiği |
+| **Siparişler** | `orders` | `model_id` FK — sipariş→model eşlemesi |
+| **Maliyet** | `cost_entries` | `model_id` FK — model bazlı maliyet |
+| **Sevkiyat** | `shipments` | `model_id` FK — hangi modeli sevk ettik |
+| **Müşteriler** | `customers` | `customer_id` FK — kim sipariş verdi |
+
+---
+
+## 🏗️ COMPONENT MİMARİSİ (page.js)
+
+```
+NewModelModal          → Yeni model oluşturma (~satır 826)
+  ├── Fotoğraf yükleme (handleImageUpload)
+  ├── Dikim operasyonu satırları (op_rows state)
+  └── handleSubmit → POST /api/models
+
+EditModelModal         → Model düzenleme (~satır 6982)
+  ├── editFrontPreview / editBackPreview state
+  ├── handleEditImageUpload (fotoğraf güncelleme)
+  ├── op_dikim_details (JSON — sıralı operasyon listesi)
+  ├── post_sewing (JSON — dikimden sonra 6 panel)
+  └── handleUpdateModel → PUT /api/models/:id
+
+openEditModal()        → editForm state'i models verisiyle doldurur
+```
+
+> **ÖNEMLİ:** Model Düzenle'deki `color_details` alanı `|` ile ayrılmış varyant saklar (`Varyant1|Varyant2`)
+
+---
+
+## 🤖 CODING AGENT TALİMATLARI
+
+### Yeni Model Alanı Eklemek
+
+1. **DB:** `db.js` alterStatements dizisine `ALTER TABLE models ADD COLUMN yeni_alan TEXT` ekle
+2. **API GET:** `/api/models/route.js` SELECT sorgusuna ekle
+3. **API PUT:** `/api/models/[id]/route.js` UPDATE sorgusuna ekle
+4. **EditModal UI:** `page.js` ~satır 6982 editModel bloğuna form input ekle
+5. **NewModal UI:** `page.js` ~satır 826 NewModelModal'a da ekle
+6. **openEditModal():** `setEditForm({...model, yeni_alan: model.yeni_alan || ''})` satırına ekle
+
+### Dikimden Sonra Yeni Panel Eklemek
+
+EditModal'daki 6 panel dizisine yeni `{ key, label, placeholder }` objesi ekle.  
+Veri `post_sewing` JSON alanına saklanır — DB değişikliği gereksiz.
+
+---
+
+## 🔄 VERİ AKIŞI
+
+```
+EditModal form
+  → PUT /api/models/:id
+  → audit_trail tablosuna her değişen alan kaydedilir
+  → loadModels() → UI güncellenir
+  → Değişiklik Geçmişi modal'ında görünür
+```
+
+---
+
+## ⚠️ ÖNEMLİ KISITLAMALAR
+
+- `models` soft-delete: `deleted_at / deleted_by` sütunları var
+- Her PUT isteği `audit_trail`'e otomatik loglanır (API route içinde)
+- `op_dikim_details` ve `post_sewing` JSON string olarak saklanır — parse edilmeli
+- `color_details` varyant: `"Kırmızı|Mavi"` formatı
+
+---
+
 ## 📝 BOT GÜNCELLEME KURALI
 
 **Bu dosyayı şu durumlarda güncelle:**

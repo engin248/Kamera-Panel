@@ -162,28 +162,48 @@ Bugün Üretim: ${uretim.slice(0, 4).map(u => `${u.personel_name || '?'}:${u.tot
 
 // ====== API ÇAĞRILARI ======
 
-async function callGemini(systemPrompt, message, history) {
-    const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
-    try {
-        const res = await fetch(GEMINI_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [
-                    { role: 'user', parts: [{ text: systemPrompt }] },
-                    { role: 'model', parts: [{ text: '✅ Hazırım.' }] },
-                    ...history.slice(-6).map(h => ({ role: h.role === 'assistant' ? 'model' : 'user', parts: [{ text: h.content }] })),
-                    { role: 'user', parts: [{ text: message }] }
-                ],
-                generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
-            })
-        });
-        if (!res.ok) throw new Error(`Gemini HTTP ${res.status}`);
-        const data = await res.json();
-        return { reply: data?.candidates?.[0]?.content?.parts?.[0]?.text || '❓ Cevap alınamadı.', source: 'gemini' };
-    } catch (e) {
-        return { reply: `❌ Gemini bağlanamadı: ${e.message}`, source: 'error' };
+async function callGemini(systemPrompt, message, history, allowFallback = true) {
+    const GEMINI_MODELS = [
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-1.5-flash-8b',
+    ];
+
+    for (const model of GEMINI_MODELS) {
+        try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [
+                        { role: 'user', parts: [{ text: systemPrompt }] },
+                        { role: 'model', parts: [{ text: '✅ Hazırım.' }] },
+                        ...history.slice(-6).map(h => ({ role: h.role === 'assistant' ? 'model' : 'user', parts: [{ text: h.content }] })),
+                        { role: 'user', parts: [{ text: message }] }
+                    ],
+                    generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+                })
+            });
+            if (res.status === 429) {
+                console.warn(`Gemini ${model} rate limited, trying next...`);
+                continue; // sonraki modeli dene
+            }
+            if (!res.ok) throw new Error(`Gemini ${model} HTTP ${res.status}`);
+            const data = await res.json();
+            const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (reply) return { reply, source: `gemini-${model}` };
+        } catch (e) {
+            console.warn(`Gemini ${model} error:`, e.message);
+        }
     }
+
+    // Tüm Gemini modelleri başarısız → GPT fallback
+    if (allowFallback && OPENAI_API_KEY) {
+        console.log('Tüm Gemini modelleri 429, GPT fallback devreye giriyor...');
+        return await callGPT(systemPrompt, message, history);
+    }
+    return { reply: '⚠️ Servis şu an yoğun, lütfen birkaç saniye sonra tekrar deneyin.', source: 'error' };
 }
 
 async function callGPT(systemPrompt, message, history) {
@@ -207,23 +227,36 @@ async function callGPT(systemPrompt, message, history) {
 }
 
 async function callPerplexity(systemPrompt, message, history) {
-    try {
-        const msgs = [
-            { role: 'system', content: systemPrompt },
-            ...history.slice(-4).map(h => ({ role: h.role, content: h.content })),
-            { role: 'user', content: message }
-        ];
-        const res = await fetch('https://api.perplexity.ai/chat/completions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${PERPLEXITY_KEY}` },
-            body: JSON.stringify({ model: 'llama-3.1-sonar-small-128k-online', messages: msgs, max_tokens: 600, temperature: 0.7 })
-        });
-        if (!res.ok) throw new Error(`Perplexity HTTP ${res.status}`);
-        const data = await res.json();
-        return { reply: data.choices?.[0]?.message?.content || '❓ Cevap alınamadı.', source: 'perplexity' };
-    } catch (e) {
-        return { reply: `❌ Perplexity bağlanamadı: ${e.message}`, source: 'error' };
+    const MODELS = ['sonar', 'sonar-pro'];
+    for (const model of MODELS) {
+        try {
+            const msgs = [
+                { role: 'system', content: systemPrompt },
+                ...history.slice(-4).map(h => ({ role: h.role, content: h.content })),
+                { role: 'user', content: message }
+            ];
+            const res = await fetch('https://api.perplexity.ai/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${PERPLEXITY_KEY}` },
+                body: JSON.stringify({ model, messages: msgs, max_tokens: 600, temperature: 0.7 })
+            });
+            if (!res.ok) {
+                const errText = await res.text().catch(() => '');
+                throw new Error(`Perplexity HTTP ${res.status}: ${errText.slice(0, 120)}`);
+            }
+            const data = await res.json();
+            const reply = data.choices?.[0]?.message?.content;
+            if (reply) return { reply, source: `perplexity-${model}` };
+        } catch (e) {
+            console.warn(`Perplexity model ${model} failed:`, e.message);
+            if (model === MODELS[MODELS.length - 1]) {
+                // son model de başarısız → Gemini'ye fallback
+                console.log('Perplexity tamamen failed, falling back to Gemini...');
+                return await callGemini(systemPrompt, message, history);
+            }
+        }
     }
+    return { reply: '❌ Araştırma servisi geçici olarak kullanılamıyor.', source: 'error' };
 }
 
 async function callDeepSeek(systemPrompt, message, history) {
@@ -238,11 +271,22 @@ async function callDeepSeek(systemPrompt, message, history) {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_KEY}` },
             body: JSON.stringify({ model: 'deepseek-chat', messages: msgs, max_tokens: 600, temperature: 0.7 })
         });
-        if (!res.ok) throw new Error(`DeepSeek HTTP ${res.status}`);
+        if (!res.ok) {
+            const status = res.status;
+            // 402 = bakiye yok, 401 = geçersiz key → Gemini'ye fallback
+            if (status === 402 || status === 401 || status === 403) {
+                console.log(`DeepSeek HTTP ${status} — Gemini fallback devreye giriyor...`);
+                const fallback = await callGemini(systemPrompt, message, history);
+                return { ...fallback, source: 'gemini-fallback-for-deepseek' };
+            }
+            throw new Error(`DeepSeek HTTP ${status}`);
+        }
         const data = await res.json();
         return { reply: data.choices?.[0]?.message?.content || '❓ Cevap alınamadı.', source: 'deepseek' };
     } catch (e) {
-        return { reply: `❌ DeepSeek bağlanamadı: ${e.message}`, source: 'error' };
+        // Bağlantı hatası → Gemini fallback
+        console.log('DeepSeek error, Gemini fallback:', e.message);
+        return await callGemini(systemPrompt, message, history);
     }
 }
 

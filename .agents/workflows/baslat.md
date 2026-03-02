@@ -8,7 +8,48 @@ description: Yeni bir geliştirme görevi başlatmak — analiz et, planla, uygu
 
 ---
 
-## ADIM 0: MİMARİYİ OKU
+## ADIM 0-A: AKTİF SEKMEYİ TESPİT ET
+
+**Her göreve başlarken ilk yapılacak şey budur.**
+
+Kullanıcının isteğinden ve açık dosyalardan hangi sekmeyle çalışıldığını belirle:
+
+| Sekme Adı | ID | Bot |
+|-----------|-----|-----|
+| 👗 Modeller | `models` | 🛠️ Tekniker |
+| 👥 Personel | `personnel` | 📹 Kamera |
+| 🔩 Üretim | `production` | 📹 Kamera |
+| 💰 Maliyet | `costs` | 💼 Muhasip |
+| 📒 Rapor & Analiz | `muhasebe` | 💼 Muhasip |
+| 📋 Siparişler | `orders` | 📹 Kamera |
+| ✅ Kalite | `quality` | 🛠️ Tekniker |
+| 🔧 Fason | `fason` | 💼 Muhasip |
+| 📦 Sevkiyat | `shipments` | 📹 Kamera |
+| 🏆 Prim | `prim` | 💼 Muhasip |
+| ⚙️ Makineler | `machines` | 🛠️ Tekniker |
+| 🤝 Müşteriler | `customers` | 📹 Kamera |
+| 📈 Raporlar | `reports` | 🔍 Kaşif |
+| 📊 Ana Panel | `dashboard` | 📹 Kamera |
+| 🤖 Bot Sistemi | `bot` | — |
+| 🏗️ Mimari | `architecture` | — |
+
+Tespit ettikten sonra **ilk yanıtının en başına** şunu yaz:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 AKTİF SEKME: [emoji] [Sekme Adı]
+🤖 UZMAN BOT:   [Bot Adı]
+📅 Tarih:       [YYYY-MM-DD]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+> **Sohbet başlığı önerisi:** `[Sekme]: [Görev özeti]`
+> Örnek: `Modeller: Parça listesi PDF export`
+> Örnek: `Personel: Prim hesaplama düzeltme`
+
+---
+
+## ADIM 0-B: MİMARİYİ OKU
 
 Göreve başlamadan önce ilgili dosyaları oku:
 

@@ -47,6 +47,54 @@ Antigravity, kullanıcıdan sormadan ve onay beklemeden ilgili `.md` dosyasını
 
 ---
 
+## 🟡 KURAL #1 — SEKME BAĞLAMI (HER YANITA EKLENİR)
+
+> **Bu kural her sohbette otomatik uygulanır.**
+
+Antigravity her görev yanıtının **en başına** şu bloğu ekler:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 AKTİF SEKME: [emoji] [Sekme Adı]
+🤖 UZMAN BOT:   [Bot Adı]
+📅 Tarih:       [YYYY-MM-DD]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Sekme Tespiti — Öncelik Sırası
+
+1. Kullanıcının açık dosyasına bak (örn. `MODELLER.md` açıksa → Modeller)
+2. Kullanıcının isteğindeki anahtar kelimelere bak
+3. Önceki sohbet bağlamına bak
+
+### Sekme → Bot Eşleşmesi
+
+| Sekme | Bot |
+|-------|-----|
+| 👗 Modeller, ✅ Kalite, ⚙️ Makineler | 🛠️ Tekniker |
+| 👥 Personel, 🔩 Üretim, 📋 Siparişler, 📦 Sevkiyat, 🤝 Müşteriler, 📊 Ana Panel | 📹 Kamera |
+| 💰 Maliyet, 📒 Rapor & Analiz, 🔧 Fason, 🏆 Prim | 💼 Muhasip |
+| 📈 Raporlar (piyasa) | 🔍 Kaşif |
+| 🤖 Bot, 🏗️ Mimari | — (Koordinatör) |
+
+### Sohbet Adlandırma Kuralı
+
+Yeni bir göreve başlarken sohbet başlığı önerisi:
+
+```
+[Sekme]: [Görev özeti — max 5 kelime]
+Örnek: "Modeller: Parça listesi export"
+Örnek: "Personel: Prim hesaplama düzeltme"
+Örnek: "Bot: Kamera prompt güncelleme"
+```
+
+**YASAK:**
+
+- ❌ Sekme bilgisi olmadan yanıt vermek (görev yanıtlarında)
+- ❌ Yanlış bot seçimi yapmak
+
+---
+
 > **Koordinatör (Antigravity):** Analiz, koordinasyon, kod yazma  
 
 ---

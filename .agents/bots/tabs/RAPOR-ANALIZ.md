@@ -96,6 +96,71 @@ Rapor sekmesi birden fazla tablodan veri çeker:
 
 ---
 
+## 🔗 CROSS-TAB ENTEGRASYON
+
+| Kaynak | Nasıl Kullanılır |
+|--------|------------------|
+| **Üretim** | `production_logs` — OEE, FPY, gunluk çıktı grafikleri |
+| **Personel** | `personnel` — kişi başına verimlilik bar chart |
+| **Modeller** | `models` + `operations` — model bazında performans |
+| **Kalite** | `quality_checks` — hata oranı ve FPY trendi |
+| **Maliyet** | `cost_entries` — maliyet trendi grafikleri |
+
+---
+
+## 🏗️ COMPONENT MİMARİSİ (page.js)
+
+```
+RaporAnalizSekmesi
+  ├── OeeGrafigi          → /api/rapor/oee
+  ├── PersonelVerimPanel  → /api/rapor/personel
+  ├── ModelPerformans     → /api/rapor/model-ops
+  ├── HataRaporuGrafigi   → /api/rapor/defects
+  └── ExcelExport         → /api/rapor/export
+```
+
+> **Not:** Rapor sekmesinın bütün verileri read-only'dir. Veri yazma yapmaz.
+
+---
+
+## 🤖 CODING AGENT TALİMATLARI
+
+### Yeni Rapor/Grafik Eklemek
+
+1. **API:** `/api/rapor/` altına yeni route oluştur
+2. **Query:** `production_logs` JOIN `models` JOIN `personnel` ile istenen metrik
+3. **UI:** `page.js` RaporAnalizSekmesi'ne yeni panel ekle
+4. **Grafık:** Sistem Chart.js veya native SVG kullanıyor — mevcut grafiklere bak
+
+### Excel Export Eklemek
+
+1. API: `/api/rapor/export?type=personel&from=&to=` formatında
+2. Response: `Content-Disposition: attachment; filename=rapor.xlsx`
+3. UI: "Excel İndir" butonu ekle
+
+---
+
+## 🔄 VERİ AKIŞI
+
+```
+Kullanıcı tarih/filtre seçer
+  → GET /api/rapor/... (parametreli sorgu)
+  → DB: production_logs GROUP BY tablo/tarih
+  → Response: { labels[], data[] }
+  → UI: grafik render edilir
+```
+
+---
+
+## ⚠️ ÖNEMLİ KISITLAMALAR
+
+- Tüm raporlar read-only — veri değiştirmez
+- Grafik verileri API'den hesaplanır, UI'da math yok
+- Soft-delete kayıtları (`deleted_at IS NOT NULL`) raporlara dahil edilmez
+- Excel export şu an planlama aşamasında
+
+---
+
 ## 📝 BOT GÜNCELLEME KURALI
 
 **Bu dosyayı şu durumlarda güncelle:**

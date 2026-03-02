@@ -116,6 +116,64 @@ KURAL: Geciken siparişleri her zaman önce belirt.
 
 ---
 
+## 🔗 CROSS-TAB ENTEGRASYON
+
+| İlişki | Nasıl Bağlı |
+|--------|-------------|
+| **Modeller** | `model_id` FK — hangi modelin siparişi |
+| **Müşteriler** | `customer_id` FK — kimin siparişi |
+| **Üretim** | `orders.status` → "imalatta" ile production_logs bağlatılır |
+| **Sevkiyat** | `shipments.model_id` — tamamlanan sipariş sevk edilir |
+
+---
+
+## 🏗️ COMPONENT MİMARİSİ (page.js)
+
+```
+SiparislerSekmesi
+  ├── YeniSiparisModal     → POST /api/orders
+  ├── SiparisDuzenleModal  → PUT /api/orders/:id
+  ├── SiparisFiltrePaneli  → durum/müşteri/tarih filtresi
+  └── SilmeOnayModal       → soft-delete (deleted_at)
+```
+
+---
+
+## 🤖 CODING AGENT TALİMATLARI
+
+### Yeni Sipariş Alanı Eklemek
+
+1. **DB:** `db.js` alterStatements: `ALTER TABLE orders ADD COLUMN yeni_alan TEXT`
+2. **API GET:** `/api/orders/route.js` SELECT'e ekle
+3. **API POST/PUT:** Body parse kısmına ekle
+4. **UI Forms:** `page.js` YeniSiparisModal ve SiparisDuzenleModal'a input ekle
+
+### Yeni Durum Eklemek
+
+1. `orders` tablosunda durum TEXT — herhangi bir değer girilir
+2. `page.js` durum dropdown'una `<option>` ekle
+3. Durum badge renklerini güncellemek için status-color mapleme objesini güncelle
+
+---
+
+## 🔄 VERİ AKIŞI
+
+```
+Form → POST /api/orders → orders kaydı
+Durum değişikliği → PUT /api/orders/:id → updated_at güncellenir
+Soft-delete → PUT → deleted_at ve deleted_by dolar
+```
+
+---
+
+## ⚠️ ÖNEMLİ KISITLAMALAR
+
+- `orders` soft-delete: `deleted_at / deleted_by / delete_reason` sütunları var
+- `product_image` URL olarak orders'da saklanır
+- `size_distribution`, `color_details`, `accessories` JSON string olabilir — parse et
+
+---
+
 ## 📝 BOT GÜNCELLEME KURALI
 
 **Bu dosyayı şu durumlarda güncelle:**

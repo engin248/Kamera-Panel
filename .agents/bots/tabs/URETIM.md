@@ -133,11 +133,79 @@ KURAL: Bugünün verisine odaklan. Trend için haftalık bak.
 
 ---
 
+## 🔗 CROSS-TAB ENTEGRASYON
+
+| İlişki | Tablo | Nasıl Bağlı |
+|--------|-------|-------------|
+| **Modeller** | `models` | Hangi modeli üretiyoruz — `model_id` FK |
+| **Personel** | `personnel` | Kim çalışıyor — `personnel_id` FK |
+| **Siparişler** | `orders` | Hangi sipariş için üretim yapılıyor |
+| **Kalite** | `quality_checks` | FPY/OEE skorları kalite sekmesini besler |
+| **Maliyet** | `cost_entries` | `unit_value` → maliyet analizine gider |
+
+---
+
+## 🏗️ COMPONENT MİMARİSİ (page.js)
+
+```
+UretimAsamasiSekmesi   → Ana sekme bileşeni
+  ├── GunlukHedefBar       → /api/uretim-ozet verisi, hedef çubuğu
+  ├── PartiBaglantisi      → /api/uretim-giris parti listesi
+  ├── UretimGirisFormu     → production_logs POST formu
+  │     ├── Model/Op/Personel seçimi (dropdown)
+  │     ├── Üretilen/Hatalı adet girişi
+  │     └── OEE/FPY otomatik hesaplama
+  └── SesliKomutButonu     → parseVoiceCommand() ile doğal dil komutu
+```
+
+> **ÖNEMLİ:** page.js TEK DOSYA (12k+ satır). Tüm bileşenler inline fonksiyon.
+
+---
+
+## 🤖 CODING AGENT TALİMATLARI
+
+### Yeni Üretim Metriği Eklemek
+
+1. **DB:** `db.js` → alterStatements'a `ALTER TABLE production_logs ADD COLUMN yeni_metrik REAL DEFAULT 0` ekle
+2. **API GET:** `/api/production/route.js` SELECT sorgusuna alan ekle  
+3. **API POST:** `/api/uretim-ozet/route.js` veya `/api/production/route.js` POST'ta hesapla  
+4. **UI:** `page.js` içinde `UretimAsamasiSekmesi` fonksiyonuna yeni input/display ekle
+5. **Form state:** `useState` içindeki form objesine alan ekle
+
+### Sesli Komut Eklemek
+
+1. `parseVoiceCommand()` fonksiyonunu bul (page.js ~satır 300)
+2. Yeni regex pattern ekle
+3. `handleVoiceCommand()` içine case ekle
+
+---
+
+## 🔄 VERİ AKIŞI
+
+```
+Tablet/Form
+  → POST /api/production (production_logs kaydı)
+  → GET /api/uretim-ozet?tarih=YYYY-MM-DD (GunlukHedefBar)
+  → GET /api/personel-saat (giriş/çıkış takibi)
+  → UI: OEE/FPY/Takt otomatik hesaplanır ve gösterilir
+```
+
+---
+
+## ⚠️ ÖNEMLİ KISITLAMALAR
+
+- `page.js` inline bileşenler — ayrı dosya yok
+- `production_logs` soft-delete: `deleted_at` sütunu var
+- OEE/FPY hesabı → API'de değil, formda JavaScript ile anlık hesaplanır
+- Sesli komut sadece Chrome/Edge'de çalışır
+
+---
+
 ## 📝 BOT GÜNCELLEME KURALI
 
 **Bu dosyayı şu durumlarda güncelle:**
 
-- Yeni production_logs sütunu eklendiyse → DB tablosu güncelle
-- Yeni metrik formülü eklendiyse → Metrikler tablosu güncelle
+- Yeni production_logs sütunu eklendiyse → DYeni metrik formülü eklendiyse → Metrikler tablosu güncelle
 - Yeni özellik eklendiyse → `[x]` yap
-- Yeni TODO belirlediyse → `[ ]` ekle
+- Yeni TODO belirlediyse → `[ ]` ekleB tablosu güncelle
+-

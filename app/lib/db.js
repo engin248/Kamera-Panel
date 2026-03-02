@@ -716,6 +716,92 @@ function initTables() {
   for (const sql of modelMigrations) {
     try { db.exec(sql); } catch { /* sütun zaten varsa hata verir, sorun yok */ }
   }
+
+  // ===== YENİ TABLOLAR: M1-M3 Üretim Süreç Modülleri =====
+  db.exec(`
+    -- M1: Parti Kabul (Fabrika kapısından giriş)
+    CREATE TABLE IF NOT EXISTS parti_kabul (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      model_id INTEGER,
+      firma_adi TEXT NOT NULL,
+      getiren_personel_id INTEGER,
+      kabul_eden_id INTEGER,
+      gelis_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP,
+      arac_plaka TEXT DEFAULT '',
+      tasima_tipi TEXT DEFAULT 'kendi_araci',
+      toplam_adet INTEGER DEFAULT 0,
+      beden_listesi TEXT DEFAULT '[]',
+      parca_listesi TEXT DEFAULT '[]',
+      parca_eksik INTEGER DEFAULT 0,
+      parca_eksik_not TEXT DEFAULT '',
+      beden_eksik INTEGER DEFAULT 0,
+      beden_eksik_not TEXT DEFAULT '',
+      dugme_var INTEGER DEFAULT 0,
+      dugme_adet INTEGER DEFAULT 0,
+      fermuar_var INTEGER DEFAULT 0,
+      fermuar_tip TEXT DEFAULT '',
+      etiket_geldi INTEGER DEFAULT 0,
+      yikama_talimati_geldi INTEGER DEFAULT 0,
+      hang_tag_geldi INTEGER DEFAULT 0,
+      aksesuar_not TEXT DEFAULT '',
+      kabul_durum TEXT DEFAULT 'tam' CHECK(kabul_durum IN ('tam','eksikli','ret')),
+      foto_url TEXT DEFAULT '',
+      notlar TEXT DEFAULT '',
+      deleted_at TEXT DEFAULT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- M1: Kalıp Arşivi (Her bedenden 1 numune saklanır)
+    CREATE TABLE IF NOT EXISTS kalip_arsivi (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      model_id INTEGER NOT NULL,
+      parti_kabul_id INTEGER,
+      beden TEXT NOT NULL,
+      foto_url TEXT DEFAULT '',
+      saklama_yeri TEXT DEFAULT '',
+      kaydeden_id INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (model_id) REFERENCES models(id)
+    );
+
+    -- M2: Personel Mola Kayıtları
+    CREATE TABLE IF NOT EXISTS personel_mola (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      personel_id INTEGER NOT NULL,
+      mola_tipi TEXT NOT NULL CHECK(mola_tipi IN ('cay','yemek','tuvalet','sigara','namaz','diger')),
+      baslama DATETIME NOT NULL,
+      bitis DATETIME,
+      sure_dk REAL DEFAULT 0,
+      tarih DATE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (personel_id) REFERENCES personnel(id)
+    );
+
+    -- M2: İlk Ürün Hazırlık (Kaç personel lazım)
+    CREATE TABLE IF NOT EXISTS ilk_urun_hazirlama (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      model_id INTEGER NOT NULL,
+      parti_kabul_id INTEGER,
+      kalip_beden TEXT DEFAULT '',
+      ara_iscilik TEXT DEFAULT '[]',
+      makineci_sayi INTEGER DEFAULT 0,
+      kasar_sayi INTEGER DEFAULT 0,
+      utuku_sayi INTEGER DEFAULT 0,
+      ortaci_sayi INTEGER DEFAULT 0,
+      ara_isci_sayi INTEGER DEFAULT 0,
+      kalite_sayi INTEGER DEFAULT 1,
+      notlar TEXT DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (model_id) REFERENCES models(id)
+    );
+  `);
+
+  // Çalışma takvimi güncelle: Öğle molası 45 dk (13:00-13:45) — DÜZELTME
+  try {
+    db.exec(`UPDATE work_schedule SET end_time = '13:45', name = 'Öğle Molası (45dk)' WHERE name LIKE '%Öğle%' AND start_time = '13:00'`);
+    db.exec(`UPDATE work_schedule SET start_time = '13:45' WHERE name LIKE '%Öğleden%' AND start_time = '13:40'`);
+  } catch (e) { /* zaten doğruysa sorun yok */ }
 }
 
 export default getDb;
+

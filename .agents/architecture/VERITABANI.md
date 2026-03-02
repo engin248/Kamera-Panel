@@ -1,9 +1,13 @@
 # 🗄️ VERİTABANI ŞEMASI — KAMERA-PANEL
 
-> **Dosya:** `app/data/kamera-panel.db`  
-> **Motor:** SQLite (better-sqlite3)  
+> **SQLite Dosyası:** `app/data/kamera-panel.db`  
+> **Motor:** SQLite (better-sqlite3) + ☁️ Supabase PostgreSQL  
 > **Pragma:** WAL mode + Foreign Keys ON  
-> **Son Güncelleme:** 2026-03-01
+> **Son Güncelleme:** 2026-03-02
+
+> ⚠️ **Hibrit Mimari (2026-03-02'den itibaren):**  
+> `personnel` tablosu → **Supabase PostgreSQL** (`cauptlsnqieegdrgotob.supabase.co`)  
+> Diğer tüm tablolar → **SQLite** (yerel dosya)
 
 ---
 
@@ -74,7 +78,11 @@ Model teknik kartı — Her konfeksiyon modeli için bir kayıt.
 
 ---
 
-## 📋 TABLO: `personnel` (Personel)
+## 📋 TABLO: `personnel` (Personel) — ☁️ **SUPABASE**
+
+> **2026-03-02:** Bu tablo SQLite'dan Supabase PostgreSQL'e taşındı.  
+> **Client:** `app/lib/supabase.js` → `supabaseAdmin`  
+> **RLS:** Açık (anonim okuma/yazma, gelecekte GitHub OAuth ile sınırlandırılacak)
 
 P1-P11 kriterli tam personel profili.
 
@@ -83,14 +91,14 @@ P1-P11 kriterli tam personel profili.
 | **Kimlik (P1)** | `name`, `national_id`, `birth_date`, `gender`, `education`, `children_count`, `blood_type`, `military_status`, `emergency_contact_*`, `smokes`, `prays`, `transport_type`, `turkish_level`, `living_status`, `disability_status` |
 | **İş Geçmişi (P2)** | `role`, `department`, `position`, `start_date`, `contract_type`, `sgk_entry_date`, `previous_workplaces`, `leave_reason`, `leave_types` |
 | **Ücret (P3)** | `daily_wage`, `base_salary`, `transport_allowance`, `ssk_cost`, `food_allowance`, `compensation` |
-| **Beceri (P4)** | `skill_level`, `machines`, `skills`, `capable_operations`, `operation_skill_scores`, `learning_speed`, `independence_level`, `finger_dexterity`, `color_perception`, `sample_reading` |
-| **Makine (P5)** | `preferred_machine`, `most_efficient_machine`, `maintenance_skill`, `machine_adjustment_care`, `machine_adjustments` |
+| **Beceri (P4)** | `skill_level`, `machines`, `skills`, `capable_operations`, `operation_skill_scores` (JSONB), `learning_speed`, `independence_level`, `finger_dexterity`, `color_perception`, `sample_reading` |
+| **Makine (P5)** | `preferred_machine`, `most_efficient_machine`, `maintenance_skill`, `machine_adjustment_care`, `machine_adjustments` (JSONB) |
 | **Fiziksel (P6)** | `physical_endurance`, `eye_health`, `health_restrictions`, `body_type`, `work_capacity`, `isg_training_date`, `last_health_check` |
 | **Karakter (P7)** | `reliability`, `hygiene`, `change_openness`, `responsibility_acceptance`, `error_stance` |
-| **Üretim (P8-P9)** | `daily_avg_output`, `error_rate`, `efficiency_score`, `color_tone_matching`, `critical_matching_responsibility`, `fabric_experience` |
+| **Üretim (P8-P9)** | `daily_avg_output`, `error_rate`, `efficiency_score`, `color_tone_matching`, `critical_matching_responsibility`, `fabric_experience` (JSONB) |
 | **Gelişim (P10)** | `new_machine_learning`, `hard_work_avoidance`, `self_improvement`, `training_needs`, `general_evaluation` |
 | **Performans (P11)** | `operator_class`, `satisfaction_score`, `recommend`, `weekly_note`, `leadership_potential` |
-| **Sistem** | `status`, `language`, `work_start`, `work_end`, `adaptation_status`, `photo_url`, `phone`, `deleted_at`, `deleted_by`, `created_at` |
+| **Sistem** | `status`, `language`, `work_start`, `work_end`, `adaptation_status`, `photo_url`, `phone`, `deleted_at`, `deleted_by`, `created_at`, `updated_at` |
 
 ---
 
@@ -146,3 +154,18 @@ P1-P11 kriterli tam personel profili.
 3. Her kritik işlem `audit_trail`'e kaydedilir
 4. `activity_log` — kim ne zaman ne yaptı kaydı
 5. Migration'lar `alterStatements[]` dizisine eklenir
+6. **Supabase tablolarında:** `VALID_COLUMNS` whitelist kullan — bilinmeyen alanları insert etme
+7. **JSONB alanları:** `operation_skill_scores`, `machine_adjustments`, `fabric_experience` string ise parse et
+
+---
+
+## 🔄 HİBRİT MİMARİ DURUMU (2026-03-02)
+
+| Tablo | Motor | Durum |
+|-------|-------|-------|
+| `personnel` | ☁️ Supabase PostgreSQL | ✅ Taşındı |
+| `models` | SQLite | Bekliyor |
+| `operations` | SQLite | Bekliyor |
+| `production_logs` | SQLite | Bekliyor |
+| `orders` | SQLite | Bekliyor |
+| Diğer tüm tablolar | SQLite | Bekliyor |

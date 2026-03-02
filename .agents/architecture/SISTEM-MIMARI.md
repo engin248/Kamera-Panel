@@ -1,8 +1,8 @@
 # 🏗️ KAMERA-PANEL — SİSTEM MİMARİSİ
 
-> **Son Güncelleme:** 2026-03-01  
+> **Son Güncelleme:** 2026-03-02  
 > **Durum:** Aktif Üretim  
-> **Versiyon:** v2.0 (Bot Entegrasyonlu)
+> **Versiyon:** v2.1 (Supabase + Bot Entegrasyonlu)
 
 ---
 
@@ -15,16 +15,20 @@ Kamera-Panel/
 │   │   ├── page.js               → Ana UI (12.000+ satır, tek dosya React)
 │   │   ├── globals.css           → Global stiller
 │   │   ├── layout.js             → Root layout
-│   │   ├── api/                  → 27 API endpoint
+│   │   ├── api/                  → 27+ API endpoint
 │   │   └── operator/             → Tablet operatör ekranı
 │   ├── lib/
 │   │   ├── db.js                 → SQLite veritabanı (better-sqlite3)
+│   │   ├── supabase.js           → ☁️ Supabase istemcisi (supabase + supabaseAdmin)
 │   │   ├── ai-services.js        → 4 AI API entegrasyonu
 │   │   ├── auth.js               → Yetki sistemi
-│   │   ├── edit-system.js        → Audit trail / düzenleme sistemi
+│   │   ├── edit-system.js        → Audit trail / düzenlemesistemi
 │   │   └── i18n.js               → Çok dil desteği (TR/AR)
-│   └── data/
-│       └── kamera-panel.db       → SQLite veritabanı dosyası
+│   ├── scripts/
+│   │   └── migrate-personnel-to-supabase.mjs  → SQLite→Supabase migration
+│   ├── data/
+│   │   └── kamera-panel.db       → SQLite veritabanı (diğer tablolar)
+│   └── .env.local              → API anahtarları (GitHub'a gitmiyor)
 ├── .agents/                      → AI Agent sistemi
 │   ├── architecture/             → Mimari dokümanlar (BU KLASÖR)
 │   ├── bots/                     → Bot konfigürasyonları
@@ -38,28 +42,30 @@ Kamera-Panel/
 
 ## 🗄️ VERİTABANI TABLOLARI
 
-| Tablo | Açıklama | Satır Sayısı (Tahmini) |
-|-------|----------|------------------------|
-| `models` | Model kartları (teknik detaylar) | 10-50 |
-| `operations` | Model operasyonları | 50-500 |
-| `personnel` | Çalışan profilleri (P1-P11) | 10-30 |
-| `production_logs` | Günlük üretim kayıtları | 1000+ |
-| `quality_checks` | Kalite kontrol | 500+ |
-| `approval_queue` | İlk ürün onayları | 50+ |
-| `orders` | Siparişler | 20-100 |
-| `shipments` | Sevkiyatlar | 10-50 |
-| `customers` | Müşteri listesi | 5-30 |
-| `machines` | Makine envanteri | 5-20 |
-| `machine_settings` | Makine ayar şablonları | 10-100 |
-| `fason_providers` | Fason tedarikçiler | 5-20 |
-| `fason_orders` | Fason siparişler | 10-50 |
-| `cost_entries` | Maliyet kalemleri | 50-200 |
-| `business_expenses` | İşletme giderleri | 20-100 |
-| `users` | Kullanıcılar (yetki) | 2-10 |
-| `activity_log` | İşlem günlüğü | 1000+ |
-| `audit_trail` | Değişiklik geçmişi | 1000+ |
-| `work_schedule` | Mola çizelgesi | 7 (sabit) |
-| `monthly_work_days` | Aylık çalışma günleri | 12/yıl |
+> **Hibrit Mimari:** `personnel` → Supabase | Diğerleri → SQLite
+
+| Tablo | Motor | Açıklama | Satır Sayısı (Tahmini) |
+|-------|-------|----------|------------------------|
+| `personnel` | ☁️ Supabase | Çalışan profilleri (P1-P11) | 10-30 |
+| `models` | SQLite | Model kartları (teknik detaylar) | 10-50 |
+| `operations` | SQLite | Model operasyonları | 50-500 |
+| `production_logs` | SQLite | Günlük üretim kayıtları | 1000+ |
+| `quality_checks` | SQLite | Kalite kontrol | 500+ |
+| `approval_queue` | SQLite | İlk ürün onayları | 50+ |
+| `orders` | SQLite | Siparişler | 20-100 |
+| `shipments` | SQLite | Sevkiyatlar | 10-50 |
+| `customers` | SQLite | Müşteri listesi | 5-30 |
+| `machines` | SQLite | Makine envanteri | 5-20 |
+| `machine_settings` | SQLite | Makine ayar şablonları | 10-100 |
+| `fason_providers` | SQLite | Fason tedarikçiler | 5-20 |
+| `fason_orders` | SQLite | Fason siparişler | 10-50 |
+| `cost_entries` | SQLite | Maliyet kalemleri | 50-200 |
+| `business_expenses` | SQLite | İşletme giderleri | 20-100 |
+| `users` | SQLite | Kullanıcılar (yetki) | 2-10 |
+| `activity_log` | SQLite | İşlem günlüğü | 1000+ |
+| `audit_trail` | SQLite | Değişiklik geçmişi | 1000+ |
+| `work_schedule` | SQLite | Mola çizelgesi | 7 (sabit) |
+| `monthly_work_days` | SQLite | Aylık çalışma günleri | 12/yıl |
 
 ---
 
@@ -168,11 +174,12 @@ Varsayılan: `admin` / `47admin2026`
 |--------|-----------|----------|
 | Framework | Next.js | 16.1.6 |
 | UI | React | 19.2.3 |
-| Veritabanı | SQLite (better-sqlite3) | ^12.6.2 |
-| AI - Operasyon | Google Gemini | 2.0-flash |
+| Veritabanı (yerel) | SQLite (better-sqlite3) | ^12.6.2 |
+| Veritabanı (bulut) | ☁️ Supabase PostgreSQL | @supabase/supabase-js |
+| AI - Operasyon | Google Gemini | 2.0-flash (+fallback to GPT) |
 | AI - Finans | OpenAI GPT | 4o-mini |
-| AI - Araştırma | Perplexity | sonar |
-| AI - Teknik | DeepSeek | chat |
+| AI - Araştırma | Perplexity | sonar (+fallback to Gemini) |
+| AI - Teknik | DeepSeek | chat (+fallback to Gemini/GPT) |
 | Dosya Yükleme | Multer | ^2.0.2 |
 | ID Üretimi | UUID | ^13.0.0 |
 | Port | localhost | 3000 |
