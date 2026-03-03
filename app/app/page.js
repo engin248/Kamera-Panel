@@ -210,9 +210,9 @@ function SesliKomutButonu({ models, personnel, addToast }) {
 // ========== GN:012C — FASON HESAP MİNİ ==========
 
 function FasonHesapMini({ addToast }) {
-  const [kar, setKar] = React.useState(20);
-  const [malzeme, setMalzeme] = React.useState(0);
-  const [sonuc, setSonuc] = React.useState(null);
+  const [kar, setKar] = useState(20);
+  const [malzeme, setMalzeme] = useState(0);
+  const [sonuc, setSonuc] = useState(null);
   const hesapla = async () => {
     const r = await fetch('/api/fason-fiyat-hesapla', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kar_marji_yuzde: kar, ek_malzeme_tl: malzeme }) });
     setSonuc(await r.json());
@@ -9365,1406 +9365,416 @@ function ProductionPage({ models, personnel, addToast }) {
 
 
 
-// ========== REPORTS PAGE ==========
+
+// ========== PRİM SAYFASI ==========
+
+function PrimPage({ personnel, addToast }) {
+  const now = new Date();
+  const [ay, setAy] = useState(now.getMonth() + 1);
+  const [yil, setYil] = useState(now.getFullYear());
+  const [primOrani, setPrimOrani] = useState(30);
+  const [primler, setPrimler] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [hesaplaniyor, setHesaplaniyor] = useState(false);
+  const [detay, setDetay] = useState(null);
+  const AYLAR = ['Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran', 'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik'];
+  const loadPrimler = useCallback(async () => {
+    setLoading(true);
+    try { const r = await fetch('/api/prim?ay=' + ay + '&yil=' + yil); const d = await r.json(); setPrimler(Array.isArray(d) ? d : []); }
+    catch { setPrimler([]); } finally { setLoading(false); }
+  }, [ay, yil]);
+  useEffect(() => { loadPrimler(); }, [loadPrimler]);
+  const hesapla = async () => {
+    setHesaplaniyor(true);
+    try {
+      const r = await fetch('/api/prim', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ay, yil, prim_orani: primOrani }) });
+      const d = await r.json();
+      if (d.success) { addToast('success', d.personel_sayisi + ' personel icin prim hesaplandi'); loadPrimler(); }
+      else { addToast('error', d.error || 'Hesaplama hatasi'); }
+    } catch { addToast('error', 'Baglanti hatasi'); } finally { setHesaplaniyor(false); }
+  };
+  const onayla = async (id, durum) => {
+    try {
+      const r = await fetch('/api/prim', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, onay_durumu: durum }) });
+      if (r.ok) { addToast('success', durum === 'onaylandi' ? 'Prim onaylandi' : 'Prim reddedildi'); loadPrimler(); }
+    } catch { addToast('error', 'Guncelleme hatasi'); }
+  };
+  const toplamPrim = primler.reduce((t, p) => t + (p.prim_tutari || 0), 0);
+  const toplamKatki = primler.reduce((t, p) => t + (p.katki_degeri || 0), 0);
+  const onaylanan = primler.filter(p => p.onay_durumu === 'onaylandi').length;
+  const durumRenk = { hesaplandi: '#f39c12', onaylandi: '#27ae60', reddedildi: '#e74c3c', odendi: '#3498db' };
+  const durumLabel = { hesaplandi: 'Hesaplandi', onaylandi: 'Onaylandi', reddedildi: 'Reddedildi', odendi: 'Odendi' };
+  return (
+    <>
+      <div className="topbar">
+        <h1 className="topbar-title">Prim &amp; Tesvik Sistemi</h1>
+        <div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <select className="form-select" value={ay} onChange={e => setAy(+e.target.value)} style={{ minWidth: '100px' }}>
+            {AYLAR.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+          </select>
+          <select className="form-select" value={yil} onChange={e => setYil(+e.target.value)}>
+            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Prim %</span>
+          <input type="number" min={1} max={100} value={primOrani} onChange={e => setPrimOrani(+e.target.value)}
+            style={{ width: '60px', padding: '6px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-input)', color: 'var(--text-primary)', textAlign: 'center' }} />
+          <button onClick={hesapla} disabled={hesaplaniyor}
+            style={{ padding: '8px 16px', background: hesaplaniyor ? 'rgba(212,168,71,0.3)' : 'var(--accent)', color: hesaplaniyor ? 'var(--text-muted)' : '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontFamily: 'inherit' }}>
+            {hesaplaniyor ? 'Hesaplaniyor...' : 'Hesapla'}
+          </button>
+        </div>
+      </div>
+      <div className="page-content">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '20px' }}>
+          {[
+            { label: 'Toplam Katki', value: '&#x20BA;' + toplamKatki.toLocaleString('tr-TR', { maximumFractionDigits: 0 }), color: '#3498db', icon: '&#x1F4B0;' },
+            { label: 'Dagitilacak Prim', value: '&#x20BA;' + toplamPrim.toLocaleString('tr-TR', { maximumFractionDigits: 0 }), color: '#27ae60', icon: '&#x1F3C6;' },
+            { label: 'Personel', value: primler.length + ' kisi', color: '#9b59b6', icon: '&#x1F465;' },
+            { label: 'Onaylanan', value: onaylanan + '/' + primler.length, color: '#f39c12', icon: '&#x2705;' },
+          ].map((k, i) => (
+            <div key={i} style={{ padding: '16px', background: 'var(--bg-card)', borderRadius: '10px', border: '1px solid ' + k.color + '33' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }} dangerouslySetInnerHTML={{ __html: k.icon + ' ' + k.label }} />
+              <div style={{ fontSize: '20px', fontWeight: '800', color: k.color }} dangerouslySetInnerHTML={{ __html: k.value }} />
+            </div>
+          ))}
+        </div>
+        <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <b style={{ fontSize: '14px' }}>Personel Prim Dagilimi  {AYLAR[ay - 1]} {yil}</b>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Formul: (Katki - Maas) x %{primOrani}</span>
+          </div>
+          {loading ? (
+            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>Yukleniyor...</div>
+          ) : primler.length === 0 ? (
+            <div style={{ padding: '48px', textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '12px' }}></div>
+              <div style={{ fontWeight: '700', color: 'var(--text-muted)', marginBottom: '8px' }}>Bu ay icin prim kaydi yok</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Hesapla butonuna basin</div>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ background: 'var(--bg-input)' }}>
+                    {['#', 'Personel', 'Uretim', 'FPY', 'Katki', 'Maas', 'Fark', 'Prim', 'Durum', 'Islem'].map(h => (
+                      <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...primler].sort((a, b) => (b.prim_tutari || 0) - (a.prim_tutari || 0)).map((p, i) => {
+                    const fark = (p.katki_degeri || 0) - (p.maas_maliyeti || 0);
+                    return (
+                      <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)', cursor: 'pointer' }} onClick={() => setDetay(detay && detay.id === p.id ? null : p)}>
+                        <td style={{ padding: '10px 12px', fontWeight: '700', color: i < 3 ? '#D4A847' : 'var(--text-muted)' }}>{i < 3 ? ['', '', ''][i] : i + 1}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: '600' }}>{p.personel_adi || 'Personel #' + p.personel_id}</td>
+                        <td style={{ padding: '10px 12px' }}>{(p.toplam_uretilen || 0).toLocaleString('tr-TR')}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: '700', color: (p.fpy_yuzde || 0) >= 90 ? '#27ae60' : (p.fpy_yuzde || 0) >= 75 ? '#f39c12' : '#e74c3c' }}>%{(p.fpy_yuzde || 0).toFixed(1)}</td>
+                        <td style={{ padding: '10px 12px', color: '#3498db', fontWeight: '600' }}>₺{(p.katki_degeri || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</td>
+                        <td style={{ padding: '10px 12px', color: '#e74c3c' }}>₺{(p.maas_maliyeti || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: '700', color: fark > 0 ? '#27ae60' : '#e74c3c' }}>{fark > 0 ? '+' : ''}₺{fark.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: '800', color: '#D4A847', fontSize: '15px' }}>{(p.prim_tutari || 0) > 0 ? '₺' + (p.prim_tutari || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }) : ''}</td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: (durumRenk[p.onay_durumu] || '#95a5a6') + '22', color: durumRenk[p.onay_durumu] || '#95a5a6', fontWeight: '600' }}>
+                            {durumLabel[p.onay_durumu] || p.onay_durumu}
+                          </span>
+                        </td>
+                        <td style={{ padding: '10px 12px' }} onClick={e => e.stopPropagation()}>
+                          {p.onay_durumu === 'hesaplandi' && (
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <button onClick={() => onayla(p.id, 'onaylandi')} style={{ padding: '4px 8px', background: 'rgba(46,204,113,0.15)', border: '1px solid rgba(46,204,113,0.3)', borderRadius: '6px', color: '#27ae60', cursor: 'pointer', fontSize: '11px', fontWeight: '700', fontFamily: 'inherit' }}>Onayla</button>
+                              <button onClick={() => onayla(p.id, 'reddedildi')} style={{ padding: '4px 8px', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.25)', borderRadius: '6px', color: '#e74c3c', cursor: 'pointer', fontSize: '11px', fontFamily: 'inherit' }}>X</button>
+                            </div>
+                          )}
+                          {p.onay_durumu === 'onaylandi' && (
+                            <button onClick={() => onayla(p.id, 'odendi')} style={{ padding: '4px 8px', background: 'rgba(52,152,219,0.15)', border: '1px solid rgba(52,152,219,0.3)', borderRadius: '6px', color: '#3498db', cursor: 'pointer', fontSize: '11px', fontWeight: '700', fontFamily: 'inherit' }}>Odendi</button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        {detay && (
+          <div style={{ marginTop: '16px', padding: '16px', background: 'var(--bg-card)', borderRadius: '12px', border: '2px solid rgba(212,168,71,0.4)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <b style={{ fontSize: '14px' }}>{detay.personel_adi}  Prim Detayi</b>
+              <button onClick={() => setDetay(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: 'var(--text-muted)' }}>X</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px' }}>
+              {[
+                { label: 'Uretim', value: (detay.toplam_uretilen || 0).toLocaleString('tr-TR') + ' adet' },
+                { label: 'Hatali', value: (detay.toplam_hatali || 0) + ' adet' },
+                { label: 'FPY', value: '%' + (detay.fpy_yuzde || 0).toFixed(1) },
+                { label: 'Katki Degeri', value: '₺' + (detay.katki_degeri || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }) },
+                { label: 'Maas Maliyeti', value: '₺' + (detay.maas_maliyeti || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }) },
+                { label: 'Fazla Deger', value: '₺' + (detay.katki_maas_farki || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }) },
+                { label: 'Prim', value: '₺' + (detay.prim_tutari || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }) },
+                { label: 'Durum', value: durumLabel[detay.onay_durumu] || detay.onay_durumu },
+              ].map((it, i) => (
+                <div key={i} style={{ padding: '10px 12px', background: 'var(--bg-input)', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>{it.label}</div>
+                  <div style={{ fontWeight: '700', fontSize: '14px' }}>{it.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ========== RAPORLAR SAYFASI ==========
 
 function ReportsPage({ models, personnel, addToast }) {
-
-  const [logs, setLogs] = useState([]);
-
-  const [period, setPeriod] = useState('today');
-
-  const [customFrom, setCustomFrom] = useState('');
-
-  const [customTo, setCustomTo] = useState('');
-
-
-
-  const getDateRange = useCallback((p) => {
-
-    const now = new Date();
-
-    const fmt = d => d.toISOString().split('T')[0];
-
-    switch (p) {
-
-      case 'today': return { date: fmt(now) };
-
-      case 'yesterday': { const d = new Date(now); d.setDate(d.getDate() - 1); return { date: fmt(d) }; }
-
-      case 'week': { const d = new Date(now); d.setDate(d.getDate() - 7); return { from: fmt(d) }; }
-
-      case 'month': { return { from: fmt(new Date(now.getFullYear(), now.getMonth(), 1)) }; }
-
-      case '2month': { return { from: fmt(new Date(now.getFullYear(), now.getMonth() - 1, 1)) }; }
-
-      case '3month': { return { from: fmt(new Date(now.getFullYear(), now.getMonth() - 2, 1)) }; }
-
-      case '6month': { return { from: fmt(new Date(now.getFullYear(), now.getMonth() - 5, 1)) }; }
-
-      case 'custom': return customFrom ? { from: customFrom, ...(customTo ? { to: customTo } : {}) } : {};
-
-      case 'all': return {};
-
-      default: return {};
-
-    }
-
-  }, [customFrom, customTo]);
-
-
-
-  const loadReportData = useCallback(async () => {
-
+  const now = new Date();
+  const [raporTab, setRaporTab] = useState('ozet');
+  const [ay, setAy] = useState(now.getMonth() + 1);
+  const [yil, setYil] = useState(now.getFullYear());
+  const [ozet, setOzet] = useState(null);
+  const [verimlilik, setVerimlilik] = useState([]);
+  const [karlilik, setKarlilik] = useState([]);
+  const [kararlar, setKararlar] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const AYLAR = ['Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran', 'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik'];
+  const loadAll = useCallback(async () => {
+    setLoading(true);
     try {
-
-      const range = getDateRange(period);
-
-      let params = new URLSearchParams();
-
-      if (range.date) params.set('date', range.date);
-
-      if (range.from) params.set('from', range.from);
-
-      if (range.to) params.set('to', range.to);
-
-      const qs = params.toString() ? `?${params.toString()}` : '';
-
-      const res = await fetch(`/api/production${qs}`);
-
-      const data = await res.json();
-
-      setLogs(Array.isArray(data) ? data : []);
-
-    } catch (err) { console.error(err); }
-
-  }, [period, getDateRange]);
-
-
-
-  useEffect(() => { loadReportData(); }, [loadReportData]);
-
-
-
-  const personnelSummary = {};
-
-  logs.forEach(log => {
-
-    if (!personnelSummary[log.personnel_id]) {
-
-      personnelSummary[log.personnel_id] = { name: log.personnel_name, role: log.personnel_role, daily_wage: log.daily_wage || 0, total_produced: 0, total_defective: 0, total_value: 0, total_minutes: 0, passive_minutes: 0, records: 0 };
-
-    }
-
-    const p = personnelSummary[log.personnel_id];
-
-    p.total_produced += log.total_produced || 0;
-
-    p.total_defective += log.defective_count || 0;
-
-    p.total_value += (log.total_produced || 0) * (log.unit_price || 0);
-
-    const dur = log.end_time ? (new Date(log.end_time) - new Date(log.start_time)) / 60000 : 0;
-
-    p.total_minutes += dur;
-
-    p.passive_minutes += (log.passive_time_min || 0);
-
-    p.records++;
-
-  });
-
-
-
-  const summaryList = Object.values(personnelSummary);
-
-  const totalValue = summaryList.reduce((s, p) => s + p.total_value, 0);
-
-  const totalProduced = summaryList.reduce((s, p) => s + p.total_produced, 0);
-
-  const totalDefective = summaryList.reduce((s, p) => s + p.total_defective, 0);
-
-
-
-  // CSV dışa aktarma
-
-  const exportCSV = () => {
-
-    if (summaryList.length === 0) return;
-
-    const headers = ['Personel', 'Üretim Adet', 'Üretim Değeri (₺)', 'Günlük Maliyet (₺)', 'Katma Değer (₺)', 'Hata', 'Kalite %', 'Pasif Süre (dk)'];
-
-    const rows = summaryList.map(p => {
-
-      const kd = p.total_value - p.daily_wage;
-
-      const qr = p.total_produced > 0 ? Math.round((1 - p.total_defective / p.total_produced) * 100) : 100;
-
-      return [p.name, p.total_produced, p.total_value.toFixed(2), p.daily_wage.toFixed(0), kd.toFixed(2), p.total_defective, qr, p.passive_minutes.toFixed(0)];
-
-    });
-
-    const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
-
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-
-    const link = document.createElement('a');
-
-    link.href = URL.createObjectURL(blob);
-
-    link.download = `rapor_${new Date().toISOString().split('T')[0]}.csv`;
-
-    link.click();
-
-    addToast('success', 'Rapor CSV olarak indirildi');
-
-  };
-
-
-
-  // Model Kartı PDF çıktısı (yazdır) — İşlem listesiyle zenginleştirilmiş
-
-  const printModelCard = async (model) => {
-
-    let opsHtml = '<p style="color:#999;font-size:12px">İşlem bilgisi yükleniyor...</p>';
-
-    try {
-
-      const res = await fetch(`/api/models/${model.id}/operations`);
-
-      const ops = await res.json();
-
-      if (Array.isArray(ops) && ops.length > 0) {
-
-        opsHtml = `<table><thead><tr><th>#</th><th>İşlem Adı</th><th>Makine</th><th>Zorluk</th><th>İplik/Malzeme</th><th>Bağımlılık</th><th>Birim Fiyat</th></tr></thead><tbody>` +
-
-          ops.map(op => `<tr><td>${op.order_number}</td><td><strong>${op.name}</strong></td><td>${op.machine_type || '—'}</td><td>${op.difficulty || '—'}/10</td><td>${op.thread_material || '—'}</td><td>${op.dependency || '—'}</td><td>${op.unit_price ? op.unit_price + ' ₺' : '—'}</td></tr>`).join('') +
-
-          `</tbody></table>`;
-
-      } else {
-
-        opsHtml = '<p style="color:#999;font-size:12px">Henüz işlem tanımlanmamış</p>';
-
+      const [ozetR, veriR, karR, kararR] = await Promise.allSettled([
+        fetch('/api/rapor/ay-ozet?ay=' + ay + '&yil=' + yil).then(r => r.json()),
+        fetch('/api/rapor/personel-verimlilik?ay=' + ay + '&yil=' + yil).then(r => r.json()),
+        fetch('/api/rapor/model-karlilik?ay=' + ay + '&yil=' + yil).then(r => r.json()),
+        fetch('/api/rapor/karar-arsivi?limit=20').then(r => r.json()),
+      ]);
+      if (ozetR.status === 'fulfilled') {
+        const d = ozetR.value;
+        // ay-ozet API: fpy → fpy_ortalama, toplam_iscilik → iscilik_maliyeti normalization
+        setOzet(d && !d.error ? {
+          ...d,
+          fpy_ortalama: d.fpy ?? d.fpy_ortalama ?? 0,
+          toplam_gelir: d.toplam_gelir ?? 0,
+          toplam_gider: d.toplam_gider ?? 0,
+          net_kar: d.net_kar ?? 0,
+          kar_marji: d.kar_marji ?? 0,
+          aktif_personel: d.aktif_personel ?? 0,
+          toplam_uretim: d.toplam_uretim ?? 0,
+          toplam_hata: d.toplam_hata ?? 0,
+          tamamlanan_siparis: d.tamamlanan_siparis ?? 0,
+          iscilik_maliyeti: d.toplam_iscilik ?? d.iscilik_maliyeti ?? 0,
+          hammadde_maliyeti: d.hammadde_tahmini ?? d.hammadde_maliyeti ?? 0,
+          sabit_gider: d.toplam_gider ?? 0,
+          siparis_geliri: d.toplam_gelir ?? 0,
+        } : null);
       }
-
-    } catch (err) { opsHtml = '<p style="color:red">İşlem bilgisi yüklenemedi</p>'; }
-
-
-
-    const w = window.open('', '_blank');
-
-    w.document.write(`<html><head><title>Model Kartı — ${model.name}</title><style>
-
-      body{font-family:Arial,sans-serif;padding:30px;color:#222}
-
-      h1{font-size:22px;border-bottom:2px solid #333;padding-bottom:8px}
-
-      h2{font-size:16px;color:#555;margin-top:20px}
-
-      table{width:100%;border-collapse:collapse;margin:10px 0}
-
-      th,td{border:1px solid #ddd;padding:8px 10px;text-align:left;font-size:12px}
-
-      th{background:#f5f5f5;font-weight:700}
-
-      .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px;margin:12px 0}
-
-      .meta span{color:#666}
-
-      .footer{margin-top:30px;border-top:1px solid #ddd;padding-top:10px;font-size:11px;color:#999}
-
-      @media print{button{display:none}}
-
-    </style></head><body>
-
-      <h1>📋 Model Kartı</h1>
-
-      <div class="meta">
-
-        <div><span>Model Adı:</span> <strong>${model.name}</strong></div>
-
-        <div><span>Model Kodu:</span> <strong>${model.code || '—'}</strong></div>
-
-        <div><span>Kumaş:</span> <strong>${model.fabric_type || '—'}</strong></div>
-
-        <div><span>Beden Aralığı:</span> <strong>${model.size_range || '—'}</strong></div>
-
-        <div><span>Açıklama:</span> <strong>${model.description || '—'}</strong></div>
-
-        <div><span>Siparişçi:</span> <strong>${model.customer || '—'}</strong></div>
-
-      </div>
-
-      <h2>İşlem Listesi (${model.operation_count || 0} işlem)</h2>
-
-      ${opsHtml}
-
-      <button onclick="window.print()" style="padding:8px 16px;cursor:pointer;margin:12px 0">🖨️ Yazdır / PDF Kaydet</button>
-
-      <div class="footer">Oluşturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}  47 Sil Baştan 01</div>
-
-    </body></html>`);
-
-    w.document.close();
-
-  };
-
-
-
-  return (
-
-    <>
-
-      <div className="topbar"><h1 className="topbar-title">📊 Raporlar & Performans</h1>
-
-        <div className="topbar-actions" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-
-          <button className="btn btn-secondary" onClick={exportCSV} disabled={summaryList.length === 0}>📏 CSV İndir</button>
-
-          <select className="form-select" value={period} onChange={e => setPeriod(e.target.value)} style={{ minWidth: '160px' }}>
-
-            <option value="today">📅 Bugün</option>
-
-            <option value="yesterday">📅 Dün</option>
-
-            <option value="week">📅 Bu Hafta (7 gün)</option>
-
-            <option value="month">📅 Bu Ay</option>
-
-            <option value="2month">📅 Son 2 Ay</option>
-
-            <option value="3month">📅 Son 3 Ay</option>
-
-            <option value="6month">📅 Son 6 Ay</option>
-
-            <option value="custom">📋 Özel Tarih Aralığı</option>
-
-            <option value="all">📅 Tüm Zamanlar</option>
-
-          </select>
-
-          {period === 'custom' && (
-
-            <>
-
-              <input type="date" className="form-input" value={customFrom} onChange={e => setCustomFrom(e.target.value)} style={{ width: '140px' }} />
-
-              <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>—</span>
-
-              <input type="date" className="form-input" value={customTo} onChange={e => setCustomTo(e.target.value)} style={{ width: '140px' }} />
-
-              <button className="btn btn-primary" onClick={loadReportData} style={{ padding: '6px 12px' }}>📋 Ara</button>
-
-            </>
-
-          )}
-
-        </div>
-
-      </div>
-
-      <div className="page-content">
-
-        <div className="stats-grid">
-
-          <div className="stat-card"><div className="stat-icon">📦</div><div className="stat-value">{totalProduced.toLocaleString('tr-TR')}</div><div className="stat-label">Toplam Üretim</div></div>
-
-          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{totalValue.toFixed(0)} ₺</div><div className="stat-label">Toplam Üretim Değeri</div></div>
-
-          <div className="stat-card"><div className="stat-icon">❌</div><div className="stat-value">{totalDefective}</div><div className="stat-label">Toplam Hata</div></div>
-
-          <div className="stat-card"><div className="stat-icon">✅</div><div className="stat-value">%{totalProduced > 0 ? Math.round((1 - totalDefective / totalProduced) * 100) : 100}</div><div className="stat-label">Kalite Oranı</div></div>
-
-        </div>
-
-        <div className="card" style={{ marginTop: '16px' }}>
-
-          <div className="card-header"><h3 className="card-title">📊 Personel Performans Tablosu</h3></div>
-
-          {summaryList.length === 0 ? (
-
-            <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Bu dönem için üretim verisi yok.</div>
-
-          ) : (
-
-            <div className="table-wrapper"><table className="table"><thead><tr><th>Personel</th><th>Üretim Adet</th><th>Üretim Değeri</th><th>Günlük Maliyet</th><th>Katma Değer</th><th>Hata</th><th>Kalite</th><th>Pasif Süre</th><th>Durum</th></tr></thead><tbody>
-
-              {summaryList.map((p, i) => {
-
-                const katmaDeger = p.total_value - p.daily_wage;
-
-                const qualityRate = p.total_produced > 0 ? Math.round((1 - p.total_defective / p.total_produced) * 100) : 100;
-
-                const covered = p.total_value >= p.daily_wage;
-
-                return (
-
-                  <tr key={i}>
-
-                    <td style={{ fontWeight: '600', color: 'var(--text-muted)', textAlign: 'center', minWidth: '30px' }}>{idx + 1}</td>
-                    <td style={{ fontWeight: '600' }}>{p.name}</td>
-
-                    <td style={{ fontWeight: '700' }}>{p.total_produced}</td>
-
-                    <td style={{ fontWeight: '600', color: 'var(--accent)' }}>{p.total_value.toFixed(2)} ₺</td>
-
-                    <td>{p.daily_wage.toFixed(0)} ₺</td>
-
-                    <td style={{ fontWeight: '700', color: katmaDeger >= 0 ? 'var(--success)' : 'var(--danger)' }}>{katmaDeger >= 0 ? '+' : ''}{katmaDeger.toFixed(2)} ₺</td>
-
-                    <td>{p.total_defective > 0 ? <span className="badge badge-danger">{p.total_defective}</span> : '✔'}</td>
-
-                    <td><span className={`badge ${qualityRate >= 95 ? 'badge-success' : qualityRate >= 80 ? 'badge-warning' : 'badge-danger'}`}>%{qualityRate}</span></td>
-
-                    <td style={{ fontSize: '13px' }}>{p.passive_minutes > 0 ? `${p.passive_minutes.toFixed(0)} dk` : '—'}</td>
-
-                    <td><span className={`badge ${covered ? 'badge-success' : 'badge-warning'}`}>{covered ? '✅ Maliyeti Karşıladı' : '⏳ Devam'}</span></td>
-
-                  </tr>
-
-                );
-
-              })}
-
-            </tbody></table></div>
-
-          )}
-
-        </div>
-
-
-
-        {/* FIRE ANALİZİ */}
-
-        {logs.length > 0 && (() => {
-
-          const fireByReason = {};
-
-          const fireByPerson = {};
-
-          logs.forEach(log => {
-
-            if (log.defective_count > 0) {
-
-              const reason = log.defect_reason || 'Belirtilmemiş';
-
-              fireByReason[reason] = (fireByReason[reason] || 0) + log.defective_count;
-
-              fireByPerson[log.personnel_name || '?'] = (fireByPerson[log.personnel_name || '?'] || 0) + log.defective_count;
-
-            }
-
-          });
-
-          const totalFire = Object.values(fireByReason).reduce((s, v) => s + v, 0);
-
-          if (totalFire === 0) return null;
-
-          return (
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
-
-              <div className="card">
-
-                <div className="card-header"><h3 className="card-title">📋 Fire — Nedene Göre</h3></div>
-
-                <div style={{ padding: '14px' }}>
-
-                  {Object.entries(fireByReason).sort((a, b) => b[1] - a[1]).map(([reason, count]) => (
-
-                    <div key={reason} style={{ marginBottom: '14px' }}>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}><span>{reason}</span><strong>{count} ({(count / totalFire * 100).toFixed(0)}%)</strong></div>
-
-                      <div style={{ height: '6px', borderRadius: '3px', background: 'var(--bg-input)' }}><div style={{ height: '100%', borderRadius: '3px', background: '#e74c3c', width: `${(count / totalFire * 100)}%` }} /></div>
-
-                    </div>
-
-                  ))}
-
-                </div>
-
-              </div>
-
-              <div className="card">
-
-                <div className="card-header"><h3 className="card-title">📋 Fire — Kişiye Göre</h3></div>
-
-                <div style={{ padding: '14px' }}>
-
-                  {Object.entries(fireByPerson).sort((a, b) => b[1] - a[1]).map(([name, count]) => (
-
-                    <div key={name} style={{ marginBottom: '14px' }}>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}><span>{name}</span><strong>{count} adet</strong></div>
-
-                      <div style={{ height: '6px', borderRadius: '3px', background: 'var(--bg-input)' }}><div style={{ height: '100%', borderRadius: '3px', background: '#f39c12', width: `${(count / totalFire * 100)}%` }} /></div>
-
-                    </div>
-
-                  ))}
-
-                </div>
-
-              </div>
-
-            </div>
-
-          );
-
-        })()}
-
-
-
-        {/* MODEL KARTI YAZDIRMA */}
-
-        <div className="card" style={{ marginTop: '16px' }}>
-
-          <div className="card-header"><h3 className="card-title">📋 Model Kartı Yazdır</h3></div>
-
-          <div style={{ padding: '14px' }}>
-
-            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '14px' }}>Model seçerek işlem listesiyle birlikte model kartını yazdırabilirsiniz.</p>
-
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-
-              {models.map(m => (
-
-                <button key={m.id} onClick={() => printModelCard(m)} className="btn btn-secondary" style={{ fontSize: '12px' }}>🖨️ {m.name}</button>
-
-              ))}
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </>
-
-  );
-
-}
-
-
-
-// ========== MACHINES PAGE ==========
-
-function MachinesPage({ addToast }) {
-
-  const [machines, setMachines] = useState([]);
-
-  const [showModal, setShowModal] = useState(false);
-
-  const [form, setForm] = useState({ name: '', type: '', brand: '', model_name: '', location: '', notes: '', count: 1 });
-
-  const [filterCat, setFilterCat] = useState('all');
-
-  const [editMachine, setEditMachine] = useState(null);
-
-  const [editMachineForm, setEditMachineForm] = useState({});
-
-  const [machineAuditHistory, setMachineAuditHistory] = useState(null);
-
-  const [machineAuditData, setMachineAuditData] = useState([]);
-
-
-
-  const machineCats = {
-
-    dikis: { label: '🧵 Dikiş', types: ['Düz Dikiş (Tek İĞne)', 'Çift İĞne Düz Dikiş', 'Zincir Dikiş', 'Çift İĞne Zincir Dikiş', 'Gizli Dikiş', 'Zigzag'] },
-
-    overlok: { label: '🔄 Overlok', types: ['3 İplik Overlok', '4 İplik Overlok', '5 İplik Overlok'] },
-
-    recme: { label: '📏 Reçme & Flatlock', types: ['2 İĞne Reçme', '3 İĞne Reçme', 'Bıçaklı Reçme', 'Silindir Kol Reçme', 'Flatlock'] },
-
-    ozel: { label: '⚙️ Özel Operasyon', types: ['İlik Makinesi', 'DüĞme Dikme Makinesi', 'Punteriz (Bartack)', 'Kemer Takma Makinesi', 'Kollu Makine (Feed-off-the-arm)', 'Çıt Çıt / Rivet Makinesi', 'Cep Otomatı', 'Köprü Atma Makinesi', 'Fermuar Makinesi', 'Lastik Takma Makinesi', 'Biye Aparatlı Makine'] },
-
-    kesim: { label: '✂️ Kesim', types: ['Düz Bıçak Kesim', 'Şerit Bıçak (Band Knife)', 'Pastal Serim Makinesi', 'CNC Otomatik Kesim'] },
-
-    utu: { label: '♨️ Ütü & Son İşlem', types: ['Buharlı Ütü', 'Vakum Ütü Masası', 'Ütü Presi', 'Buhar Kazanı'] },
-
-    yardimci: { label: '📋 Yardımcı', types: ['Nakış / Brode Makinesi', 'Etiket Kesme Makinesi', 'İplik Sarma Makinesi', 'Baskı / Transfer Makinesi'] }
-
-  };
-
-
-
-  const getCatForType = (type) => { for (const [k, c] of Object.entries(machineCats)) { if (c.types.includes(type)) return { key: k, label: c.label }; } return { key: 'diger', label: '📦 DiĞer' }; };
-
-
-
-  const load = useCallback(async () => { const res = await fetch('/api/machines'); const d = await res.json(); setMachines(Array.isArray(d) ? d : []); }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-
-
-  const handleSave = async (e) => {
-
-    e.preventDefault(); if (!form.name || !form.type) return;
-
-    try { await fetch('/api/machines', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, count: parseInt(form.count) || 1 }) }); await load(); setShowModal(false); setForm({ name: '', type: '', brand: '', model_name: '', serial_no: '', location: '', notes: '', count: 1 }); addToast('success', 'Makine eklendi!'); } catch { addToast('error', 'Hata oluştu'); }
-
-  };
-
-  const handleDelete = async (id) => { if (!confirm('Bu makineyi silmek istediĞinize emin misiniz?')) return; try { await fetch(`/api/machines/${id}`, { method: 'DELETE' }); await load(); addToast('success', 'Makine silindi'); } catch { addToast('error', 'Silinemedi'); } };
-
-  const handleStatusToggle = async (id, cs) => { try { await fetch(`/api/machines/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: cs === 'active' ? 'inactive' : 'active', changed_by: 'admin' }) }); await load(); } catch { addToast('error', 'Durum değiştirilemedi'); } };
-
-
-
-  const openEditMachine = (m) => {
-
-    setEditMachineForm({ name: m.name || '', type: m.type || '', brand: m.brand || '', model_name: m.model_name || '', location: m.location || '', notes: m.notes || '', count: m.count || 1 });
-
-    setEditMachine(m);
-
-  };
-
-
-
-  const handleUpdateMachine = async (e) => {
-    e.preventDefault();
-    try {
-      // Audit trail
-      const changes = [];
-      Object.keys(editMachineForm).forEach(key => {
-        const oldVal = String(editMachine[key] ?? '');
-        const newVal = String(editMachineForm[key] ?? '');
-        if (oldVal !== newVal) changes.push({ field_name: key, old_value: oldVal, new_value: newVal });
-      });
-      if (changes.length > 0) {
-        await fetch('/api/audit-trail', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ table_name: 'machines', record_id: editMachine.id, changes, changed_by: 'admin' })
-        });
+      if (veriR.status === 'fulfilled') {
+        const d = veriR.value;
+        // personel-verimlilik API: { personeller: [...], ozet: {...} }
+        const arr = Array.isArray(d) ? d : (d && Array.isArray(d.personeller) ? d.personeller : []);
+        // Normalize field names: ad → name, toplam_uretilen → toplam_uretim, fpy → fpy_yuzde
+        setVerimlilik(arr.map(p => ({
+          ...p,
+          name: p.name || p.ad || '',
+          toplam_uretim: p.toplam_uretim ?? p.toplam_uretilen ?? 0,
+          fpy: p.fpy ?? p.fpy_yuzde ?? 0,
+          fpy_yuzde: p.fpy_yuzde ?? p.fpy ?? 0,
+          hata: p.hata ?? p.toplam_hatali ?? p.defective_count ?? 0,
+          katki_degeri: p.katki_degeri ?? 0,
+        })));
       }
+      if (karR.status === 'fulfilled') setKarlilik(Array.isArray(karR.value) ? karR.value : (karR.value?.modeller || []));
+      if (kararR.status === 'fulfilled') setKararlar(Array.isArray(kararR.value) ? kararR.value : (kararR.value?.kayitlar || kararR.value?.kararlar || []));
+    } catch { } finally { setLoading(false); }
+  }, [ay, yil]);
 
-      const res = await fetch(`/api/machines/${editMachine.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...editMachineForm, changed_by: 'admin' }) });
-
-      if (!res.ok) throw new Error('Güncelleme hatası');
-
-      await load(); setEditMachine(null);
-
-      addToast('success', 'Makine güncellendi! Değişiklikler kayıt altına alındı.');
-
-    } catch (err) { addToast('error', err.message); }
-
-  };
-
-
-
-  const openMachineAuditHistory = async (machineId) => {
-
-    try {
-
-      const res = await fetch(`/api/audit-trail?table=machines&record_id=${machineId}`);
-
-      const data = await res.json();
-
-      setMachineAuditData(Array.isArray(data) ? data : []);
-
-      setMachineAuditHistory(machineId);
-
-    } catch { setMachineAuditData([]); setMachineAuditHistory(machineId); }
-
-  };
-
-
-
-  const filtered = filterCat === 'all' ? machines : machines.filter(m => getCatForType(m.type).key === filterCat);
-
-  const catSummary = {};
-
-  machines.forEach(m => { const c = getCatForType(m.type); if (!catSummary[c.key]) catSummary[c.key] = { label: c.label, count: 0 }; catSummary[c.key].count += (m.count || 1); });
-
-
-
+  useEffect(() => { loadAll(); }, [loadAll]);
+  const raporTabs = [
+    { id: 'ozet', label: 'Aylik Ozet' },
+    { id: 'personel', label: 'Personel Verimliligi' },
+    { id: 'model', label: 'Model Karliligi' },
+    { id: 'karar', label: 'Karar Arsivi' },
+  ];
+  const karSinyali = ozet && ozet.net_kar > 0 ? '#27ae60' : ozet && ozet.net_kar < 0 ? '#e74c3c' : '#f39c12';
   return (
-
     <>
-
-      <div className="topbar"><h1 className="topbar-title">🏭 Atölye Makine Parkuru</h1><div className="topbar-actions"><button className="btn btn-primary" onClick={() => setShowModal(true)}>➕ Yeni Makine</button></div></div>
-
-      <div className="page-content">
-
-        <div className="stats-grid">
-
-          <div className="stat-card"><div className="stat-icon">🏭</div><div className="stat-value">{machines.reduce((s, m) => s + (m.count || 1), 0)}</div><div className="stat-label">Toplam Makine</div></div>
-
-          <div className="stat-card"><div className="stat-icon">✅</div><div className="stat-value">{machines.filter(m => m.status === 'active').length}</div><div className="stat-label">Aktif</div></div>
-
-          <div className="stat-card"><div className="stat-icon">📊</div><div className="stat-value">{Object.keys(catSummary).length}</div><div className="stat-label">Kategori</div></div>
-
-          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{new Set(machines.map(m => m.brand).filter(Boolean)).size}</div><div className="stat-label">Marka</div></div>
-
-        </div>
-
-        {machines.length > 0 && (
-
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
-
-            <button onClick={() => setFilterCat('all')} className={`btn ${filterCat === 'all' ? 'btn-primary' : 'btn-secondary'}`} style={{ fontSize: '12px', padding: '6px 12px' }}>Tümü ({machines.length})</button>
-
-            {Object.entries(catSummary).map(([k, v]) => (
-
-              <button key={k} onClick={() => setFilterCat(k)} className={`btn ${filterCat === k ? 'btn-primary' : 'btn-secondary'}`} style={{ fontSize: '12px', padding: '6px 12px' }}>{v.label} ({v.count})</button>
-
-            ))}
-
-          </div>
-
-        )}
-
-        {machines.length === 0 ? (
-
-          <div className="card"><div className="empty-state"><div className="empty-state-icon">📋</div><div className="empty-state-title">Henüz Makine Yok</div><div className="empty-state-text">Atölye makine parkurunuzu oluşturmaya başlayın.</div><button className="btn btn-primary" onClick={() => setShowModal(true)}>➕ İlk Makineyi Ekle</button></div></div>
-
-        ) : (
-
-          <div className="table-wrapper"><table className="table"><thead><tr><th>Makine Adı</th><th>Adet</th><th>Kategori</th><th>Tip</th><th>Marka</th><th>Seri No</th><th>Konum</th><th>Durum</th><th style={{ width: '80px' }}>İşlem</th></tr></thead><tbody>
-
-            {filtered.map(m => {
-
-              const ct = getCatForType(m.type); return (
-
-                <tr key={m.id}><td style={{ fontWeight: '600' }}>{m.name}</td><td style={{ textAlign: 'center', fontWeight: '700', fontSize: '16px' }}>{m.count || 1}</td><td><span className="badge" style={{ background: 'rgba(52,152,219,0.1)', color: '#3498db', fontSize: '11px' }}>{ct.label}</span></td><td><span className="badge badge-info">{m.type}</span></td><td>{m.brand || '—'}</td><td style={{ fontSize: '12px' }}>{m.serial_no || '—'}</td><td>{m.location || '—'}</td>
-
-                  <td><span onClick={() => handleStatusToggle(m.id, m.status)} style={{ cursor: 'pointer' }} className={`badge ${m.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{m.status === 'active' ? '✅ Aktif' : '🔴 Pasif'}</span></td>
-
-                  <td style={{ display: 'flex', gap: '4px' }}>
-
-                    <button onClick={() => openEditMachine(m)} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
-
-                    <button onClick={() => openMachineAuditHistory(m.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
-
-                    <button onClick={() => handleDelete(m.id)} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '3px' }}>🗑️</button>
-
-                  </td></tr>
-
-              );
-
-            })}
-
-          </tbody></table></div>
-
-        )}
-
-      </div>
-
-      {showModal && (
-
-        <div className="modal-overlay" onClick={() => setShowModal(false)}><div className="modal" onClick={e => e.stopPropagation()}>
-
-          <div className="modal-header"><h2 className="modal-title">🏭 Yeni Makine Ekle</h2><button className="modal-close" onClick={() => setShowModal(false)}>✕</button></div>
-
-          <form onSubmit={handleSave}>
-
-            <div className="form-row"><div className="form-group"><label className="form-label">Makine Adı *</label><input className="form-input" placeholder="örn: Düz Dikiş 1" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
-
-              <div className="form-group"><label className="form-label">Makine Tipi *</label>
-
-                <select className="form-select" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} required>
-
-                  <option value="">Seçiniz...</option>
-
-                  {Object.entries(machineCats).map(([k, c]) => (<optgroup key={k} label={c.label}>{c.types.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>))}
-
-                </select>
-
-              </div></div>
-
-            <div className="form-row"><div className="form-group"><label className="form-label">Marka</label><input className="form-input" placeholder="örn: Juki, Jack, Typical" value={form.brand} onChange={e => setForm({ ...form, brand: e.target.value })} /></div><div className="form-group"><label className="form-label">Model</label><input className="form-input" value={form.model_name} onChange={e => setForm({ ...form, model_name: e.target.value })} /></div><div className="form-group"><label className="form-label">Adet *</label><input className="form-input" type="number" min="1" placeholder="Kaç adet?" value={form.count} onChange={e => setForm({ ...form, count: e.target.value })} required /></div></div>
-
-            <div className="form-row"><div className="form-group"><label className="form-label">Konum / Hat</label><input className="form-input" placeholder="örn: Hat 1, Kesimhane" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} /></div></div>
-
-            <div className="form-group"><label className="form-label">Notlar</label><textarea className="form-textarea" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
-
-            <div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>İptal</button><button type="submit" className="btn btn-primary">💾 Kaydet</button></div>
-
-          </form>
-
-        </div></div>
-
-      )}
-
-
-
-      {/* ===== MAKİNE DÜZENLEME MODALI ===== */}
-
-      {editMachine && (
-
-        <div className="modal-overlay" onClick={() => setEditMachine(null)}>
-
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '650px', maxHeight: '90vh', overflow: 'auto' }}>
-
-            <div className="modal-header">
-
-              <h2 className="modal-title">✏️ Makine Düzenle — {editMachine.name}</h2>
-
-              <button className="modal-close" onClick={() => setEditMachine(null)}>✕</button>
-
-            </div>
-
-            <div style={{ padding: '8px 16px', background: 'rgba(243,156,18,0.1)', borderBottom: '1px solid rgba(243,156,18,0.3)', fontSize: '12px', color: '#f39c12', fontWeight: '600' }}>
-
-              ⚠️ Tüm değişiklikler tarih/saat ile kalıcı olarak kayıt altına alınır ve silinemez.
-
-            </div>
-
-            <form onSubmit={handleUpdateMachine}>
-
-              <div style={{ padding: '20px', display: 'grid', gap: '14px' }}>
-
-                <div className="form-row">
-
-                  <div className="form-group"><label className="form-label">Makine Adı *</label><input className="form-input" value={editMachineForm.name} onChange={e => setEditMachineForm({ ...editMachineForm, name: e.target.value })} required /></div>
-
-                  <div className="form-group"><label className="form-label">Makine Tipi *</label>
-
-                    <select className="form-select" value={editMachineForm.type} onChange={e => setEditMachineForm({ ...editMachineForm, type: e.target.value })} required>
-
-                      <option value="">Seçiniz...</option>
-
-                      {Object.entries(machineCats).map(([k, c]) => (<optgroup key={k} label={c.label}>{c.types.map(t => <option key={t} value={t}>{t}</option>)}</optgroup>))}
-
-                    </select>
-
-                  </div>
-
-                </div>
-
-                <div className="form-row">
-
-                  <div className="form-group"><label className="form-label">Marka</label><input className="form-input" value={editMachineForm.brand} onChange={e => setEditMachineForm({ ...editMachineForm, brand: e.target.value })} /></div>
-
-                  <div className="form-group"><label className="form-label">Model</label><input className="form-input" value={editMachineForm.model_name} onChange={e => setEditMachineForm({ ...editMachineForm, model_name: e.target.value })} /></div>
-
-                  <div className="form-group"><label className="form-label">Adet</label><input className="form-input" type="number" min="1" value={editMachineForm.count} onChange={e => setEditMachineForm({ ...editMachineForm, count: e.target.value })} /></div>
-
-                </div>
-
-                <div className="form-row">
-
-                  <div className="form-group"><label className="form-label">Konum / Hat</label><input className="form-input" value={editMachineForm.location} onChange={e => setEditMachineForm({ ...editMachineForm, location: e.target.value })} /></div>
-
-                </div>
-
-                <div className="form-group"><label className="form-label">Notlar</label><textarea className="form-textarea" value={editMachineForm.notes} onChange={e => setEditMachineForm({ ...editMachineForm, notes: e.target.value })} /></div>
-
-              </div>
-
-              <div className="modal-footer">
-
-                <button type="button" className="btn btn-secondary" onClick={() => setEditMachine(null)}>İptal</button>
-
-                <button type="submit" className="btn btn-primary">💾 Kaydet & Değişiklikleri Logla</button>
-
-              </div>
-
-            </form>
-
-          </div>
-
-        </div>
-
-      )}
-
-
-
-      {/* ===== MAKİNE DEĞİŞİKLİK GEÇMİŞİ ===== */}
-
-      {machineAuditHistory && (
-
-        <div className="modal-overlay" onClick={() => setMachineAuditHistory(null)}>
-
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px', maxHeight: '90vh', overflow: 'auto' }}>
-
-            <div className="modal-header">
-
-              <h2 className="modal-title">📜 Makine Değişiklik Geçmişi</h2>
-
-              <button className="modal-close" onClick={() => setMachineAuditHistory(null)}>✕</button>
-
-            </div>
-
-            <div style={{ padding: '8px 16px', background: 'rgba(46,204,113,0.1)', borderBottom: '1px solid rgba(46,204,113,0.3)', fontSize: '12px', color: '#2ecc71', fontWeight: '600' }}>
-
-              🔒 Bu kayıtlar silinemez.
-
-            </div>
-
-            <div style={{ padding: '20px' }}>
-
-              {machineAuditData.length === 0 ? (
-
-                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-
-                  <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
-
-                  <div style={{ fontSize: '14px', fontWeight: '600' }}>Henüz değişiklik kaydı yok</div>
-
-                </div>
-
-              ) : (
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-
-                  {machineAuditData.map((entry, i) => (
-
-                    <div key={entry.id || i} style={{ padding: '14px 16px', borderRadius: '10px', background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-
-                        <span style={{ fontWeight: '700', fontSize: '13px', color: 'var(--accent)' }}>{entry.field_name}</span>
-
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '2px 8px', borderRadius: '4px' }}>
-
-                          🕐 {new Date(entry.changed_at).toLocaleString('tr-TR')}
-
-                        </span>
-
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '8px', alignItems: 'center' }}>
-
-                        <div style={{ padding: '8px 12px', background: 'rgba(231,76,60,0.08)', borderRadius: '6px', fontSize: '12px', wordBreak: 'break-word', borderLeft: '3px solid var(--danger)' }}>
-
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: 'var(--danger)', marginBottom: '2px' }}>ESKİ</div>
-
-                          {entry.old_value || '—'}
-
-                        </div>
-
-                        <div style={{ fontSize: '18px', color: 'var(--text-muted)' }}>→</div>
-
-                        <div style={{ padding: '8px 12px', background: 'rgba(46,204,113,0.08)', borderRadius: '6px', fontSize: '12px', wordBreak: 'break-word', borderLeft: '3px solid var(--success)' }}>
-
-                          <div style={{ fontSize: '10px', fontWeight: '600', color: 'var(--success)', marginBottom: '2px' }}>YENİ</div>
-
-                          {entry.new_value || '—'}
-
-                        </div>
-
-                      </div>
-
-                      <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>👤 {entry.changed_by || 'admin'}</div>
-
-                    </div>
-
-                  ))}
-
-                </div>
-
-              )}
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
-
-    </>
-
-  );
-
-}
-
-
-
-// ========== QUALITY CONTROL PAGE ==========
-
-function QualityPage({ models, personnel, addToast }) {
-  // EDIT system states
-  const [editQuality, setEditQuality] = useState(null);
-  const [editQualityForm, setEditQualityForm] = useState({});
-
-  const openEditQuality = (check) => {
-    setEditQualityForm({
-      result: check.result || 'ok', defect_type: check.defect_type || '',
-      notes: check.notes || '', checked_by: check.checked_by || ''
-    });
-    setEditQuality(check);
-  };
-
-  const handleUpdateQuality = async (e) => {
-    e.preventDefault();
-    try {
-      const changes = [];
-      Object.keys(editQualityForm).forEach(key => {
-        const oldVal = String(editQuality[key] ?? '');
-        const newVal = String(editQualityForm[key] ?? '');
-        if (oldVal !== newVal) changes.push({ field_name: key, old_value: oldVal, new_value: newVal });
-      });
-      if (changes.length > 0) {
-        await fetch('/api/audit-trail', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ table_name: 'quality_checks', record_id: editQuality.id, changes, changed_by: 'admin' })
-        });
-      }
-      const res = await fetch(`/api/quality-checks/${editQuality.id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editQualityForm)
-      });
-      if (!res.ok) throw new Error('Guncelleme hatasi');
-      setEditQuality(null);
-      addToast('success', 'Kalite kontrolu guncellendi!');
-    } catch (err) { addToast('error', err.message); }
-  };
-
-
-  const [checks, setChecks] = useState([]);
-
-  const [showModal, setShowModal] = useState(false);
-
-  const [form, setForm] = useState({ model_id: '', result: 'ok', defect_type: '', notes: '', checked_by: '' });
-
-  const defectTypes = ['Dikiş Hatası', 'Ölçü Farkı', 'Leke', 'Kumaş Hatası', 'Renk Farkı', 'Etiket Hatası', 'DiĞer'];
-
-
-
-  const load = useCallback(async () => { const res = await fetch('/api/quality-checks'); const d = await res.json(); setChecks(Array.isArray(d) ? d : []); }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  const handleSave = async (e) => { e.preventDefault(); try { const res = await fetch('/api/quality-checks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) }); if (!res.ok) throw new Error('Hata'); await load(); setShowModal(false); setForm({ model_id: '', result: 'ok', defect_type: '', notes: '', checked_by: '' }); addToast('success', 'Kalite kontrolü kaydedildi!'); } catch (err) { addToast('error', 'Hata oluştu'); } };
-
-
-
-  const okCount = checks.filter(c => c.result === 'ok').length;
-
-  const redCount = checks.filter(c => c.result === 'red').length;
-
-
-
-  return (
-
-    <>
-
-      <div className="topbar"><h1 className="topbar-title">✅ Kalite Kontrol</h1><div className="topbar-actions"><button className="btn btn-primary" onClick={() => setShowModal(true)}>➕ Yeni Kontrol</button></div></div>
-
-      <div className="page-content">
-
-        <div className="stats-grid">
-
-          <div className="stat-card"><div className="stat-icon">📋</div><div className="stat-value">{checks.length}</div><div className="stat-label">Toplam Kontrol</div></div>
-
-          <div className="stat-card"><div className="stat-icon">✅</div><div className="stat-value">{okCount}</div><div className="stat-label">Geçen</div></div>
-
-          <div className="stat-card"><div className="stat-icon">❌</div><div className="stat-value">{redCount}</div><div className="stat-label">Red</div></div>
-
-          <div className="stat-card"><div className="stat-icon">📊</div><div className="stat-value">%{checks.length > 0 ? Math.round(okCount / checks.length * 100) : 100}</div><div className="stat-label">Geçme Oranı</div></div>
-
-        </div>
-
-        {checks.length > 0 && (
-
-          <div className="table-wrapper"><table className="table"><thead><tr><th>Tarih</th><th>Model</th><th>Sonuç</th><th>Hata Tipi</th><th>Notlar</th><th>Kontrolçü</th></tr></thead><tbody>
-
-            {checks.slice(0, 50).map(c => (
-
-              <tr key={c.id}>
-
-                <td style={{ fontSize: '13px' }}>{new Date(c.checked_at).toLocaleString('tr-TR')}</td>
-
-                <td>{c.model_name || '—'}</td>
-
-                <td><span className={`badge ${c.result === 'ok' ? 'badge-success' : c.result === 'warning' ? 'badge-warning' : 'badge-danger'}`}>{c.result === 'ok' ? '✅ Geçti' : c.result === 'warning' ? '⚠️ Uyarı' : '❌ Red'}</span></td>
-
-                <td>{c.defect_type || '—'}</td><td style={{ fontSize: '13px' }}>{c.notes || '—'}</td><td>{c.checked_by || '—'}</td>
-
-              </tr>
-
-            ))}
-
-          </tbody></table></div>
-
-        )}
-
-      </div>
-
-      {showModal && (
-
-        <div className="modal-overlay" onClick={() => setShowModal(false)}><div className="modal" onClick={e => e.stopPropagation()}>
-
-          <div className="modal-header"><h2 className="modal-title">✅ Yeni Kalite Kontrol</h2><button className="modal-close" onClick={() => setShowModal(false)}>✕</button></div>
-
-          <form onSubmit={handleSave}>
-
-            <div className="form-row"><div className="form-group"><label className="form-label">Model</label><select className="form-select" value={form.model_id} onChange={e => setForm({ ...form, model_id: e.target.value })}><option value="">Seçiniz...</option>{models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}</select></div><div className="form-group"><label className="form-label">Sonuç *</label><select className="form-select" value={form.result} onChange={e => setForm({ ...form, result: e.target.value })}><option value="ok">✅ Geçti</option><option value="warning">⚠️ Uyarı</option><option value="red">❌ Red</option></select></div></div>
-
-            {form.result !== 'ok' && (<div className="form-group"><label className="form-label">Hata Tipi</label><select className="form-select" value={form.defect_type} onChange={e => setForm({ ...form, defect_type: e.target.value })}><option value="">Seçiniz...</option>{defectTypes.map(d => <option key={d} value={d}>{d}</option>)}</select></div>)}
-
-            <div className="form-group"><label className="form-label">Notlar</label><textarea className="form-textarea" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
-
-            <div className="form-group"><label className="form-label">Kontrolçü</label><input className="form-input" value={form.checked_by} onChange={e => setForm({ ...form, checked_by: e.target.value })} /></div>
-
-            <div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>İptal</button><button type="submit" className="btn btn-primary">💾 Kaydet</button></div>
-
-          </form>
-
-        </div></div>
-
-      )}
-
-    </>
-
-  );
-
-}
-
-
-
-// ========== PRIM & ÜCRET PAGE ==========
-
-function PrimPage({ models, personnel, addToast }) {
-
-  const [logs, setLogs] = useState([]);
-
-  const [period, setPeriod] = useState('today');
-
-  const [primRate, setPrimRate] = useState(15); // %15 default prim oranı
-
-
-
-  const load = useCallback(async () => {
-
-    let url = '/api/production';
-
-    if (period === 'today') url += `?date=${new Date().toISOString().split('T')[0]}`;
-
-    const res = await fetch(url);
-
-    const d = await res.json();
-
-    setLogs(Array.isArray(d) ? d : []);
-
-  }, [period]);
-
-  useEffect(() => { load(); }, [load]);
-
-
-
-  // Personel bazlı özet hesapla
-
-  const summary = {};
-
-  logs.forEach(log => {
-
-    if (!summary[log.personnel_id]) {
-
-      summary[log.personnel_id] = {
-
-        name: log.personnel_name,
-
-        daily_wage: log.daily_wage || 0,
-
-        total_value: 0,
-
-        total_produced: 0,
-
-        total_defective: 0,
-
-        total_net_min: 0,
-
-        days_worked: new Set()
-
-      };
-
-    }
-
-    const p = summary[log.personnel_id];
-
-    const saglamAdet = Math.max(0, (log.total_produced || 0) - (log.defective_count || 0));
-
-    p.total_value += saglamAdet * (log.unit_price || 0);
-
-    p.total_produced += log.total_produced || 0;
-
-    p.total_defective += log.defective_count || 0;
-
-    if (log.start_time) p.days_worked.add(log.start_time.split('T')[0]);
-
-
-
-    // Net çalışma süresi
-
-    if (log.start_time && log.end_time) {
-
-      const brut = (new Date(log.end_time) - new Date(log.start_time)) / 60000;
-
-      const mola = (log.break_duration_min || 0) + (log.machine_down_min || 0) + (log.material_wait_min || 0);
-
-      p.total_net_min += Math.max(0, brut - mola);
-
-    }
-
-  });
-
-
-
-  return (
-
-    <>
-
       <div className="topbar">
-
-        <h1 className="topbar-title">📋 Prim & Ücret Hesaplama</h1>
-
-        <div className="topbar-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-
-          <label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Prim Oranı:</label>
-
-          <select className="form-select" value={primRate} onChange={e => setPrimRate(parseInt(e.target.value))} style={{ minWidth: '80px' }}>
-
-            <option value="10">%10</option>
-
-            <option value="15">%15</option>
-
-            <option value="20">%20</option>
-
+        <h1 className="topbar-title">Raporlar &amp; Analiz</h1>
+        <div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <select className="form-select" value={ay} onChange={e => setAy(+e.target.value)} style={{ minWidth: '100px' }}>
+            {AYLAR.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>
-
-          <select className="form-select" value={period} onChange={e => setPeriod(e.target.value)} style={{ minWidth: '160px' }}>
-
-            <option value="today">Bugün</option>
-
-            <option value="all">Tüm Zamanlar</option>
-
+          <select className="form-select" value={yil} onChange={e => setYil(+e.target.value)}>
+            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
-
+          <button onClick={loadAll} style={{ padding: '8px 14px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontFamily: 'inherit' }}>Yenile</button>
         </div>
-
       </div>
-
       <div className="page-content">
-
-        {Object.keys(summary).length === 0 ? (
-
-          <div className="card"><div className="empty-state"><div className="empty-state-icon">📋</div><div className="empty-state-title">Henüz Üretim Verisi Yok</div><div className="empty-state-text">Operatörler üretim kaydı girdikten sonra prim hesaplamaları burada görünecek.</div></div></div>
-
-        ) : (
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-            {Object.entries(summary).map(([pid, p]) => {
-
-              const person = personnel.find(pr => pr.id == pid);
-
-              const daysCount = Math.max(1, p.days_worked.size);
-
-              const totalWage = p.daily_wage * daysCount;
-
-              const diff = p.total_value - totalWage;
-
-              const hasPrim = diff > 0;
-
-              const primAmount = hasPrim ? diff * (primRate / 100) : 0;
-
-              const karsilama = totalWage > 0 ? Math.round((p.total_value / totalWage) * 100) : 0;
-
-              const qr = p.total_produced > 0 ? Math.round((1 - p.total_defective / p.total_produced) * 100) : 100;
-
-              const fireOran = p.total_produced > 0 ? ((p.total_defective / p.total_produced) * 100).toFixed(1) : '0';
-
-              const hasComponents = person && (person.base_salary > 0 || person.transport_allowance > 0);
-
-              const totalMonthly = person ? ((person.base_salary || 0) + (person.transport_allowance || 0) + (person.ssk_cost || 0) + (person.food_allowance || 0) + (person.compensation || 0)) : 0;
-
-
-
-              return (
-
-                <div key={pid} className="card" style={{ border: hasPrim ? '2px solid rgba(46,204,113,0.3)' : diff < 0 ? '2px solid rgba(231,76,60,0.2)' : '1px solid var(--border-color)' }}>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-
-                    <div>
-
-                      <h3 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 4px' }}>📋 {p.name}</h3>
-
-                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{daysCount} gün çalışma  {p.total_net_min.toFixed(0)} dk net</span>
-
-                      {hasComponents && (
-
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-
-                          📋 Aylık: {totalMonthly.toLocaleString('tr-TR')}₺ (Maaş:{person.base_salary || 0} + Yol:{person.transport_allowance || 0} + SSK:{person.ssk_cost || 0} + Yemek:{person.food_allowance || 0} + Tazminat:{person.compensation || 0}) → Günlük: {p.daily_wage.toFixed(0)}₺
-
-                        </div>
-
-                      )}
-
-                    </div>
-
-                    <span className={`badge ${hasPrim ? 'badge-success' : diff === 0 ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: '12px', padding: '6px 14px' }}>
-
-                      {hasPrim ? '🏆 PRİM HAK EDİYOR' : diff === 0 ? '⚗️ BAŞABAŞ' : '⚠️ DÜŞÜK PERFORMANS'}
-
-                    </span>
-
-                  </div>
-
-
-
-                  {/* HESAPLAMA TABLOSU */}
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-
-                    <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
-
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Toplam Ücret</div>
-
-                      <div style={{ fontSize: '20px', fontWeight: '800' }}>{totalWage.toFixed(0)} ₺</div>
-
-                    </div>
-
-                    <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
-
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Üretim Değeri</div>
-
-                      <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--accent)' }}>{p.total_value.toFixed(0)} ₺</div>
-
-                    </div>
-
-                    <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
-
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Karşılama</div>
-
-                      <div style={{ fontSize: '20px', fontWeight: '800', color: karsilama >= 100 ? 'var(--success)' : 'var(--danger)' }}>%{karsilama}</div>
-
-                    </div>
-
-                    <div style={{ background: hasPrim ? 'rgba(46,204,113,0.1)' : 'var(--bg-input)', borderRadius: '10px', padding: '12px', textAlign: 'center', border: hasPrim ? '2px solid rgba(46,204,113,0.3)' : 'none' }}>
-
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>📋 Prim (%{primRate})</div>
-
-                      <div style={{ fontSize: '20px', fontWeight: '800', color: hasPrim ? '#2ecc71' : 'var(--text-muted)' }}>{hasPrim ? `+${primAmount.toFixed(0)} ₺` : '—'}</div>
-
-                    </div>
-
-                    <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
-
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>SaĞlam Üretim</div>
-
-                      <div style={{ fontSize: '20px', fontWeight: '800' }}>{p.total_produced - p.total_defective} adet</div>
-
-                    </div>
-
-                    <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
-
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Fire Oranı</div>
-
-                      <div style={{ fontSize: '20px', fontWeight: '800', color: parseFloat(fireOran) > 5 ? 'var(--danger)' : 'var(--success)' }}>%{fireOran}</div>
-
-                    </div>
-
-                  </div>
-
-
-
-                  {/* FORMÜL GÖSTERİMİ */}
-
-                  <div style={{ padding: '10px 14px', background: 'var(--bg-input)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.7', fontFamily: 'monospace' }}>
-
-                    {hasPrim
-
-                      ? `Üretim Değeri (${p.total_value.toFixed(0)}₺) − Toplam Ücret (${totalWage.toFixed(0)}₺) = Fazla ${diff.toFixed(0)}₺ → Prim: ${diff.toFixed(0)}  %${primRate} = ${primAmount.toFixed(0)}₺`
-
-                      : `Üretim Değeri (${p.total_value.toFixed(0)}₺) − Toplam Ücret (${totalWage.toFixed(0)}₺) = ${diff.toFixed(0)}₺ (açık)`
-
-                    }
-
-                  </div>
-
-
-
-                  {/* DÜŞÜK PERFORMANS ADAPTASYON TAKİBİ */}
-
-                  {!hasPrim && diff < 0 && (() => {
-
-                    const person = personnel.find(pr => pr.id == pid);
-
-                    const startDate = person?.start_date ? new Date(person.start_date) : null;
-
-                    const monthsWorked = startDate ? Math.floor((Date.now() - startDate.getTime()) / (30 * 24 * 60 * 60 * 1000)) : null;
-
-                    const adaptSteps = [
-
-                      { month: 1, label: '1. Ay: Uyarı', icon: '⚠️', desc: 'Performans düşüklüĞü bildirilir' },
-
-                      { month: 2, label: '2. Ay: Değerlendirme', icon: '📋', desc: 'Detaylı analiz ve görüşme yapılır' },
-
-                      { month: 3, label: '3. Ay: Karar', icon: '📋', desc: 'Görev deĞişikliĞi veya çıkış kararı' }
-
-                    ];
-
-                    return (
-
-                      <div style={{ marginTop: '12px', padding: '12px 14px', background: 'rgba(231,76,60,0.05)', borderRadius: '8px', border: '1px solid rgba(231,76,60,0.15)' }}>
-
-                        <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--danger)', marginBottom: '8px' }}>📊 Adaptasyon Takip Süreci</div>
-
-                        <div style={{ display: 'flex', gap: '8px' }}>
-
-                          {adaptSteps.map(step => {
-
-                            const active = monthsWorked !== null && monthsWorked >= step.month;
-
-                            const current = monthsWorked !== null && Math.ceil(monthsWorked) === step.month;
-
-                            return (
-
-                              <div key={step.month} style={{ flex: 1, padding: '8px', borderRadius: '6px', background: active ? 'rgba(231,76,60,0.1)' : 'var(--bg-input)', border: current ? '2px solid var(--danger)' : '1px solid var(--border-color)', textAlign: 'center', opacity: active ? 1 : 0.5 }}>
-
-                                <div style={{ fontSize: '16px' }}>{step.icon}</div>
-
-                                <div style={{ fontSize: '10px', fontWeight: '700', color: active ? 'var(--danger)' : 'var(--text-muted)' }}>{step.label}</div>
-
-                                <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginTop: '2px' }}>{step.desc}</div>
-
-                              </div>
-
-                            );
-
-                          })}
-
-                        </div>
-
-                        {monthsWorked !== null && <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '6px' }}>İşe başlama: {startDate.toLocaleDateString('tr-TR')}  {monthsWorked} ay</div>}
-
-                      </div>
-
-                    );
-
-                  })()}
-
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>
+          {raporTabs.map(t => (
+            <button key={t.id} type="button" onClick={() => setRaporTab(t.id)}
+              style={{
+                padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
+                border: raporTab === t.id ? '2px solid var(--accent)' : '2px solid var(--border-color)',
+                background: raporTab === t.id ? 'var(--accent-soft)' : 'var(--bg-input)',
+                color: raporTab === t.id ? 'var(--accent)' : 'var(--text-secondary)'
+              }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {loading && <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>Yukleniyor...</div>}
+        {raporTab === 'ozet' && !loading && (
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '20px' }}>
+              {[
+                { label: 'Gelir', value: '₺' + ((ozet && ozet.toplam_gelir) || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }), color: '#27ae60' },
+                { label: 'Gider', value: '₺' + ((ozet && ozet.toplam_gider) || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }), color: '#e74c3c' },
+                { label: 'Net Kar', value: '₺' + Math.abs((ozet && ozet.net_kar) || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }), color: karSinyali },
+                { label: 'Kar Marji', value: '%' + ((ozet && ozet.kar_marji) || 0).toFixed(1), color: karSinyali },
+              ].map((k, i) => (
+                <div key={i} style={{ padding: '16px', background: 'var(--bg-card)', borderRadius: '10px', border: '1px solid ' + k.color + '33' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>{k.label}</div>
+                  <div style={{ fontSize: '20px', fontWeight: '800', color: k.color }}>{k.value}</div>
                 </div>
-
-              );
-
-            })}
-
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ padding: '16px', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                <b style={{ fontSize: '14px', display: 'block', marginBottom: '12px' }}>Uretim Istatistikleri</b>
+                {[
+                  { label: 'Toplam Uretim', value: ((ozet && ozet.toplam_uretim) || 0).toLocaleString('tr-TR') + ' adet' },
+                  { label: 'Toplam Hata', value: ((ozet && ozet.toplam_hata) || 0) + ' adet', color: '#e74c3c' },
+                  { label: 'FPY Ort.', value: '%' + ((ozet && ozet.fpy_ortalama) || 0).toFixed(1), color: ((ozet && ozet.fpy_ortalama) || 0) >= 90 ? '#27ae60' : '#f39c12' },
+                  { label: 'Aktif Personel', value: ((ozet && ozet.aktif_personel) || 0) + ' kisi' },
+                  { label: 'Tamamlanan Siparis', value: ((ozet && ozet.tamamlanan_siparis) || 0) + ' adet' },
+                ].map((it, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)', fontSize: '13px' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>{it.label}</span>
+                    <b style={{ color: it.color || 'var(--text-primary)' }}>{it.value}</b>
+                  </div>
+                ))}
+              </div>
+              <div style={{ padding: '16px', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                <b style={{ fontSize: '14px', display: 'block', marginBottom: '12px' }}>Gelir / Gider Detayi</b>
+                {[
+                  { label: '+ Siparis Geliri', value: (ozet && ozet.siparis_geliri) || 0, color: '#27ae60' },
+                  { label: '- Iscilik', value: (ozet && ozet.iscilik_maliyeti) || 0, color: '#e74c3c' },
+                  { label: '- Hammadde', value: (ozet && ozet.hammadde_maliyeti) || 0, color: '#e74c3c' },
+                  { label: '- Sabit Gider', value: (ozet && ozet.sabit_gider) || 0, color: '#e74c3c' },
+                  { label: '= Net Kar', value: (ozet && ozet.net_kar) || 0, color: karSinyali },
+                ].map((it, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border-color)', fontSize: '13px' }}>
+                    <span>{it.label}</span>
+                    <b style={{ color: it.color }}>₺{Math.abs(it.value || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</b>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-
         )}
-
+        {raporTab === 'personel' && !loading && (
+          <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-color)' }}>
+              <b style={{ fontSize: '14px' }}>Personel Performans Raporu  {AYLAR[ay - 1]} {yil}</b>
+            </div>
+            {verimlilik.length === 0 ? (
+              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Bu ay icin veri yok</div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                  <thead><tr style={{ background: 'var(--bg-input)' }}>
+                    {['Sira', 'Personel', 'Uretim', 'Hata', 'FPY', 'Katki', 'Performans'].map(h => (
+                      <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {[...verimlilik].sort((a, b) => (b.toplam_uretim || b.total_produced || 0) - (a.toplam_uretim || a.total_produced || 0)).map((p, i) => {
+                      const fpy = p.fpy || p.fpy_yuzde || 0;
+                      const pr = fpy >= 95 ? '#27ae60' : fpy >= 85 ? '#3498db' : fpy >= 70 ? '#f39c12' : '#e74c3c';
+                      const pl = fpy >= 95 ? 'Mukemmel' : fpy >= 85 ? 'Iyi' : fpy >= 70 ? 'Orta' : 'Dusuk';
+                      return (
+                        <tr key={p.id || i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <td style={{ padding: '10px 12px', fontWeight: '700', color: i < 3 ? '#D4A847' : 'var(--text-muted)' }}>{i + 1}</td>
+                          <td style={{ padding: '10px 12px', fontWeight: '600' }}>{p.name || p.personel_adi || '#' + (p.personnel_id || '')}</td>
+                          <td style={{ padding: '10px 12px' }}>{(p.toplam_uretim || p.total_produced || 0).toLocaleString('tr-TR')}</td>
+                          <td style={{ padding: '10px 12px', color: (p.hata || p.defective_count || 0) > 0 ? '#e74c3c' : 'var(--text-muted)' }}>{p.hata || p.defective_count || 0}</td>
+                          <td style={{ padding: '10px 12px', fontWeight: '700', color: pr }}>%{fpy.toFixed(1)}</td>
+                          <td style={{ padding: '10px 12px', color: '#3498db' }}>₺{(p.katki_degeri || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</td>
+                          <td style={{ padding: '10px 12px' }}><span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '12px', background: pr + '22', color: pr, fontWeight: '700' }}>{pl}</span></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+        {raporTab === 'model' && !loading && (
+          <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-color)' }}>
+              <b style={{ fontSize: '14px' }}>Model Karliligi  {AYLAR[ay - 1]} {yil}</b>
+            </div>
+            {karlilik.length === 0 ? (
+              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Bu ay icin model karliligi verisi yok</div>
+            ) : (
+              <div style={{ padding: '16px' }}>
+                {[...karlilik].sort((a, b) => (b.net_kar || b.kar || 0) - (a.net_kar || a.kar || 0)).map((m, i) => {
+                  const kar = m.net_kar || m.kar || 0;
+                  const kr = kar > 0 ? '#27ae60' : kar < 0 ? '#e74c3c' : '#f39c12';
+                  const mxk = Math.max(...karlilik.map(x => Math.abs(x.net_kar || x.kar || 0)));
+                  const bar = mxk > 0 ? (Math.abs(kar) / mxk) * 100 : 0;
+                  return (
+                    <div key={m.id || i} style={{ marginBottom: '12px', padding: '14px', background: 'var(--bg-input)', borderRadius: '10px', border: '1px solid ' + kr + '33' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontWeight: '700', fontSize: '14px' }}>{i + 1}. {m.model_adi || m.name || 'Model #' + m.model_id}</span>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontWeight: '800', color: kr, fontSize: '16px' }}>₺{Math.abs(kar).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{kar >= 0 ? 'Kar' : 'Zarar'}</div>
+                        </div>
+                      </div>
+                      <div style={{ height: '6px', background: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: bar + '%', background: kr, borderRadius: '3px' }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+        {raporTab === 'karar' && !loading && (
+          <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-color)' }}>
+              <b style={{ fontSize: '14px' }}>Karar Arsivi</b>
+            </div>
+            {kararlar.length === 0 ? (
+              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Henuz karar kaydi yok</div>
+            ) : (
+              <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '500px', overflowY: 'auto' }}>
+                {kararlar.map((k, i) => (
+                  <div key={k.id || i} style={{ padding: '14px', background: 'var(--bg-input)', borderRadius: '10px', borderLeft: '3px solid ' + (k.sonuc === 'basarili' ? '#27ae60' : k.sonuc === 'basarisiz' ? '#e74c3c' : '#f39c12') }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontWeight: '700', fontSize: '13px' }}>{k.karar_tipi || k.tip || 'Karar'}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{k.created_at ? new Date(k.created_at).toLocaleDateString('tr-TR') : ''}</span>
+                    </div>
+                    {k.sistem_onerisi && <div style={{ fontSize: '12px', marginBottom: '6px' }}><b style={{ color: '#3498db' }}>Sistem Onerisi:</b> {k.sistem_onerisi}</div>}
+                    {k.yapilan_islem && <div style={{ fontSize: '12px', marginBottom: '6px' }}><b style={{ color: '#f39c12' }}>Yapilan:</b> {k.yapilan_islem}</div>}
+                    {k.sonuc_notu && <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{k.sonuc_notu}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
-
     </>
-
   );
-
 }
-
-
-
-
 
 // ========== ORDERS PAGE ==========
 
@@ -12519,7 +11529,9 @@ function CostsPage({ models, personnel, addToast }) {
 
   // Entegrasyon 2a: Personel toplam maliyet (maaş + SSK + ulaşım + yemek + tazminat)
   const personnelFullCost = personnel.filter(p => p.status === 'active').reduce((s, p) => {
-    return s + (p.base_salary || 0) + (p.ssk_cost || 0) + (p.transport_allowance || 0) + (p.food_allowance || 0) + (p.compensation || 0);
+    const brut = (p.base_salary || 0) + (p.transport_allowance || 0) + (p.food_allowance || 0);
+    const sgk = brut * 0.225; // SGK işveren payı %22.5
+    return s + brut + sgk;
   }, 0);
 
   // Entegrasyon 2c: Fire maliyeti = hatalı adet × ortalama birim fiyat
