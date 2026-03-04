@@ -43,8 +43,15 @@ function checkTurkishVars() {
 
             for (let li = 0; li < lines.length; li++) {
                 const line = lines[li];
-                // Turkce ozel karakterler iceren degisken isimleri
-                const m = line.match(/(const|let|var)\s+([a-zA-Z0-9_]*[\u011F\u00FC\u015F\u0131\u00F6\u00E7\u011E\u00DC\u015E\u0130\u00D6\u00C7][a-zA-Z0-9_]*)/);
+                const trimmed = line.trim();
+                // Yorum satirlarini atla
+                if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) continue;
+                // JSX metin ve string icindeki satirlari atla (degisken tanimlamasi olmayan satirlar)
+                if (!/(const|let|var)\s+\w/.test(line)) continue;
+                // CSS var() false positive'ini onle: var(-- seklinde baslayan satirlari atla
+                if (/(const|let|var)\s*\(/.test(line) && !/(const|let|var)\s+\w/.test(line)) continue;
+                // Turkce ozel karakterler iceren degisken isimleri — tanimlama = olmali
+                const m = line.match(/(const|let|var)\s+([a-zA-Z0-9_]{1,}[\u011F\u00FC\u015F\u0131\u00F6\u00E7\u011E\u00DC\u015E\u0130\u00D6\u00C7][a-zA-Z0-9_]{1,})\s*[=,;(]/);
                 if (m) {
                     warn(rel + ':' + (li + 1) + ' -- Turkce degisken: "' + m[2] + '"');
                     totalFound++;
