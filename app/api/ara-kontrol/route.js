@@ -1,49 +1,64 @@
-import getDb from '@/lib/db';
+import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase';
 
+// GET — Ara kontrol listesi
 export async function GET(request) {
     try {
-        const db = getDb();
         const { searchParams } = new URL(request.url);
         const modelId = searchParams.get('model_id');
-        const limit = searchParams.get('limit') || 30;
-        let rows;
-        if (modelId) {
-            rows = db.prepare(`SELECT ak.*, p.name as kontrol_eden_adi FROM ara_kontrol ak LEFT JOIN personnel p ON ak.kontrol_eden_id = p.id WHERE ak.model_id = ? ORDER BY ak.created_at DESC LIMIT ?`).all(modelId, limit);
-        } else {
-            rows = db.prepare(`SELECT ak.*, p.name as kontrol_eden_adi FROM ara_kontrol ak LEFT JOIN personnel p ON ak.kontrol_eden_id = p.id ORDER BY ak.created_at DESC LIMIT ?`).all(limit);
-        }
-        return Response.json(rows);
+        const limit = parseInt(searchParams.get('limit') || '30');
+
+        let query = supabaseAdmin
+            .from('ara_kontrol')
+            .select(`*, personnel (name)`)
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+
+        if (modelId) query = query.eq('model_id', parseInt(modelId));
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const rows = (data || []).map(r => ({ ...r, kontrol_eden_adi: r.personnel?.name, personnel: undefined }));
+        return NextResponse.json(rows);
     } catch (e) {
-        return Response.json({ error: e.message }, { status: 500 });
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
 
+// POST — Yeni ara kontrol kaydı
 export async function POST(request) {
     try {
-        const db = getDb();
         const body = await request.json();
-        const {
-            parti_id, model_id, kontrol_eden_id, istasyon,
+        const { parti_id, model_id, kontrol_eden_id, istasyon,
             sira_no, beden, adet, hatali, foto_url,
-            numune_foto_url, ai_uyum_skoru, onay, ret_nedeni, notlar
-        } = body;
+            numune_foto_url, ai_uyum_skoru, onay, ret_nedeni, notlar } = body;
 
-        const result = db.prepare(`
-      INSERT INTO ara_kontrol (
-        parti_id, model_id, kontrol_eden_id, istasyon,
-        sira_no, beden, adet, hatali, foto_url,
-        numune_foto_url, ai_uyum_skoru, onay, ret_nedeni, notlar, tarih
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,DATE('now'))
-    `).run(
-            parti_id || null, model_id || null, kontrol_eden_id || null,
-            istasyon || 'Dikim', sira_no || null, beden || '',
-            adet || 0, hatali || 0, foto_url || '',
-            numune_foto_url || '', ai_uyum_skoru || null,
-            onay ? 1 : 0, ret_nedeni || '', notlar || ''
-        );
+        const { data, error } = await supabaseAdmin
+            .from('ara_kontrol')
+            .insert({
+                parti_id: parti_id || null,
+                model_id: model_id ? parseInt(model_id) : null,
+                kontrol_eden_id: kontrol_eden_id ? parseInt(kontrol_eden_id) : null,
+                istasyon: istasyon || 'Dikim',
+                sira_no: sira_no || null,
+                beden: beden || '',
+                adet: adet || 0,
+                hatali: hatali || 0,
+                foto_url: foto_url || '',
+                numune_foto_url: numune_foto_url || '',
+                ai_uyum_skoru: ai_uyum_skoru || null,
+                onay: !!onay,
+                ret_nedeni: ret_nedeni || '',
+                notlar: notlar || '',
+                tarih: new Date().toISOString().split('T')[0],
+            })
+            .select().single();
 
-        return Response.json({ success: true, id: result.lastInsertRowid }, { status: 201 });
+        if (error) throw error;
+        return NextResponse.json({ success: true, id: data.id }, { status: 201 });
     } catch (e) {
-        return Response.json({ error: e.message }, { status: 500 });
+        return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }

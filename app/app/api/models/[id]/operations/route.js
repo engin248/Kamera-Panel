@@ -1,142 +1,171 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
-// GET — Modele ait tüm işlemleri getir
+const OP_FIELDS = [
+    'order_number', 'name', 'description', 'difficulty',
+    'machine_type', 'thread_material', 'needle_type',
+    'tension_setting', 'speed_setting', 'stitch_per_cm',
+    'quality_notes', 'quality_tolerance', 'error_examples',
+    'standard_time_min', 'standard_time_max', 'unit_price',
+    'standart_sure_dk', 'birim_deger',
+    'dependency', 'written_instructions',
+    'how_to_do', 'video_path', 'audio_path',
+    'correct_photo_path', 'incorrect_photo_path', 'optical_appearance',
+    'required_skill_level', 'operation_category',
+];
+
+function sanitizeOp(data, modelId) {
+    const out = { model_id: parseInt(modelId) };
+    for (const f of OP_FIELDS) {
+        if (data[f] !== undefined) out[f] = data[f];
+    }
+    return out;
+}
+
+// GET — Modele ait operasyonlar
 export async function GET(request, { params }) {
     try {
-        const db = getDb();
         const { id } = await params;
-        const operations = db.prepare(
-            'SELECT * FROM operations WHERE model_id = ? ORDER BY order_number'
-        ).all(id);
-        return NextResponse.json(operations);
+
+        const { data, error } = await supabaseAdmin
+            .from('operations')
+            .select('*')
+            .eq('model_id', id)
+            .order('order_number', { ascending: true });
+
+        if (error) throw error;
+        return NextResponse.json(data || []);
     } catch (error) {
+        console.error('Operations GET error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-// POST — Yeni işlem ekle
+// POST — Yeni operasyon ekle
 export async function POST(request, { params }) {
     try {
-        const db = getDb();
         const { id } = await params;
         const body = await request.json();
-        const {
-            order_number, name, description, difficulty,
-            machine_type, thread_material, needle_type,
-            tension_setting, speed_setting,
-            quality_notes, quality_tolerance, error_examples,
-            standard_time_min, standard_time_max, unit_price,
-            dependency, written_instructions,
-            how_to_do, stitch_per_cm, video_path, audio_path,
-            correct_photo_path, incorrect_photo_path, optical_appearance,
-            required_skill_level, operation_category
-        } = body;
 
-        if (!name || !order_number) {
-            return NextResponse.json({ error: 'İşlem adı ve sıra numarası zorunlu' }, { status: 400 });
+        if (!body.name) {
+            return NextResponse.json({ error: 'Operasyon adı zorunlu' }, { status: 400 });
         }
 
-        const result = db.prepare(`
-      INSERT INTO operations (
-        model_id, order_number, name, description, difficulty,
-        machine_type, thread_material, needle_type, tension_setting, speed_setting,
-        quality_notes, quality_tolerance, error_examples,
-        standard_time_min, standard_time_max, unit_price,
-        dependency, written_instructions,
-        how_to_do, stitch_per_cm, video_path, audio_path,
-        correct_photo_path, incorrect_photo_path, optical_appearance,
-        required_skill_level, operation_category
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-            id, order_number, name, description || '',
-            difficulty || 5, machine_type || '', thread_material || '',
-            needle_type || '', tension_setting || '', speed_setting || '',
-            quality_notes || '', quality_tolerance || '', error_examples || '',
-            standard_time_min || null, standard_time_max || null, unit_price || 0,
-            dependency || '', written_instructions || '',
-            how_to_do || '', stitch_per_cm || '',
-            video_path || null, audio_path || null,
-            correct_photo_path || null, incorrect_photo_path || null,
-            optical_appearance || '',
-            required_skill_level || '3_sinif', operation_category || 'dikim'
-        );
+        // model var mı?
+        const { data: model } = await supabaseAdmin
+            .from('models')
+            .select('id')
+            .eq('id', id)
+            .single();
+        if (!model) return NextResponse.json({ error: 'Model bulunamadı' }, { status: 404 });
 
-        const operation = db.prepare('SELECT * FROM operations WHERE id = ?').get(result.lastInsertRowid);
-        return NextResponse.json(operation, { status: 201 });
+        // Sıra numarası yoksa en sona ekle
+        if (!body.order_number) {
+            const { count } = await supabaseAdmin
+                .from('operations')
+                .select('*', { count: 'exact', head: true })
+                .eq('model_id', id);
+            body.order_number = (count || 0) + 1;
+        }
+
+        const insertData = sanitizeOp(body, id);
+
+        const { data, error } = await supabaseAdmin
+            .from('operations')
+            .insert(insertData)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        // models.total_operations güncelle
+        try {
+            const { count } = await supabaseAdmin
+                .from('operations')
+                .select('*', { count: 'exact', head: true })
+                .eq('model_id', id);
+            await supabaseAdmin.from('models').update({ total_operations: count || 0 }).eq('id', id);
+        } catch (_) { }
+
+        return NextResponse.json(data, { status: 201 });
     } catch (error) {
+        console.error('Operations POST error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-// PUT — İşlem güncelle (medya dosyaları ekleme dahil)
+// PUT — Operasyon güncelle
 export async function PUT(request, { params }) {
     try {
-        const db = getDb();
-        const { id } = await params;
-        const body = await request.json();
-        const opId = body.operation_id;
-
-        if (!opId) {
-            return NextResponse.json({ error: 'operation_id zorunlu' }, { status: 400 });
-        }
-
-        // Sadece gelen alanları güncelle
-        const updates = [];
-        const values = [];
-        const fields = [
-            'name', 'description', 'difficulty', 'machine_type', 'thread_material',
-            'needle_type', 'tension_setting', 'speed_setting', 'quality_notes',
-            'quality_tolerance', 'error_examples', 'standard_time_min', 'standard_time_max',
-            'unit_price', 'dependency', 'written_instructions', 'how_to_do',
-            'stitch_per_cm', 'video_path', 'audio_path', 'order_number',
-            'correct_photo_path', 'incorrect_photo_path', 'optical_appearance',
-            'required_skill_level', 'operation_category'
-        ];
-
-        for (const field of fields) {
-            if (body[field] !== undefined) {
-                updates.push(`${field} = ?`);
-                values.push(body[field]);
-            }
-        }
-
-        if (updates.length === 0) {
-            return NextResponse.json({ error: 'Güncellenecek alan bulunamadı' }, { status: 400 });
-        }
-
-        values.push(opId, id);
-        db.prepare(`UPDATE operations SET ${updates.join(', ')} WHERE id = ? AND model_id = ?`).run(...values);
-
-        const operation = db.prepare('SELECT * FROM operations WHERE id = ?').get(opId);
-        return NextResponse.json(operation);
-    } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-}
-
-// DELETE — İşlem sil
-export async function DELETE(request, { params }) {
-    try {
-        const db = getDb();
         const { id } = await params;
         const { searchParams } = new URL(request.url);
         const opId = searchParams.get('opId');
+        if (!opId) return NextResponse.json({ error: 'opId gerekli' }, { status: 400 });
 
-        if (!opId) {
-            return NextResponse.json({ error: 'opId zorunlu' }, { status: 400 });
+        const body = await request.json();
+        const updateData = {};
+        for (const f of OP_FIELDS) {
+            if (body[f] !== undefined) updateData[f] = body[f];
         }
 
-        db.prepare('DELETE FROM operations WHERE id = ? AND model_id = ?').run(opId, id);
+        const { data, error } = await supabaseAdmin
+            .from('operations')
+            .update(updateData)
+            .eq('id', opId)
+            .eq('model_id', id)
+            .select()
+            .single();
 
-        // Sıra numaralarını yeniden düzenle
-        const remaining = db.prepare('SELECT id FROM operations WHERE model_id = ? ORDER BY order_number').all(id);
-        remaining.forEach((op, idx) => {
-            db.prepare('UPDATE operations SET order_number = ? WHERE id = ?').run(idx + 1, op.id);
-        });
+        if (error) throw error;
+        return NextResponse.json(data);
+    } catch (error) {
+        console.error('Operations PUT error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+// DELETE — Operasyon sil (hard delete — cascade ile models silinince de temizlenir)
+export async function DELETE(request, { params }) {
+    try {
+        const { id } = await params;
+        const { searchParams } = new URL(request.url);
+        const opId = searchParams.get('opId');
+        if (!opId) return NextResponse.json({ error: 'opId gerekli' }, { status: 400 });
+
+        const { error } = await supabaseAdmin
+            .from('operations')
+            .delete()
+            .eq('id', opId)
+            .eq('model_id', id);
+
+        if (error) throw error;
+
+        // Sıra numaralarını güncelle
+        try {
+            const { data: remaining } = await supabaseAdmin
+                .from('operations')
+                .select('id')
+                .eq('model_id', id)
+                .order('order_number', { ascending: true });
+
+            if (remaining) {
+                for (let i = 0; i < remaining.length; i++) {
+                    await supabaseAdmin.from('operations')
+                        .update({ order_number: i + 1 })
+                        .eq('id', remaining[i].id);
+                }
+            }
+
+            const { count } = await supabaseAdmin
+                .from('operations')
+                .select('*', { count: 'exact', head: true })
+                .eq('model_id', id);
+            await supabaseAdmin.from('models').update({ total_operations: count || 0 }).eq('id', id);
+        } catch (_) { }
 
         return NextResponse.json({ success: true });
     } catch (error) {
+        console.error('Operations DELETE error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

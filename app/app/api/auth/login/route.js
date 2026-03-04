@@ -1,36 +1,70 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
+import { createToken, verifyPassword, hashPassword } from '@/lib/jwt';
 import { logActivity } from '@/lib/auth';
 
-// POST — Giriş Yap
+// POST — Giriş Yap (JWT token döner)
 export async function POST(request) {
     try {
-        const db = getDb();
         const { username, password } = await request.json();
 
         if (!username || !password) {
             return NextResponse.json({ error: 'Kullanıcı adı ve şifre gerekli' }, { status: 400 });
         }
 
-        // Kullanıcıyı bul
-        const user = db.prepare('SELECT * FROM users WHERE username = ? AND status = ?').get(username, 'active');
+        // Supabase users tablosundan kullanıcıyı bul
+        const { data: users, error: fetchErr } = await supabaseAdmin
+            .from('users')
+            .select('*')
+            .eq('username', username)
+            .eq('status', 'active')
+            .limit(1);
+
+        if (fetchErr) throw fetchErr;
+        const user = users?.[0];
+
         if (!user) {
             return NextResponse.json({ error: 'Kullanıcı bulunamadı' }, { status: 401 });
         }
 
-        // Şifre kontrolü (basit — sonra bcrypt'e geçilebilir)
-        if (user.password_hash !== password) {
+        // 🔐 Şifre kontrolü — hash'li ve düz metin destekli (geriye uyumlu)
+        const passwordValid = verifyPassword(password, user.password_hash);
+        if (!passwordValid) {
             return NextResponse.json({ error: 'Şifre yanlış' }, { status: 401 });
         }
 
-        // Son giriş zamanını güncelle
-        db.prepare('UPDATE users SET last_login = datetime(?) WHERE id = ?').run(new Date().toISOString(), user.id);
+        // Eski düz metin şifre varsa otomatik hash'e yükselt
+        if (!user.password_hash.includes(':')) {
+            const hashedPw = hashPassword(password);
+            await supabaseAdmin
+                .from('users')
+                .update({ password_hash: hashedPw })
+                .eq('id', user.id);
+        }
 
-        // Günlüğe kaydet
-        logActivity(user, 'LOGIN', 'users', user.id, `${user.display_name} giriş yaptı`);
+        // 🔐 JWT Token oluştur (24 saat geçerli)
+        const token = createToken({
+            user_id: user.id,
+            username: user.username,
+            role: user.role,
+        });
+
+        // Son giriş zamanını güncelle
+        await supabaseAdmin
+            .from('users')
+            .update({ last_login: new Date().toISOString() })
+            .eq('id', user.id);
+
+        // Audit log
+        await logActivity(
+            { id: user.id, display_name: user.display_name },
+            'LOGIN', 'users', user.id,
+            `${user.display_name} giriş yaptı`
+        );
 
         return NextResponse.json({
             success: true,
+            token,
             user: {
                 id: user.id,
                 username: user.username,
@@ -46,9 +80,13 @@ export async function POST(request) {
 // GET — Kullanıcı listesi (sadece koordinator)
 export async function GET(request) {
     try {
-        const db = getDb();
-        const users = db.prepare('SELECT id, username, display_name, role, status, last_login, created_at FROM users').all();
-        return NextResponse.json(users);
+        const { data, error } = await supabaseAdmin
+            .from('users')
+            .select('id, username, display_name, role, status, last_login, created_at')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return NextResponse.json(data || []);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

@@ -1,25 +1,38 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
 // GET — Onay kuyruğunu getir
 export async function GET(request) {
     try {
-        const db = getDb();
         const { searchParams } = new URL(request.url);
         const status = searchParams.get('status') || 'pending';
 
-        const approvals = db.prepare(`
-            SELECT aq.*,
-                p.name as personnel_name, p.role as personnel_role,
-                m.name as model_name, m.code as model_code,
-                o.name as operation_name
-            FROM approval_queue aq
-            JOIN personnel p ON aq.personnel_id = p.id
-            JOIN models m ON aq.model_id = m.id
-            JOIN operations o ON aq.operation_id = o.id
-            ${status !== 'all' ? 'WHERE aq.status = ?' : ''}
-            ORDER BY aq.created_at DESC
-        `).all(...(status !== 'all' ? [status] : []));
+        let query = supabaseAdmin
+            .from('approval_queue')
+            .select(`
+                *,
+                personnel (name, role),
+                models (name, code),
+                operations (name)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (status !== 'all') {
+            query = query.eq('status', status);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const approvals = (data || []).map(row => ({
+            ...row,
+            personnel_name: row.personnel?.name,
+            personnel_role: row.personnel?.role,
+            model_name: row.models?.name,
+            model_code: row.models?.code,
+            operation_name: row.operations?.name,
+            personnel: undefined, models: undefined, operations: undefined,
+        }));
 
         return NextResponse.json(approvals);
     } catch (error) {
@@ -30,7 +43,6 @@ export async function GET(request) {
 // POST — Yeni onay talebi oluştur (operatörden)
 export async function POST(request) {
     try {
-        const db = getDb();
         const body = await request.json();
         const { personnel_id, model_id, operation_id, photo_path } = body;
 
@@ -38,12 +50,20 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Zorunlu alanlar eksik' }, { status: 400 });
         }
 
-        const result = db.prepare(`
-            INSERT INTO approval_queue (personnel_id, model_id, operation_id, photo_path)
-            VALUES (?, ?, ?, ?)
-        `).run(personnel_id, model_id, operation_id, photo_path || null);
+        const { data, error } = await supabaseAdmin
+            .from('approval_queue')
+            .insert({
+                personnel_id: parseInt(personnel_id),
+                model_id: parseInt(model_id),
+                operation_id: parseInt(operation_id),
+                photo_path: photo_path || null,
+                status: 'pending',
+            })
+            .select()
+            .single();
 
-        return NextResponse.json({ id: result.lastInsertRowid, status: 'pending' }, { status: 201 });
+        if (error) throw error;
+        return NextResponse.json(data, { status: 201 });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -52,7 +72,6 @@ export async function POST(request) {
 // PUT — Onay/red güncelle (yöneticiden)
 export async function PUT(request) {
     try {
-        const db = getDb();
         const body = await request.json();
         const { id, status, notes } = body;
 
@@ -60,12 +79,19 @@ export async function PUT(request) {
             return NextResponse.json({ error: 'Geçersiz istek' }, { status: 400 });
         }
 
-        db.prepare(`
-            UPDATE approval_queue SET status = ?, reviewed_at = CURRENT_TIMESTAMP, notes = ?
-            WHERE id = ?
-        `).run(status, notes || '', id);
+        const { data, error } = await supabaseAdmin
+            .from('approval_queue')
+            .update({
+                status,
+                notes: notes || '',
+                reviewed_at: new Date().toISOString(),
+            })
+            .eq('id', id)
+            .select()
+            .single();
 
-        return NextResponse.json({ success: true });
+        if (error) throw error;
+        return NextResponse.json(data);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

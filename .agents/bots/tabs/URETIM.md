@@ -2,8 +2,20 @@
 
 > **Sekme ID:** `production`
 > **Bot:** 🔩 Kamera (Gemini 2.0 Flash)
-> **Son Güncelleme:** 2026-03-01
+> **Son Güncelleme:** 2026-03-03
 > **Bu dosya:** Üretim botu için tek bilgi kaynağı
+
+---
+
+## ⚠️ ANTİGRAVİTY ANALİZ NOTU (2026-03-03)
+
+| # | Eksik | Önem | Düzeltime |
+|---|-------|------|----------|
+| 1 | `unit_value` alanı var ama prim hesabına bağlı değil | Kritik | TODO eklendi |
+| 2 | 5. pencere için veri akışı tanımsız | Yüksek | Cross-tab güncellendi |
+| 3 | Vardiya yönetimi modulu eksik (şu an TODO durumunda) | Orta | Mevcut |
+| 4 | Bot prompt Katkı Değeri hesabı bilmiyor | Yüksek | Prompt güncellendi |
+| 5 | Supabase geçiş hazırlığı yok | Yüksek | TODO eklendi |
 
 ---
 
@@ -12,6 +24,9 @@
 Günlük üretim verilerini kayıt altına almak.
 Kim, hangi modelde, kaç adet, kaç hatalı — anlık takip.
 OEE, FPY, takt zamanı gibi verimlilik metrikleri burada hesaplanır.
+
+**Vizyon Prensibi:** Bu sekme prim sisteminin ham verisini üretir.
+Girilen `unit_value` ve `total_produced` bilgisi Katkı Değeri hesabının temelidir.
 
 ---
 
@@ -28,11 +43,14 @@ UZMANLIĞIN:
 - Vardiya bazlı üretim karşılaştırması
 - Hangi personelin nerede sıkıştığını tespit etme
 - Günlük hedef vs gerçek üretim
+- **KATKI DEĞERİ HESABI:** SUM(toplam_adet x birim_deger x (1 - hata_orani)) — Prim temelidir
+- Prim analizi (Katkı Değeri hesabı)
 
 TARZIN: Hızlı, sayı odaklı. Grafik gibi düşün — trend var mı?
 DİL: Türkçe. Net/kısa. Max 4-5 cümle.
 
 KURAL: Bugünün verisine odaklan. Trend için haftalık bak.
+KURAL: Prim hesabı için unit_value doğru girilmeli olduğunu hatırlat.
 ```
 
 ---
@@ -107,6 +125,10 @@ KURAL: Bugünün verisine odaklan. Trend için haftalık bak.
 - [ ] TODO: Personel bazlı benchmark karşılaştırması
 - [ ] TODO: Otomatik hata sınıflandırma (AI ile)
 - [ ] TODO: Üretim tahmin motoru (bir sonraki vardiya)
+- [ ] **TODO (KRİTİK): Katkı Değeri ÷zeti hesapla** — her personel için aylık SUM(adet x birim_deger x (1-hata_%)) tablosu
+- [ ] **TODO (KRİTİK): unit_value doğrulama** — giriş yapılırken birim değer yoksa uyarı ver
+- [ ] TODO: Supabase geçiş — `production_logs` ve `uretim_giris` tabloları
+- [ ] TODO: 5. Pencere (Rapor) için günlük/aylık veri özeti API end-point
 
 ---
 
@@ -142,6 +164,7 @@ KURAL: Bugünün verisine odaklan. Trend için haftalık bak.
 | **Siparişler** | `orders` | Hangi sipariş için üretim yapılıyor |
 | **Kalite** | `quality_checks` | FPY/OEE skorları kalite sekmesini besler |
 | **Maliyet** | `cost_entries` | `unit_value` → maliyet analizine gider |
+| **5. Pencere (Rapor)** | `production_logs` | Günlük/aylık verimlilik özeti + Katkı Değeri |
 
 ---
 
@@ -205,7 +228,7 @@ Tablet/Form
 
 **Bu dosyayı şu durumlarda güncelle:**
 
-- Yeni production_logs sütunu eklendiyse → DYeni metrik formülü eklendiyse → Metrikler tablosu güncelle
+- Yeni production_logs sütunu eklendiyse → Tablo güncelle
+- Yeni metrik formülü eklendiyse → Metrikler tablosu güncelle
 - Yeni özellik eklendiyse → `[x]` yap
-- Yeni TODO belirlediyse → `[ ]` ekleB tablosu güncelle
--
+- Yeni TODO belirlediyse → `[ ]` ekle

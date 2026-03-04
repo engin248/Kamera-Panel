@@ -1,28 +1,48 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
-export async function GET() {
+// ============================================================
+// GET — Müşteri listesi
+// ============================================================
+export async function GET(request) {
     try {
-        const db = getDb();
-        const customers = db.prepare('SELECT * FROM customers ORDER BY created_at DESC').all();
-        return NextResponse.json(customers);
+        const { searchParams } = new URL(request.url);
+        const status = searchParams.get('status');
+
+        let query = supabaseAdmin
+            .from('customers')
+            .select('*')
+            .is('deleted_at', null)
+            .order('name', { ascending: true });
+
+        if (status) query = query.eq('status', status);
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return NextResponse.json(data || []);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
+// ============================================================
+// POST — Yeni müşteri
+// ============================================================
 export async function POST(request) {
     try {
-        const db = getDb();
         const body = await request.json();
         const { name, company, phone, email, address, tax_no, notes } = body;
+
         if (!name) return NextResponse.json({ error: 'Müşteri adı zorunlu' }, { status: 400 });
-        const result = db.prepare(`
-      INSERT INTO customers (name, company, phone, email, address, tax_no, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(name, company || '', phone || '', email || '', address || '', tax_no || '', notes || '');
-        const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(result.lastInsertRowid);
-        return NextResponse.json(customer, { status: 201 });
+
+        const { data, error } = await supabaseAdmin
+            .from('customers')
+            .insert({ name, company: company || '', phone: phone || '', email: email || '', address: address || '', tax_no: tax_no || '', notes: notes || '' })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return NextResponse.json(data, { status: 201 });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

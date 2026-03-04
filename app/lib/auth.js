@@ -1,15 +1,11 @@
 /**
  * 🔒 Auth Middleware — Yetki ve Güvenlik Kontrolü
- * 
+ * Supabase versiyonu (SQLite'dan migrate edildi)
+ *
  * Roller: koordinator, ustabasi, kaliteci, operator
- * 
- * Kullanım:
- *   import { checkAuth, logActivity } from '@/lib/auth';
- *   const user = checkAuth(request, 'DELETE'); // yetki kontrolü
- *   logActivity(user, 'DELETE', 'personnel', id, 'Ahmet silinidi');
  */
 
-import getDb from './db';
+import { supabaseAdmin } from './supabase';
 
 // Yetki matrisi
 const PERMISSIONS = {
@@ -21,112 +17,119 @@ const PERMISSIONS = {
 
 /**
  * İstekten kullanıcı bilgisini çıkar ve yetki kontrolü yap
- * @param {Request} request - HTTP isteği
- * @param {string} method - HTTP metodu (GET, POST, PUT, DELETE)
- * @returns {{ id, username, display_name, role } | null}
+ * Güvenlik: API_SECRET_KEY ile iç servis çağrıları doğrulanır.
+ * Header yoksa koordinator kabul edilir (geliştirme modunda).
  */
-export function checkAuth(request, method = 'GET') {
-    const db = getDb();
-
-    // Header'dan kullanıcı bilgisi al
+export async function checkAuth(request, method = 'GET') {
     const userId = request.headers.get('x-user-id');
     const userRole = request.headers.get('x-user-role');
+    const internalKey = request.headers.get('x-internal-key');
 
-    // Geçici: Eğer header yoksa varsayılan olarak koordinator kabul et
-    // (Login sistemi aktif edilince bu kaldırılacak)
+    // İç servis çağrıları (bot/cron) — INTERNAL_API_KEY ile doğrula
+    const INTERNAL_KEY = process.env.INTERNAL_API_KEY;
+    if (internalKey && INTERNAL_KEY && internalKey === INTERNAL_KEY) {
+        return { id: null, username: 'system', display_name: 'Sistem', role: 'koordinator' };
+    }
+
+    // Header yoksa geliştirme modunda koordinator kabul (production'da kapatılmalı)
+    const isDev = process.env.NODE_ENV !== 'production';
     if (!userId) {
-        return { id: 1, username: 'admin', display_name: 'Koordinatör', role: 'koordinator' };
+        if (isDev) {
+            return { id: null, username: 'admin', display_name: 'Koordinatör (Dev)', role: 'koordinator' };
+        }
+        // Production: yetkisiz
+        return null;
     }
 
-    // Kullanıcıyı DB'den doğrula
-    const user = db.prepare('SELECT * FROM users WHERE id = ? AND status = ?').get(userId, 'active');
-    if (!user) {
-        return null; // Kullanıcı bulunamadı
-    }
+    // Supabase'den kullanıcıyı doğrula
+    const { data: user } = await supabaseAdmin
+        .from('personnel')
+        .select('id, name, role, status')
+        .eq('id', userId)
+        .eq('status', 'active')
+        .maybeSingle();
+
+    if (!user) return null;
 
     // Yetki kontrolü
-    const perms = PERMISSIONS[user.role] || PERMISSIONS.operator;
+    const role = userRole || user.role || 'operator';
+    const perms = PERMISSIONS[role] || PERMISSIONS.operator;
     if (!perms[method]) {
-        return { ...user, _forbidden: true };
+        return { ...user, display_name: user.name, role, _forbidden: true };
     }
 
-    return user;
+    return { ...user, display_name: user.name, role };
 }
 
-/**
- * DELETE yetkisi kontrolü — sadece koordinator yapabilir
- * @param {Request} request
- * @returns {{ allowed: boolean, user: object, error?: string }}
- */
-export function checkDeletePermission(request) {
-    const user = checkAuth(request, 'DELETE');
+/** Senkron versiyon — Header kontrolü ile yetki doğrulama */
+export function checkAuthSync(request, method = 'GET') {
+    const userId = request.headers.get('x-user-id');
+    const userRole = request.headers.get('x-user-role');
+    const internalKey = request.headers.get('x-internal-key');
 
-    if (!user) {
-        return { allowed: false, user: null, error: 'Kullanıcı bulunamadı veya devre dışı' };
+    // İç servis çağrıları (bot/cron)
+    const INTERNAL_KEY = process.env.INTERNAL_API_KEY;
+    if (internalKey && INTERNAL_KEY && internalKey === INTERNAL_KEY) {
+        return { id: null, username: 'system', display_name: 'Sistem', role: 'koordinator' };
     }
 
-    if (user._forbidden) {
-        return { allowed: false, user, error: `${user.display_name} (${user.role}) — silme yetkisi yok. Sadece Koordinatör silebilir.` };
+    // Header yoksa — dev modunda koordinator, production'da null
+    if (!userId && !userRole) {
+        const isDev = process.env.NODE_ENV !== 'production';
+        if (isDev) {
+            return { id: null, username: 'admin', display_name: 'Koordinatör (Dev)', role: 'koordinator' };
+        }
+        return null;
     }
 
+    const role = userRole || 'operator';
+    const perms = PERMISSIONS[role] || PERMISSIONS.operator;
+    if (!perms[method]) return { role, _forbidden: true };
+    return { id: userId, role, display_name: 'Kullanıcı' };
+}
+
+/** DELETE yetkisi kontrolü */
+export async function checkDeletePermission(request) {
+    const user = await checkAuth(request, 'DELETE');
+    if (!user) return { allowed: false, user: null, error: 'Kullanıcı bulunamadı' };
+    if (user._forbidden) return { allowed: false, user, error: `${user.display_name} — silme yetkisi yok. Sadece Koordinatör silebilir.` };
     return { allowed: true, user };
 }
 
-/**
- * İşlem günlüğüne kayıt ekle
- * @param {object} user - { id, display_name }
- * @param {string} action - 'CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'SOFT_DELETE'
- * @param {string} tableName - 'personnel', 'models', vs.
- * @param {number|string} recordId - Kaydın ID'si
- * @param {string} summary - Kısa açıklama
- */
-export function logActivity(user, action, tableName, recordId, summary) {
+/** Denetim logu — audit_trail tablosuna yazar */
+export async function logActivity(user, action, tableName, recordId, summary) {
     try {
-        const db = getDb();
-        db.prepare(
-            'INSERT INTO activity_log (user_id, user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?, ?)'
-        ).run(
-            user?.id || 0,
-            user?.display_name || 'Sistem',
+        await supabaseAdmin.from('audit_trail').insert({
+            user_id: user?.id || null,
+            user_name: user?.display_name || 'Sistem',
             action,
-            tableName,
-            recordId || 0,
-            summary || ''
-        );
+            table_name: tableName,
+            record_id: recordId ? String(recordId) : null,
+            record_summary: summary || '',
+        });
     } catch (e) {
         console.error('Activity log hatası:', e.message);
     }
 }
 
-/**
- * Soft-delete işlemi — veriyi silmez, deleted_at ile işaretler
- * @param {string} tableName - Tablo adı
- * @param {number|string} id - Kayıt ID'si
- * @param {object} user - Silme yapan kullanıcı
- * @returns {{ success: boolean, error?: string }}
- */
-export function softDelete(tableName, id, user) {
+/** Soft-delete — Supabase'de deleted_at ile işaretler */
+export async function softDelete(tableName, id, user) {
     try {
-        const db = getDb();
+        const { error } = await supabaseAdmin
+            .from(tableName)
+            .update({
+                deleted_at: new Date().toISOString(),
+                deleted_by: user?.display_name || 'admin',
+            })
+            .eq('id', id)
+            .is('deleted_at', null);
 
-        // Kaydın mevcut olup olmadığını kontrol et
-        const record = db.prepare(`SELECT * FROM ${tableName} WHERE id = ? AND deleted_at IS NULL`).get(id);
-        if (!record) {
-            return { success: false, error: 'Kayıt bulunamadı veya zaten silinmiş' };
-        }
-
-        // Soft-delete uygula
-        db.prepare(
-            `UPDATE ${tableName} SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?`
-        ).run(user?.display_name || 'admin', id);
-
-        // Günlüğe kaydet
-        logActivity(user, 'SOFT_DELETE', tableName, id, `${tableName} #${id} soft-delete yapıldı`);
-
+        if (error) return { success: false, error: error.message };
+        await logActivity(user, 'SOFT_DELETE', tableName, id, `${tableName} #${id} soft-delete yapıldı`);
         return { success: true };
     } catch (e) {
         return { success: false, error: e.message };
     }
 }
 
-export default { checkAuth, checkDeletePermission, logActivity, softDelete };
+export default { checkAuth, checkAuthSync, checkDeletePermission, logActivity, softDelete };

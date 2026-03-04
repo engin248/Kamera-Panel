@@ -1,28 +1,37 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
-export async function GET() {
+// GET — Fason tedarikçi listesi
+export async function GET(request) {
     try {
-        const db = getDb();
-        const providers = db.prepare('SELECT * FROM fason_providers ORDER BY created_at DESC').all();
-        return NextResponse.json(providers);
+        const { searchParams } = new URL(request.url);
+        const status = searchParams.get('status');
+
+        let query = supabaseAdmin.from('fason_providers').select('*').order('created_at', { ascending: false });
+        if (status) query = query.eq('status', status);
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return NextResponse.json(data || []);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
+// POST — Yeni fason tedarikçi
 export async function POST(request) {
     try {
-        const db = getDb();
         const body = await request.json();
-        const { name, company, phone, address, speciality, notes } = body;
+        const { name, company, phone, address, speciality, notes, quality_rating } = body;
         if (!name) return NextResponse.json({ error: 'Fasoncu adı zorunlu' }, { status: 400 });
-        const result = db.prepare(`
-      INSERT INTO fason_providers (name, company, phone, address, speciality, notes)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(name, company || '', phone || '', address || '', speciality || '', notes || '');
-        const provider = db.prepare('SELECT * FROM fason_providers WHERE id = ?').get(result.lastInsertRowid);
-        return NextResponse.json(provider, { status: 201 });
+
+        const { data, error } = await supabaseAdmin
+            .from('fason_providers')
+            .insert({ name, company: company || '', phone: phone || '', address: address || '', speciality: speciality || '', notes: notes || '', quality_rating: quality_rating || 5 })
+            .select().single();
+
+        if (error) throw error;
+        return NextResponse.json(data, { status: 201 });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

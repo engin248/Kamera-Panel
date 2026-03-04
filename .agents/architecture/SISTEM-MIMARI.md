@@ -1,8 +1,8 @@
 # 🏗️ KAMERA-PANEL — SİSTEM MİMARİSİ
 
-> **Son Güncelleme:** 2026-03-02  
-> **Durum:** Aktif Üretim  
-> **Versiyon:** v2.1 (Supabase + Bot Entegrasyonlu)
+> **Son Güncelleme:** 2026-03-03  
+> **Durum:** Aktif Üretim — Supabase Geçişi  
+> **Versiyon:** v2.2 (Supabase Tam Geçiş)
 
 ---
 
@@ -42,30 +42,31 @@ Kamera-Panel/
 
 ## 🗄️ VERİTABANI TABLOLARI
 
-> **Hibrit Mimari:** `personnel` → Supabase | Diğerleri → SQLite
+> **Hedef: Tüm tablolar Supabase'de** (Geçiş 2026-03-03'ten itibaren)
 
-| Tablo | Motor | Açıklama | Satır Sayısı (Tahmini) |
-|-------|-------|----------|------------------------|
-| `personnel` | ☁️ Supabase | Çalışan profilleri (P1-P11) | 10-30 |
-| `models` | SQLite | Model kartları (teknik detaylar) | 10-50 |
-| `operations` | SQLite | Model operasyonları | 50-500 |
-| `production_logs` | SQLite | Günlük üretim kayıtları | 1000+ |
-| `quality_checks` | SQLite | Kalite kontrol | 500+ |
-| `approval_queue` | SQLite | İlk ürün onayları | 50+ |
-| `orders` | SQLite | Siparişler | 20-100 |
-| `shipments` | SQLite | Sevkiyatlar | 10-50 |
-| `customers` | SQLite | Müşteri listesi | 5-30 |
-| `machines` | SQLite | Makine envanteri | 5-20 |
-| `machine_settings` | SQLite | Makine ayar şablonları | 10-100 |
-| `fason_providers` | SQLite | Fason tedarikçiler | 5-20 |
-| `fason_orders` | SQLite | Fason siparişler | 10-50 |
-| `cost_entries` | SQLite | Maliyet kalemleri | 50-200 |
-| `business_expenses` | SQLite | İşletme giderleri | 20-100 |
-| `users` | SQLite | Kullanıcılar (yetki) | 2-10 |
-| `activity_log` | SQLite | İşlem günlüğü | 1000+ |
-| `audit_trail` | SQLite | Değişiklik geçmişi | 1000+ |
-| `work_schedule` | SQLite | Mola çizelgesi | 7 (sabit) |
-| `monthly_work_days` | SQLite | Aylık çalışma günleri | 12/yıl |
+| Tablo | Motor | Açıklama | API Durumu |
+|-------|-------|----------|------------|
+| `personnel` | ☁️ Supabase | Çalışan profilleri (P1-P11) | ✅ Supabase |
+| `machines` | ☁️ Supabase | Makine envanteri | ✅ Supabase |
+| `models` | ☁️ Supabase | Model kartları | ✅ Supabase |
+| `operations` | ☁️ Supabase | Model operasyonları | ✅ Supabase |
+| `production_logs` | ☁️ Supabase | Günlük üretim kayıtları | ✅ Supabase |
+| `cost_entries` | ☁️ Supabase | Maliyet kalemleri | ✅ Supabase |
+| `business_expenses` | ☁️ Supabase | İşletme giderleri | ✅ Supabase |
+| `prim_kayitlari` | ☁️ Supabase | Prim motor tablosu | ⏳ API bekliyor |
+| `kar_zarar_ozet` | ☁️ Supabase | Aylık muhasebe özeti | ⏳ API bekliyor |
+| `karar_arsivi` | ☁️ Supabase | Karar öğrenme sistemi | ⏳ API bekliyor |
+| `quality_checks` | SQLite→Supabase | Kalite kontrol | ⏳ Bekliyor |
+| `orders` | SQLite→Supabase | Siparişler | ⏳ Bekliyor |
+| `customers` | SQLite→Supabase | Müşteri listesi | ⏳ Bekliyor |
+| `shipments` | SQLite→Supabase | Sevkiyatlar | ⏳ Bekliyor |
+| `fason_providers` | SQLite→Supabase | Fason tedarikçiler | ⏳ Bekliyor |
+| `fason_orders` | SQLite→Supabase | Fason siparişler | ⏳ Bekliyor |
+| `audit_trail` | SQLite→Supabase | Değişiklik geçmişi | ⏳ Bekliyor |
+| `users` | SQLite→Supabase | Kullanıcılar (yetki) | ⏳ Bekliyor |
+| `work_schedule` | SQLite→Supabase | Mola çizelgesi | ⏳ Bekliyor |
+| `personel_saat` | SQLite→Supabase | Giriş/çıkış saati | ⏳ Bekliyor |
+| `sistem_ayarlari` | ☁️ Supabase | Sistem ayarları | ✅ SQL hazır |
 
 ---
 
@@ -73,41 +74,46 @@ Kamera-Panel/
 
 | Endpoint | Metot | Açıklama |
 |----------|-------|----------|
-| `/api/models` | GET, POST | Model CRUD |
-| `/api/models/[id]` | GET, PUT, DELETE | Tekil model |
-| `/api/operations` | GET, POST | Operasyon CRUD |
-| `/api/personnel` | GET, POST | Personel CRUD |
-| `/api/production` | GET, POST | Üretim kaydı |
-| `/api/quality-checks` | GET, POST | Kalite kontrol |
-| `/api/orders` | GET, POST | Sipariş CRUD |
-| `/api/orders/[id]` | GET, PUT, DELETE | Tekil sipariş |
-| `/api/shipments` | GET, POST | Sevkiyat |
-| `/api/shipments/[id]` | PUT | Tekil sevkiyat |
-| `/api/customers` | GET, POST | Müşteri CRUD |
-| `/api/customers/[id]` | PUT, DELETE | Tekil müşteri |
-| `/api/machines` | GET, POST | Makine CRUD |
-| `/api/machines/[id]` | PUT, DELETE | Tekil makine |
-| `/api/fason` | GET, POST | Fason yönetim |
-| `/api/fason/[id]` | PUT | Tekil fason |
-| `/api/costs` | GET, POST | Maliyet |
-| `/api/costs/[id]` | DELETE | Tekil maliyet |
-| `/api/expenses` | GET, POST | İşletme giderleri |
-| `/api/isletme-gider` | GET, POST | İşletme gider (yeni) |
-| `/api/auth` | POST | Giriş/Çıkış |
-| `/api/chatbot` | POST | **4 Bot AI** |
-| `/api/ai-kurul` | POST | Yönetim kurulu oylaması |
-| `/api/fason-fiyat-hesapla` | POST | Fiyat hesaplama |
-| `/api/uretim-ozet` | GET | Günlük özet |
-| `/api/uretim-giris` | GET, POST | Üretim parti girişi |
-| `/api/personel-saat` | POST | Giriş/çıkış saati |
-| `/api/personel-haftalik` | GET | Haftalık personel raporu |
-| `/api/work-schedule` | GET, POST | Çalışma takvimi |
-| `/api/upload` | POST | Dosya yükleme |
-| `/api/model-vision` | POST | Fotoğraf analizi (AI) |
-| `/api/model-operasyonlar` | GET | Model+Operasyon listesi |
-| `/api/approvals` | GET, POST | Onay kuyruğu |
-| `/api/audit-trail` | GET | Değişiklik geçmişi |
-| `/api/voice-command` | POST | Sesli komut işleme |
+| `/api/models` | GET, POST | Model CRUD | ✅ Supabase |
+| `/api/models/[id]` | GET, PUT, DELETE | Tekil model | ✅ Supabase |
+| `/api/models/[id]/operations` | GET, POST, PUT, DELETE | Model operasyonları | ✅ Supabase |
+| `/api/operations` | GET, POST | Operasyon CRUD | |
+| `/api/personnel` | GET, POST | Personel CRUD | ✅ Supabase |
+| `/api/personnel/[id]` | GET, PUT, DELETE | Tekil personel | ✅ Supabase |
+| `/api/production` | GET, POST | Üretim kaydı | ✅ Supabase |
+| `/api/production/[id]` | GET, PUT, DELETE | Tekil üretim | ✅ Supabase |
+| `/api/quality-checks` | GET, POST | Kalite kontrol | |
+| `/api/orders` | GET, POST | Sipariş CRUD | |
+| `/api/orders/[id]` | GET, PUT, DELETE | Tekil sipariş | |
+| `/api/shipments` | GET, POST | Sevkiyat | |
+| `/api/shipments/[id]` | PUT | Tekil sevkiyat | |
+| `/api/customers` | GET, POST | Müşteri CRUD | |
+| `/api/customers/[id]` | PUT, DELETE | Tekil müşteri | |
+| `/api/machines` | GET, POST | Makine CRUD | ✅ Supabase |
+| `/api/machines/[id]` | PUT, DELETE | Tekil makine | ✅ Supabase |
+| `/api/fason` | GET, POST | Fason yönetim | |
+| `/api/fason/[id]` | PUT | Tekil fason | |
+| `/api/costs` | GET, POST | Maliyet | ✅ Supabase |
+| `/api/costs/[id]` | PUT, DELETE | Tekil maliyet | ✅ Supabase |
+| `/api/expenses` | GET, POST, PUT, DELETE | İşletme giderleri | |
+| `/api/isletme-gider` | GET, POST, PUT, DELETE | İşletme gider | ✅ Supabase |
+| `/api/rapor/ay-ozet` | GET | Aylık özet dashboard | ✅ Supabase |
+| `/api/rapor/personel-verimlilik` | GET | Personel prim analizi | ✅ Supabase |
+| `/api/auth` | POST | Giriş/Çıkış | |
+| `/api/chatbot` | POST | **4 Bot AI** | |
+| `/api/ai-kurul` | POST | Yönetim kurulu oylaması | |
+| `/api/fason-fiyat-hesapla` | POST | Fiyat hesaplama | |
+| `/api/uretim-ozet` | GET | Günlük özet | |
+| `/api/uretim-giris` | GET, POST | Üretim parti girişi | |
+| `/api/personel-saat` | POST | Giriş/çıkış saati | |
+| `/api/personel-haftalik` | GET | Haftalık personel raporu | |
+| `/api/work-schedule` | GET, POST | Çalışma takvimi | |
+| `/api/upload` | POST | Dosya yükleme | |
+| `/api/model-vision` | POST | Fotoğraf analizi (AI) | |
+| `/api/model-operasyonlar` | GET | Model+Operasyon listesi | |
+| `/api/approvals` | GET, POST | Onay kuyruğu | |
+| `/api/audit-trail` | GET | Değişiklik geçmişi | |
+| `/api/voice-command` | POST | Sesli komut işleme | |
 
 ---
 

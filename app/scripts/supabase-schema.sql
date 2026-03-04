@@ -309,30 +309,24 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 15. AUDİT TRAIL
+-- 15. AUDİT TRAIL (birleştirilmiş — hem alan değişiklikleri hem aktivite logu)
+-- NOT: Kod (auth.js logActivity) user_id, user_name, action, record_summary kullanıyor
 CREATE TABLE IF NOT EXISTS audit_trail (
   id BIGSERIAL PRIMARY KEY,
   table_name TEXT NOT NULL,
-  record_id BIGINT NOT NULL,
-  field_name TEXT NOT NULL,
+  record_id TEXT,
+  field_name TEXT,
   old_value TEXT,
   new_value TEXT,
-  changed_by TEXT DEFAULT 'admin',
-  changed_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 16. AKTİVİTE LOGU
-CREATE TABLE IF NOT EXISTS activity_log (
-  id BIGSERIAL PRIMARY KEY,
-  user_id BIGINT,
-  user_name TEXT,
-  action TEXT NOT NULL,
-  table_name TEXT,
-  record_id BIGINT,
+  action TEXT,
   record_summary TEXT,
-  ip_address TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  changed_by TEXT DEFAULT 'admin',
+  changed_at TIMESTAMPTZ DEFAULT NOW(),
+  user_id BIGINT,
+  user_name TEXT
 );
+CREATE INDEX IF NOT EXISTS idx_audit_trail_table ON audit_trail(table_name, record_id);
+CREATE INDEX IF NOT EXISTS idx_audit_trail_changed_at ON audit_trail(changed_at DESC);
 
 -- 17. ÇALIŞMA TAKVİMİ
 CREATE TABLE IF NOT EXISTS work_schedule (
@@ -368,7 +362,8 @@ CREATE TABLE IF NOT EXISTS business_expenses (
 );
 
 -- 20. PERSONEL SAAT (giriş/çıkış)
-CREATE TABLE IF NOT EXISTS personel_saat (
+-- NOT: Kodda "personel_saat_kayitlari" kullanıldığı için tablo ismi buna uygun
+CREATE TABLE IF NOT EXISTS personel_saat_kayitlari (
   id BIGSERIAL PRIMARY KEY,
   personel_id BIGINT REFERENCES personnel(id),
   tarih DATE NOT NULL,
@@ -376,7 +371,9 @@ CREATE TABLE IF NOT EXISTS personel_saat (
   cikis_saat TEXT,
   net_calisma_dakika NUMERIC(8,2) DEFAULT 0,
   mesai_dakika NUMERIC(8,2) DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  gec_kalma_dakika NUMERIC(8,2) DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(personel_id, tarih)
 );
 
 -- 21. M1: PARTİ KABUL

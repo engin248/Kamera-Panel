@@ -1,74 +1,151 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
+// Güncellenebilir alanlar
+const UPDATEABLE_FIELDS = [
+    'name', 'type', 'brand', 'model_name', 'serial_no',
+    'sub_type', 'count', 'category', 'location',
+    'purchase_date', 'last_maintenance', 'next_maintenance',
+    'notes', 'status',
+];
+
+const FIELD_LABELS = {
+    name: 'Makine Adı',
+    type: 'Tip',
+    brand: 'Marka',
+    model_name: 'Model',
+    serial_no: 'Seri No',
+    location: 'Konum',
+    notes: 'Notlar',
+    status: 'Durum',
+    count: 'Adet',
+    category: 'Kategori',
+    sub_type: 'Alt Tip',
+};
+
+// ============================================================
+// PUT — Makine güncelle
+// ============================================================
 export async function PUT(request, { params }) {
     try {
-        const db = getDb();
         const { id } = await params;
         const body = await request.json();
 
-        // 1. Önce mevcut kaydı al (audit trail için)
-        const oldMachine = db.prepare('SELECT * FROM machines WHERE id = ?').get(id);
-        if (!oldMachine) {
+        // 1. Mevcut kaydı al (audit trail için)
+        const { data: oldMachine, error: fetchError } = await supabaseAdmin
+            .from('machines')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !oldMachine) {
             return NextResponse.json({ error: 'Makine bulunamadı' }, { status: 404 });
         }
 
-        const { name, type, brand, model_name, serial_no, location, notes, status, count, changed_by } = body;
+        // 2. Güncelleme objesi — sadece body'de gelen geçerli alanlar
+        const updateData = {};
+        for (const field of UPDATEABLE_FIELDS) {
+            if (body[field] !== undefined) {
+                updateData[field] = body[field];
+            }
+        }
 
-        // 2. Güncellemeyi yap
-        db.prepare(`UPDATE machines SET
-      name = COALESCE(?, name), type = COALESCE(?, type), brand = COALESCE(?, brand),
-      model_name = COALESCE(?, model_name), serial_no = COALESCE(?, serial_no),
-      location = COALESCE(?, location), notes = COALESCE(?, notes), status = COALESCE(?, status),
-      count = COALESCE(?, count) WHERE id = ?
-    `).run(name, type, brand, model_name, serial_no, location, notes, status, count ? parseInt(count) : null, id);
+        // count integer olmalı
+        if (updateData.count !== undefined) {
+            updateData.count = parseInt(updateData.count) || 1;
+        }
 
-        // 3. Değişen alanları audit_trail'e kaydet (SİLİNEMEZ)
-        const auditInsert = db.prepare(
-            'INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)'
-        );
+        // Boş string tarihleri null yap
+        for (const dateField of ['purchase_date', 'last_maintenance', 'next_maintenance']) {
+            if (updateData[dateField] === '') updateData[dateField] = null;
+        }
 
-        const fieldLabels = {
-            name: 'Makine Adı', type: 'Tip', brand: 'Marka',
-            model_name: 'Model', serial_no: 'Seri No', location: 'Konum',
-            notes: 'Notlar', status: 'Durum', count: 'Adet'
-        };
+        if (Object.keys(updateData).length === 0) {
+            return NextResponse.json(oldMachine);
+        }
 
-        const auditTransaction = db.transaction(() => {
-            for (const [field, label] of Object.entries(fieldLabels)) {
-                const newVal = body[field];
-                if (newVal !== undefined && newVal !== null) {
-                    const oldVal = String(oldMachine[field] || '');
-                    const newValStr = String(newVal);
-                    if (oldVal !== newValStr) {
-                        auditInsert.run('machines', String(id), label, oldVal, newValStr, changed_by || 'admin');
-                    }
+        const { data, error } = await supabaseAdmin
+            .from('machines')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        // 3. Audit trail — değişen alanları kaydet (Personnel ile aynı pattern)
+        const changed_by = body.changed_by || 'admin';
+        const auditEntries = [];
+        for (const [field, label] of Object.entries(FIELD_LABELS)) {
+            if (updateData[field] !== undefined) {
+                const oldVal = String(oldMachine[field] || '');
+                const newVal = String(updateData[field] || '');
+                if (oldVal !== newVal) {
+                    auditEntries.push({
+                        table_name: 'machines',
+                        record_id: parseInt(id),
+                        field_name: label,
+                        old_value: oldVal,
+                        new_value: newVal,
+                        changed_by,
+                    });
                 }
             }
-        });
-        auditTransaction();
+        }
+        if (auditEntries.length > 0) {
+            supabaseAdmin.from('audit_trail').insert(auditEntries).then(() => { });
+        }
 
-        const machine = db.prepare('SELECT * FROM machines WHERE id = ?').get(id);
-        return NextResponse.json(machine);
+        return NextResponse.json(data);
     } catch (error) {
+        console.error('Machines PUT error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
+// ============================================================
+// DELETE — Makine sil (soft delete — Personnel ile aynı pattern)
+// ============================================================
 export async function DELETE(request, { params }) {
     try {
-        const db = getDb();
         const { id } = await params;
-        const machine = db.prepare('SELECT * FROM machines WHERE id = ? AND deleted_at IS NULL').get(id);
-        if (!machine) return NextResponse.json({ error: 'Makina bulunamadı' }, { status: 404 });
 
-        db.prepare("UPDATE machines SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
-        db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)')
-            .run('machines', String(id), 'SOFT-DELETE', `${machine.name} (${machine.type})`, 'SİLİNDİ (geri alınabilir)', 'Koordinatör');
-        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'machines', id, `${machine.name} soft-delete`); } catch (e) { }
+        // Önce kaydı kontrol et
+        const { data: machine, error: fetchError } = await supabaseAdmin
+            .from('machines')
+            .select('*')
+            .eq('id', id)
+            .is('deleted_at', null)
+            .single();
 
-        return NextResponse.json({ success: true, message: 'Makina silindi (geri alınabilir)' });
+        if (fetchError || !machine) {
+            return NextResponse.json({ error: 'Makine bulunamadı' }, { status: 404 });
+        }
+
+        // Soft-delete
+        const { error } = await supabaseAdmin
+            .from('machines')
+            .update({
+                deleted_at: new Date().toISOString(),
+                deleted_by: 'Koordinatör',
+            })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        // Audit trail
+        supabaseAdmin.from('audit_trail').insert({
+            table_name: 'machines',
+            record_id: parseInt(id),
+            field_name: 'SOFT-DELETE',
+            old_value: `${machine.name} (${machine.type})`,
+            new_value: 'SİLİNDİ (geri alınabilir)',
+            changed_by: 'Koordinatör',
+        }).then(() => { });
+
+        return NextResponse.json({ success: true, message: 'Makine silindi (geri alınabilir)' });
     } catch (error) {
+        console.error('Machines DELETE error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -1,31 +1,31 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
-// GET — Belirli bir kayıt için düzeltme geçmişini getir
+// GET — Audit trail kayıtları
 export async function GET(request) {
     try {
-        const db = getDb();
         const { searchParams } = new URL(request.url);
         const tableName = searchParams.get('table');
         const recordId = searchParams.get('record_id');
 
-        // Tüm tabloların geçmişini getir (filtre yoksa)
-        if (!tableName && !recordId) {
-            const all = db.prepare(
-                'SELECT * FROM audit_trail ORDER BY changed_at DESC LIMIT 200'
-            ).all();
-            return NextResponse.json(all);
-        }
+        let query = supabaseAdmin
+            .from('audit_trail')
+            .select('*')
+            .order('changed_at', { ascending: false })
+            .limit(200);
 
-        if (!tableName || !recordId) {
+        if (tableName) query = query.eq('table_name', tableName);
+        if (recordId) query = query.eq('record_id', recordId);
+
+        if (!tableName && !recordId) {
+            // Tüm trail
+        } else if (!tableName || !recordId) {
             return NextResponse.json({ error: 'table ve record_id zorunlu' }, { status: 400 });
         }
 
-        const history = db.prepare(
-            'SELECT * FROM audit_trail WHERE table_name = ? AND record_id = ? ORDER BY changed_at DESC'
-        ).all(tableName, recordId);
-
-        return NextResponse.json(history);
+        const { data, error } = await query;
+        if (error) throw error;
+        return NextResponse.json(data || []);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -34,12 +34,9 @@ export async function GET(request) {
 // POST — Düzeltme kaydı ekle (5 saat kuralı ile)
 export async function POST(request) {
     try {
-        const db = getDb();
         const body = await request.json();
         const { table_name, record_id, changes, changed_by, force_log } = body;
 
-        // changes = [{ field_name, old_value, new_value }]
-        // Eski format desteği (tek alan)
         const changeList = changes || [{
             field_name: body.field_name,
             old_value: body.old_value,
@@ -50,46 +47,41 @@ export async function POST(request) {
             return NextResponse.json({ error: 'table_name ve record_id zorunlu' }, { status: 400 });
         }
 
-        // 5 SAAT KURALI: Kaydın oluşturulma zamanını kontrol et
+        // 5 SAAT KURALI
         let withinGracePeriod = false;
         if (!force_log) {
             try {
-                const record = db.prepare(
-                    `SELECT created_at FROM ${table_name} WHERE id = ?`
-                ).get(record_id);
+                const { data: rec } = await supabaseAdmin
+                    .from(table_name)
+                    .select('created_at')
+                    .eq('id', record_id)
+                    .single();
 
-                if (record && record.created_at) {
-                    const createdAt = new Date(record.created_at);
-                    const now = new Date();
-                    const hoursDiff = (now - createdAt) / (1000 * 60 * 60);
+                if (rec?.created_at) {
+                    const hoursDiff = (new Date() - new Date(rec.created_at)) / (1000 * 60 * 60);
                     withinGracePeriod = hoursDiff < 5;
                 }
-            } catch (e) {
-                // Tablo bulunamazsa loglama yap
-                withinGracePeriod = false;
-            }
+            } catch (_) { }
         }
 
         let loggedCount = 0;
 
         if (!withinGracePeriod) {
-            // 5 saatten sonra: TÜM değişiklikleri kaydet
-            const ins = db.prepare(
-                'INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)'
-            );
+            const inserts = changeList
+                .filter(c => c.old_value !== c.new_value)
+                .map(c => ({
+                    table_name,
+                    record_id: String(record_id),
+                    field_name: c.field_name,
+                    old_value: String(c.old_value ?? ''),
+                    new_value: String(c.new_value ?? ''),
+                    changed_by: changed_by || 'admin',
+                }));
 
-            for (const change of changeList) {
-                if (change.old_value !== change.new_value) {
-                    ins.run(
-                        table_name,
-                        record_id,
-                        change.field_name,
-                        String(change.old_value ?? ''),
-                        String(change.new_value ?? ''),
-                        changed_by || 'admin'
-                    );
-                    loggedCount++;
-                }
+            if (inserts.length > 0) {
+                const { error } = await supabaseAdmin.from('audit_trail').insert(inserts);
+                if (error) throw error;
+                loggedCount = inserts.length;
             }
         }
 

@@ -1,22 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
-
-function ensureTable(db) {
-    db.exec(`
-        CREATE TABLE IF NOT EXISTS personel_saat_kayitlari (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            personel_id INTEGER NOT NULL,
-            tarih DATE NOT NULL,
-            giris_saat TEXT,
-            cikis_saat TEXT,
-            net_calisma_dakika INTEGER DEFAULT 0,
-            mesai_dakika INTEGER DEFAULT 0,
-            gec_kalma_dakika INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (personel_id) REFERENCES personnel(id)
-        );
-    `);
-}
+import { supabaseAdmin } from '@/lib/supabase';
 
 function hesaplaMola(dakika) {
     if (dakika <= 120) return 0;
@@ -26,24 +9,30 @@ function hesaplaMola(dakika) {
 
 export async function GET(request) {
     try {
-        const db = getDb();
-        ensureTable(db);
         const { searchParams } = new URL(request.url);
         const tarih = searchParams.get('tarih') || new Date().toISOString().split('T')[0];
 
-        const rows = db.prepare(`
-            SELECT psk.*, p.name as personel_adi, p.role as gorev
-            FROM personel_saat_kayitlari psk
-            JOIN personnel p ON p.id = psk.personel_id
-            WHERE psk.tarih = ?
-            ORDER BY psk.personel_id
-        `).all(tarih);
+        const [{ data: kayitlar }, { data: personel }] = await Promise.all([
+            supabaseAdmin
+                .from('personel_saat_kayitlari')
+                .select(`*, personnel (name, role)`)
+                .eq('tarih', tarih)
+                .order('personel_id'),
+            supabaseAdmin
+                .from('personnel')
+                .select('id, name, role')
+                .is('deleted_at', null)
+                .order('name'),
+        ]);
 
-        const tumPersonel = db.prepare(
-            "SELECT id, name, role FROM personnel WHERE deleted_at IS NULL ORDER BY name"
-        ).all();
+        const formatted = (kayitlar || []).map(r => ({
+            ...r,
+            personel_adi: r.personnel?.name,
+            gorev: r.personnel?.role,
+            personnel: undefined,
+        }));
 
-        return NextResponse.json({ kayitlar: rows, personel: tumPersonel });
+        return NextResponse.json({ kayitlar: formatted, personel: personel || [] });
     } catch (e) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }
@@ -51,25 +40,28 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
-        const db = getDb();
-        ensureTable(db);
         const { personel_id, tip } = await request.json();
         const simdi = new Date();
         const tarih = simdi.toISOString().split('T')[0];
         const saat = simdi.toTimeString().split(' ')[0].substring(0, 5);
 
-        const mevcut = db.prepare(
-            'SELECT * FROM personel_saat_kayitlari WHERE personel_id=? AND tarih=?'
-        ).get(personel_id, tarih);
+        const { data: mevcut } = await supabaseAdmin
+            .from('personel_saat_kayitlari')
+            .select('*')
+            .eq('personel_id', parseInt(personel_id))
+            .eq('tarih', tarih)
+            .single();
 
         if (tip === 'giris') {
             if (mevcut) {
-                db.prepare('UPDATE personel_saat_kayitlari SET giris_saat=? WHERE id=?')
-                    .run(saat, mevcut.id);
+                await supabaseAdmin
+                    .from('personel_saat_kayitlari')
+                    .update({ giris_saat: saat })
+                    .eq('id', mevcut.id);
             } else {
-                db.prepare(
-                    'INSERT INTO personel_saat_kayitlari (personel_id, tarih, giris_saat) VALUES (?,?,?)'
-                ).run(personel_id, tarih, saat);
+                await supabaseAdmin
+                    .from('personel_saat_kayitlari')
+                    .insert({ personel_id: parseInt(personel_id), tarih, giris_saat: saat });
             }
         } else if (tip === 'cikis' && mevcut?.giris_saat) {
             const [gh, gm] = mevcut.giris_saat.split(':').map(Number);
@@ -80,11 +72,10 @@ export async function POST(request) {
             const mesaiDk = Math.max(0, (gh * 60 + gm + netDk) - (17 * 60 + 30));
             const gecDk = Math.max(0, (gh * 60 + gm) - (8 * 60));
 
-            db.prepare(`
-                UPDATE personel_saat_kayitlari 
-                SET cikis_saat=?, net_calisma_dakika=?, mesai_dakika=?, gec_kalma_dakika=?
-                WHERE id=?
-            `).run(saat, netDk, mesaiDk, gecDk, mevcut.id);
+            await supabaseAdmin
+                .from('personel_saat_kayitlari')
+                .update({ cikis_saat: saat, net_calisma_dakika: netDk, mesai_dakika: mesaiDk, gec_kalma_dakika: gecDk })
+                .eq('id', mevcut.id);
         }
 
         return NextResponse.json({ success: true, saat });

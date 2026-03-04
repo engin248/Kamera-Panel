@@ -2,8 +2,20 @@
 
 > **Sekme ID:** `models`
 > **Bot:** 🛠️ Tekniker (DeepSeek Chat)
-> **Son Güncelleme:** 2026-03-01
+> **Son Güncelleme:** 2026-03-03
 > **Bu dosya:** Modeller botu için tek bilgi kaynağı
+
+---
+
+## ⚠️ ANTİGRAVİTY ANALİZ NOTU (2026-03-03)
+
+| # | Eksik | Önem | Düzeltime |
+|---|-------|------|----------|
+| 1 | Operasyon standart süresi yok — prim hesabının temeli eksik | Kritik | TODO eklendi |
+| 2 | Kumaş/hammadde bağlantısı yok — Kartela platformuyla kopuk | Yüksek | TODO eklendi |
+| 3 | 5. pencere (Rapor) İçin veri çıkışı tanımlı değil | Orta | Cross-tab güncellendi |
+| 4 | Supabase geçiş hazırlığı yok | Yüksek | Supabase notu eklendi |
+| 5 | Model timeline (prototip→numune→seri) hala TODO | Orta | Mevcut |
 
 ---
 
@@ -12,6 +24,9 @@
 Her konfeksiyon modelinin teknik kartını tutmak.
 Beden, renk, operasyon, parça listesi, dikim detayları — hepsi burada.
 Bu bilgiler çalışanlara iş verirken temel alınır.
+
+**Vizyon Prensibi:** Operasyonun standart süresi ve birim değeri burada tanımlanır.
+Prim hesabı bu değerlerle gerçekleşir. Doğru tanım → Adil ücret.
 
 ---
 
@@ -27,11 +42,12 @@ UZMANLIĞIN:
 - Kalite kriterleri ve zor noktalar
 - Müşteri talepleri ve teslim tarihi
 - Fason fiyat ve zorluk puanı
+- Prim hesabı ve adil ücretlendirme
 
 TARZIN: Teknik, adım adım. Üretim verimliliğine odaklan.
 DİL: Türkçe. Teknik ama anlaşılır. Max 5-6 cümle.
 
-KURAL: Model verisini detaylı analiz et. Eksik varsa söyle.
+KURAL: Model verisini detaylı analiz et. Eksik varsa söyle. Prim hesabı için operasyon sürelerini ve birim değerlerini kullan.
 ```
 
 ---
@@ -100,10 +116,15 @@ KURAL: Model verisini detaylı analiz et. Eksik varsa söyle.
 ## 🔲 YAPILMASI PLANLANANLAR
 
 - [ ] TODO: Operasyon eğitim videosu tam entegrasyonu
-- [ ] TODO: Tedarikçi/kumaş bağlantısı (fabric_supplier alanı)
+- [ ] **TODO (KRİTİK): Operasyon standart süre alanı** — her operasyon için süre (dk/adet) girilmeli, prim hesabı buradan gelir
+- [ ] **TODO (KRİTİK): Birim değer alanı** — operasyon başına TL değeri — `operations` tablosunda olmalı
+- [ ] TODO: Prim hesabı entegrasyonu (operasyon süreleri ve birim değerleri ile)
+- [ ] TODO: Tedarikçi/kumaş bağlantısı (fabric_supplier alanı — Kartela Platformuyla entegre)
 - [ ] TODO: Model şablondan kopyalama özelliği
 - [ ] TODO: Beden tablosu (ölçü grafiği)
 - [ ] TODO: Model timeline (prototip → numune → seri üretim)
+- [ ] TODO: 5. Pencere (Rapor) için veri hazırlığı ve görselleştirme
+- [ ] TODO: Supabase geçiş — `models` ve `operations` tabloları Supabase'e taşınacak
 
 ---
 
@@ -128,6 +149,7 @@ KURAL: Model verisini detaylı analiz et. Eksik varsa söyle.
 | **Maliyet** | `cost_entries` | `model_id` FK — model bazlı maliyet |
 | **Sevkiyat** | `shipments` | `model_id` FK — hangi modeli sevk ettik |
 | **Müşteriler** | `customers` | `customer_id` FK — kim sipariş verdi |
+| **5. Pencere (Rapor)** | `production_logs + cost_entries` | Model başına verimlilik + kar analizi |
 
 ---
 

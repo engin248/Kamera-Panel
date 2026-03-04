@@ -1,35 +1,38 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
-// GET — Çalışma çizelgesi ve aylık çalışma günlerini getir
+// GET — Çalışma takvimi / aylık çalışma günleri
 export async function GET(request) {
     try {
-        const db = getDb();
         const { searchParams } = new URL(request.url);
         const type = searchParams.get('type'); // 'schedule' | 'workdays'
         const year = searchParams.get('year') || new Date().getFullYear();
 
         if (type === 'workdays') {
-            const workDays = db.prepare(
-                'SELECT * FROM monthly_work_days WHERE year = ? ORDER BY month'
-            ).all(year);
-            return NextResponse.json(workDays);
+            const { data, error } = await supabaseAdmin
+                .from('monthly_work_days')
+                .select('*')
+                .eq('year', parseInt(year))
+                .order('month');
+            if (error) throw error;
+            return NextResponse.json(data || []);
         }
 
-        // Default: mola çizelgesi
-        const schedule = db.prepare(
-            'SELECT * FROM work_schedule ORDER BY order_number'
-        ).all();
-        return NextResponse.json(schedule);
+        // Default: mola/çalışma çizelgesi
+        const { data, error } = await supabaseAdmin
+            .from('work_schedule')
+            .select('*')
+            .order('order_number');
+        if (error) throw error;
+        return NextResponse.json(data || []);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-// PUT — Aylık çalışma günü güncelle veya mola çizelgesi güncelle
+// PUT — Çalışma günü veya çizelge güncelle
 export async function PUT(request) {
     try {
-        const db = getDb();
         const body = await request.json();
 
         if (body.type === 'workdays') {
@@ -37,18 +40,22 @@ export async function PUT(request) {
             if (!year || !month || !work_days) {
                 return NextResponse.json({ error: 'Yıl, ay ve çalışma günü zorunlu' }, { status: 400 });
             }
-            db.prepare(
-                'INSERT OR REPLACE INTO monthly_work_days (year, month, work_days) VALUES (?, ?, ?)'
-            ).run(year, month, work_days);
+            const { error } = await supabaseAdmin
+                .from('monthly_work_days')
+                .upsert({ year: parseInt(year), month: parseInt(month), work_days: parseInt(work_days) },
+                    { onConflict: 'year,month' });
+            if (error) throw error;
             return NextResponse.json({ success: true });
         }
 
         if (body.type === 'schedule') {
             const { id, name, start_time, end_time } = body;
             if (!id) return NextResponse.json({ error: 'ID zorunlu' }, { status: 400 });
-            db.prepare(
-                'UPDATE work_schedule SET name = ?, start_time = ?, end_time = ? WHERE id = ?'
-            ).run(name, start_time, end_time, id);
+            const { error } = await supabaseAdmin
+                .from('work_schedule')
+                .update({ name, start_time, end_time })
+                .eq('id', id);
+            if (error) throw error;
             return NextResponse.json({ success: true });
         }
 

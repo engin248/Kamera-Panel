@@ -1,38 +1,38 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
+
+const SHIPMENT_FIELDS = ['status', 'tracking_no', 'notes', 'cargo_company', 'destination', 'quantity'];
 
 export async function PUT(request, { params }) {
     try {
-        const db = getDb();
         const { id } = await params;
         const body = await request.json();
 
-        const oldShipment = db.prepare('SELECT * FROM shipments WHERE id = ?').get(id);
-        if (!oldShipment) return NextResponse.json({ error: 'Sevkiyat bulunamadı' }, { status: 404 });
+        const { data: existing } = await supabaseAdmin.from('shipments').select('*').eq('id', id).single();
+        if (!existing) return NextResponse.json({ error: 'Sevkiyat bulunamadı' }, { status: 404 });
 
-        const { status, tracking_no, notes, changed_by } = body;
+        const updateData = {};
+        for (const f of SHIPMENT_FIELDS) {
+            if (body[f] !== undefined) updateData[f] = body[f];
+        }
 
-        db.prepare(`UPDATE shipments SET
-      status = COALESCE(?, status), tracking_no = COALESCE(?, tracking_no),
-      notes = COALESCE(?, notes) WHERE id = ?
-    `).run(status, tracking_no, notes, id);
+        const { data, error } = await supabaseAdmin.from('shipments').update(updateData).eq('id', id).select().single();
+        if (error) throw error;
 
-        const auditInsert = db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)');
-        const fieldLabels = { status: 'Durum', tracking_no: 'Takip No', notes: 'Notlar' };
-        const auditTransaction = db.transaction(() => {
-            for (const [field, label] of Object.entries(fieldLabels)) {
-                const newVal = body[field];
-                if (newVal !== undefined && newVal !== null) {
-                    const oldVal = String(oldShipment[field] || '');
-                    const newValStr = String(newVal);
-                    if (oldVal !== newValStr) auditInsert.run('shipments', String(id), label, oldVal, newValStr, changed_by || 'admin');
+        // Audit trail
+        try {
+            for (const f of Object.keys(updateData)) {
+                if (String(existing[f] || '') !== String(updateData[f] || '')) {
+                    await supabaseAdmin.from('audit_trail').insert({
+                        table_name: 'shipments', record_id: parseInt(id), field_name: f,
+                        old_value: String(existing[f] || ''), new_value: String(updateData[f] || ''),
+                        changed_by: body.changed_by || 'admin',
+                    });
                 }
             }
-        });
-        auditTransaction();
+        } catch (_) { }
 
-        const shipment = db.prepare('SELECT * FROM shipments WHERE id = ?').get(id);
-        return NextResponse.json(shipment);
+        return NextResponse.json(data);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -40,16 +40,15 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
     try {
-        const db = getDb();
         const { id } = await params;
-        const shipment = db.prepare('SELECT * FROM shipments WHERE id = ? AND deleted_at IS NULL').get(id);
-        if (!shipment) return NextResponse.json({ error: 'Sevkiyat bulunamadı' }, { status: 404 });
+        const { data: existing } = await supabaseAdmin
+            .from('shipments').select('id').eq('id', id).is('deleted_at', null).single();
+        if (!existing) return NextResponse.json({ error: 'Sevkiyat bulunamadı' }, { status: 404 });
 
-        db.prepare("UPDATE shipments SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
-        db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)')
-            .run('shipments', String(id), 'SOFT-DELETE', JSON.stringify({ tracking: shipment.tracking_no, status: shipment.status }), 'SİLİNDİ (geri alınabilir)', 'Koordinatör');
-        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'shipments', id, `Sevkiyat #${id} soft-delete`); } catch (e) { }
-
+        const { error } = await supabaseAdmin.from('shipments').update({
+            deleted_at: new Date().toISOString(), deleted_by: 'admin',
+        }).eq('id', id);
+        if (error) throw error;
         return NextResponse.json({ success: true, message: 'Sevkiyat silindi (geri alınabilir)' });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });

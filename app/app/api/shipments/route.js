@@ -1,34 +1,71 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
-export async function GET() {
+// ============================================================
+// GET — Sevkiyat listesi
+// ============================================================
+export async function GET(request) {
     try {
-        const db = getDb();
-        const shipments = db.prepare(`
-      SELECT s.*, m.name as model_name, m.code as model_code, c.name as customer_name
-      FROM shipments s
-      JOIN models m ON s.model_id = m.id
-      LEFT JOIN customers c ON s.customer_id = c.id
-      ORDER BY s.created_at DESC
-    `).all();
+        const { searchParams } = new URL(request.url);
+        const status = searchParams.get('status');
+        const model_id = searchParams.get('model_id');
+
+        let query = supabaseAdmin
+            .from('shipments')
+            .select(`*, models (name, code), customers (name)`)
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false });
+
+        if (status) query = query.eq('status', status);
+        if (model_id) query = query.eq('model_id', parseInt(model_id));
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const shipments = (data || []).map(row => ({
+            ...row,
+            model_name: row.models?.name,
+            model_code: row.models?.code,
+            customer_name: row.customers?.name,
+            models: undefined, customers: undefined,
+        }));
+
         return NextResponse.json(shipments);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
+// ============================================================
+// POST — Yeni sevkiyat
+// ============================================================
 export async function POST(request) {
     try {
-        const db = getDb();
         const body = await request.json();
         const { model_id, customer_id, quantity, shipment_date, tracking_no, cargo_company, destination, notes, status } = body;
-        if (!model_id || !quantity) return NextResponse.json({ error: 'Model ve adet zorunlu' }, { status: 400 });
-        const result = db.prepare(`
-      INSERT INTO shipments (model_id, customer_id, quantity, shipment_date, tracking_no, cargo_company, destination, notes, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(model_id, customer_id || null, quantity, shipment_date || '', tracking_no || '', cargo_company || '', destination || '', notes || '', status || 'hazirlaniyor');
-        const shipment = db.prepare('SELECT * FROM shipments WHERE id = ?').get(result.lastInsertRowid);
-        return NextResponse.json(shipment, { status: 201 });
+
+        if (!model_id || !quantity) {
+            return NextResponse.json({ error: 'Model ve adet zorunlu' }, { status: 400 });
+        }
+
+        const { data, error } = await supabaseAdmin
+            .from('shipments')
+            .insert({
+                model_id: parseInt(model_id),
+                customer_id: customer_id || null,
+                quantity: parseInt(quantity),
+                shipment_date: shipment_date || null,
+                tracking_no: tracking_no || '',
+                cargo_company: cargo_company || '',
+                destination: destination || '',
+                notes: notes || '',
+                status: status || 'hazirlaniyor',
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return NextResponse.json(data, { status: 201 });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

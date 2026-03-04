@@ -1,203 +1,153 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
-// GET — Belirli modeli getir
+const VALID_COLUMNS = new Set([
+    'name', 'code', 'order_no', 'modelist', 'customer', 'customer_id', 'description',
+    'fabric_type', 'sizes', 'size_range', 'total_order', 'total_order_text', 'completed_count',
+    'fason_price', 'fason_price_text', 'model_difficulty',
+    'front_image', 'back_image', 'measurement_table',
+    'delivery_date', 'work_start_date', 'post_sewing', 'status',
+    'garni', 'color_count', 'color_details', 'size_count', 'size_distribution', 'asorti',
+    'total_operations', 'piece_count', 'piece_count_details',
+    'op_kesim_count', 'op_kesim_details', 'op_dikim_count', 'op_dikim_details',
+    'op_utu_paket_count', 'op_utu_paket_details', 'op_nakis_count', 'op_nakis_details',
+    'op_yikama_count', 'op_yikama_details',
+    'has_lining', 'lining_pieces', 'has_interlining', 'interlining_parts', 'interlining_count',
+    'difficult_points', 'critical_points', 'customer_requests',
+    'cutting_info', 'accessory_info', 'label_info',
+]);
+
+const DATE_FIELDS = ['delivery_date', 'work_start_date'];
+const JSON_FIELDS = ['measurement_table'];
+
+function sanitizeData(data) {
+    const out = {};
+    for (const [k, v] of Object.entries(data)) {
+        if (!VALID_COLUMNS.has(k)) continue;
+        if (DATE_FIELDS.includes(k)) { out[k] = v === '' ? null : v; continue; }
+        if (JSON_FIELDS.includes(k) && typeof v === 'string') {
+            try { out[k] = JSON.parse(v); } catch { out[k] = v; }
+            continue;
+        }
+        out[k] = v;
+    }
+    return out;
+}
+
+// GET — Tek model + operasyonları
 export async function GET(request, { params }) {
     try {
-        const db = getDb();
         const { id } = await params;
-        const model = db.prepare('SELECT * FROM models WHERE id = ?').get(id);
-        if (!model) {
-            return NextResponse.json({ error: 'Model bulunamadı' }, { status: 404 });
-        }
-        const operations = db.prepare(
-            'SELECT * FROM operations WHERE model_id = ? ORDER BY order_number'
-        ).all(id);
-        return NextResponse.json({ ...model, operations });
+
+        const { data: model, error: mErr } = await supabaseAdmin
+            .from('models')
+            .select('*')
+            .eq('id', id)
+            .is('deleted_at', null)
+            .single();
+
+        if (mErr || !model) return NextResponse.json({ error: 'Model bulunamadı' }, { status: 404 });
+
+        const { data: operations } = await supabaseAdmin
+            .from('operations')
+            .select('*')
+            .eq('model_id', id)
+            .order('order_number', { ascending: true });
+
+        return NextResponse.json({ ...model, operations: operations || [] });
     } catch (error) {
+        console.error('Models [id] GET error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-// PUT — Model güncelle + Audit Trail kaydı
+// PUT — Model güncelle
 export async function PUT(request, { params }) {
     try {
-        const db = getDb();
         const { id } = await params;
         const body = await request.json();
 
-        // 1. Önce mevcut kaydı al (eski değerler için)
-        const oldModel = db.prepare('SELECT * FROM models WHERE id = ?').get(id);
-        if (!oldModel) {
-            return NextResponse.json({ error: 'Model bulunamadı' }, { status: 404 });
-        }
+        const { data: oldModel, error: fetchErr } = await supabaseAdmin
+            .from('models')
+            .select('*')
+            .eq('id', id)
+            .is('deleted_at', null)
+            .single();
 
-        const {
-            name, code, order_no, modelist, customer, description,
-            fabric_type, sizes, size_range, total_order, total_order_text, completed_count,
-            fason_price, fason_price_text, model_difficulty, measurement_table,
-            delivery_date, work_start_date, post_sewing, status,
-            garni, color_count, color_details, size_count, size_distribution, asorti,
-            total_operations, piece_count, piece_count_details,
-            op_kesim_count, op_kesim_details, op_dikim_count, op_dikim_details,
-            op_utu_paket_count, op_utu_paket_details, op_nakis_count, op_nakis_details,
-            op_yikama_count, op_yikama_details,
-            has_lining, lining_pieces, has_interlining, interlining_parts, interlining_count,
-            difficult_points, critical_points, customer_requests,
-            cutting_info, accessory_info, label_info,
-            changed_by
-        } = body;
+        if (fetchErr || !oldModel) return NextResponse.json({ error: 'Model bulunamadı' }, { status: 404 });
 
-        // 2. Güncellemeyi yap
-        db.prepare(`
-      UPDATE models SET
-        name = COALESCE(?, name),
-        code = COALESCE(?, code),
-        order_no = COALESCE(?, order_no),
-        modelist = COALESCE(?, modelist),
-        customer = COALESCE(?, customer),
-        description = COALESCE(?, description),
-        fabric_type = COALESCE(?, fabric_type),
-        sizes = COALESCE(?, sizes),
-        size_range = COALESCE(?, size_range),
-        total_order = COALESCE(?, total_order),
-        total_order_text = COALESCE(?, total_order_text),
-        completed_count = COALESCE(?, completed_count),
-        fason_price = COALESCE(?, fason_price),
-        fason_price_text = COALESCE(?, fason_price_text),
-        model_difficulty = COALESCE(?, model_difficulty),
-        measurement_table = COALESCE(?, measurement_table),
-        delivery_date = COALESCE(?, delivery_date),
-        work_start_date = COALESCE(?, work_start_date),
-        post_sewing = COALESCE(?, post_sewing),
-        status = COALESCE(?, status),
-        garni = COALESCE(?, garni),
-        color_count = COALESCE(?, color_count),
-        color_details = COALESCE(?, color_details),
-        size_count = COALESCE(?, size_count),
-        size_distribution = COALESCE(?, size_distribution),
-        asorti = COALESCE(?, asorti),
-        total_operations = COALESCE(?, total_operations),
-        piece_count = COALESCE(?, piece_count),
-        piece_count_details = COALESCE(?, piece_count_details),
-        op_kesim_count = COALESCE(?, op_kesim_count),
-        op_kesim_details = COALESCE(?, op_kesim_details),
-        op_dikim_count = COALESCE(?, op_dikim_count),
-        op_dikim_details = COALESCE(?, op_dikim_details),
-        op_utu_paket_count = COALESCE(?, op_utu_paket_count),
-        op_utu_paket_details = COALESCE(?, op_utu_paket_details),
-        op_nakis_count = COALESCE(?, op_nakis_count),
-        op_nakis_details = COALESCE(?, op_nakis_details),
-        op_yikama_count = COALESCE(?, op_yikama_count),
-        op_yikama_details = COALESCE(?, op_yikama_details),
-        has_lining = COALESCE(?, has_lining),
-        lining_pieces = COALESCE(?, lining_pieces),
-        has_interlining = COALESCE(?, has_interlining),
-        interlining_parts = COALESCE(?, interlining_parts),
-        interlining_count = COALESCE(?, interlining_count),
-        difficult_points = COALESCE(?, difficult_points),
-        critical_points = COALESCE(?, critical_points),
-        customer_requests = COALESCE(?, customer_requests),
-        cutting_info = COALESCE(?, cutting_info),
-        accessory_info = COALESCE(?, accessory_info),
-        label_info = COALESCE(?, label_info),
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `).run(
-            name, code, order_no, modelist, customer, description,
-            fabric_type, sizes, size_range, total_order, total_order_text, completed_count,
-            fason_price, fason_price_text, model_difficulty, measurement_table,
-            delivery_date, work_start_date, post_sewing, status,
-            garni, color_count, color_details, size_count, size_distribution, asorti,
-            total_operations, piece_count, piece_count_details,
-            op_kesim_count, op_kesim_details, op_dikim_count, op_dikim_details,
-            op_utu_paket_count, op_utu_paket_details, op_nakis_count, op_nakis_details,
-            op_yikama_count, op_yikama_details,
-            has_lining, lining_pieces, has_interlining, interlining_parts, interlining_count,
-            difficult_points, critical_points, customer_requests,
-            cutting_info, accessory_info, label_info,
-            id
-        );
+        const updateData = sanitizeData(body);
+        if (!Object.keys(updateData).length) return NextResponse.json(oldModel);
 
-        // 3. Değişen alanları audit_trail'e kaydet (SİLİNEMEZ)
-        const auditInsert = db.prepare(
-            'INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)'
-        );
+        const { data: updated, error } = await supabaseAdmin
+            .from('models')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
 
-        const fieldLabels = {
-            name: 'Model Adı', code: 'Model Kodu', order_no: 'Sipariş No',
-            modelist: 'Modelist', customer: 'Müşteri', description: 'Açıklama',
-            fabric_type: 'Kumaş Tipi', sizes: 'Bedenler', size_range: 'Beden Aralığı',
-            total_order: 'Sipariş Adeti', total_order_text: 'Sipariş Açıklaması',
-            completed_count: 'Tamamlanan',
-            fason_price: 'Fason Fiyatı', fason_price_text: 'Fason Fiyat Açıklaması',
-            model_difficulty: 'Zorluk',
-            measurement_table: 'Ölçü Tablosu',
-            delivery_date: 'Sevk Tarihi', work_start_date: 'İşe Başlama',
-            post_sewing: 'Dikimden Sonra', status: 'Durum',
-            garni: 'Garni', color_count: 'Renk Sayısı', color_details: 'Renk Detayları',
-            size_count: 'Beden Sayısı', size_distribution: 'Beden Dağılımı',
-            asorti: 'Asorti', total_operations: 'Toplam Operasyon',
-            piece_count: 'Parça Sayısı', piece_count_details: 'Parça Detayları',
-            op_kesim_count: 'Kesim Op. Adedi', op_kesim_details: 'Kesim Op. Detayı',
-            op_dikim_count: 'Dikim Op. Adedi', op_dikim_details: 'Dikim Op. Detayı',
-            op_utu_paket_count: 'Ütü-Paket Op. Adedi', op_utu_paket_details: 'Ütü-Paket Op. Detayı',
-            op_nakis_count: 'Nakış Op. Adedi', op_nakis_details: 'Nakış Op. Detayı',
-            op_yikama_count: 'Yıkama Op. Adedi', op_yikama_details: 'Yıkama Op. Detayı',
-            has_lining: 'Astar', lining_pieces: 'Astar Parça',
-            has_interlining: 'Tela', interlining_parts: 'Tela Parçaları', interlining_count: 'Tela Parça Sayısı',
-            difficult_points: 'Zor Noktalar', critical_points: 'Kritik Noktalar',
-            customer_requests: 'Müşteri Talepleri',
-            cutting_info: 'Kesim Bilgileri',
-            accessory_info: 'Aksesuar Bilgileri',
-            label_info: 'Etiket Bilgileri'
-        };
+        if (error) throw error;
 
-        // Her değişen alanı kaydet
-        const fieldsToCheck = Object.keys(fieldLabels);
-        const auditTransaction = db.transaction(() => {
-            for (const field of fieldsToCheck) {
-                const newVal = body[field];
-                if (newVal !== undefined && newVal !== null) {
-                    const oldVal = String(oldModel[field] || '');
-                    const newValStr = String(newVal);
-                    if (oldVal !== newValStr) {
-                        auditInsert.run(
-                            'models',
-                            String(id),
-                            fieldLabels[field] || field,
-                            oldVal,
-                            newValStr,
-                            changed_by || 'admin'
-                        );
-                    }
-                }
+        // Audit trail
+        const changed_by = body.changed_by || 'admin';
+        try {
+            const auditRows = Object.keys(updateData)
+                .filter(f => String(oldModel[f] ?? '') !== String(updateData[f] ?? ''))
+                .map(f => ({
+                    table_name: 'models',
+                    record_id: parseInt(id),
+                    field_name: f,
+                    old_value: String(oldModel[f] ?? ''),
+                    new_value: String(updateData[f] ?? ''),
+                    changed_by,
+                }));
+            if (auditRows.length) {
+                await supabaseAdmin.from('audit_trail').insert(auditRows);
             }
-        });
-        auditTransaction();
+        } catch (_) { }
 
-        const model = db.prepare('SELECT * FROM models WHERE id = ?').get(id);
-        return NextResponse.json(model);
+        return NextResponse.json(updated);
     } catch (error) {
+        console.error('Models PUT error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-// DELETE — Model soft-delete
+// DELETE — Soft delete
 export async function DELETE(request, { params }) {
     try {
-        const db = getDb();
         const { id } = await params;
-        const model = db.prepare('SELECT * FROM models WHERE id = ? AND deleted_at IS NULL').get(id);
-        if (!model) return NextResponse.json({ error: 'Model bulunamadı' }, { status: 404 });
 
-        db.prepare("UPDATE models SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
-        db.prepare('INSERT INTO audit_trail (table_name, record_id, field_name, old_value, new_value, changed_by) VALUES (?, ?, ?, ?, ?, ?)')
-            .run('models', String(id), 'SOFT-DELETE', `${model.name} (${model.code})`, 'SİLİNDİ (geri alınabilir)', 'Koordinatör');
-        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'models', id, `${model.name} soft-delete`); } catch (e) { }
+        const { data: model, error: fetchErr } = await supabaseAdmin
+            .from('models')
+            .select('id, name, code')
+            .eq('id', id)
+            .is('deleted_at', null)
+            .single();
 
-        return NextResponse.json({ success: true, message: 'Model silindi (geri alınabilir)' });
+        if (fetchErr || !model) return NextResponse.json({ error: 'Model bulunamadı' }, { status: 404 });
+
+        const { error } = await supabaseAdmin
+            .from('models')
+            .update({ deleted_at: new Date().toISOString(), deleted_by: 'admin' })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        try {
+            await supabaseAdmin.from('audit_trail').insert({
+                table_name: 'models',
+                record_id: parseInt(id),
+                field_name: 'SOFT-DELETE',
+                old_value: `${model.name} (${model.code})`,
+                new_value: 'SİLİNDİ',
+                changed_by: 'admin',
+            });
+        } catch (_) { }
+
+        return NextResponse.json({ success: true });
     } catch (error) {
+        console.error('Models DELETE error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

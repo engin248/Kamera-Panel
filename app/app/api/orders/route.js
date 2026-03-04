@@ -1,74 +1,103 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
+import { checkAuth, logActivity } from '@/lib/auth';
 
+const PRIORITY_ORDER = { acil: 1, yuksek: 2, normal: 3, dusuk: 4 };
+
+// ============================================================
+// GET — Sipariş listesi
+// ============================================================
 export async function GET(request) {
     try {
-        const db = getDb();
         const { searchParams } = new URL(request.url);
         const archived = searchParams.get('archived') === '1';
-        const whereClause = archived ? 'WHERE o.deleted_at IS NOT NULL' : 'WHERE o.deleted_at IS NULL';
-        const orders = db.prepare(`
-      SELECT o.*, c.name as c_name, c.company as c_company, m.name as m_name, m.code as m_code
-      FROM orders o
-      LEFT JOIN customers c ON o.customer_id = c.id
-      LEFT JOIN models m ON o.model_id = m.id
-      ${whereClause}
-      ORDER BY 
-        CASE o.priority WHEN 'acil' THEN 1 WHEN 'yuksek' THEN 2 WHEN 'normal' THEN 3 WHEN 'dusuk' THEN 4 END,
-        o.created_at DESC
-    `).all();
+        const status = searchParams.get('status');
+        const model_id = searchParams.get('model_id');
+        const customer_id = searchParams.get('customer_id');
+
+        let query = supabaseAdmin
+            .from('orders')
+            .select(`*, customers (name, company), models (name, code)`)
+            .order('created_at', { ascending: false });
+
+        if (archived) {
+            query = query.not('deleted_at', 'is', null);
+        } else {
+            query = query.is('deleted_at', null);
+        }
+        if (status) query = query.eq('status', status);
+        if (model_id) query = query.eq('model_id', parseInt(model_id));
+        if (customer_id) query = query.eq('customer_id', parseInt(customer_id));
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        // Düzleştir + öncelik sırala
+        const orders = (data || [])
+            .map(row => ({
+                ...row,
+                c_name: row.customers?.name,
+                c_company: row.customers?.company,
+                m_name: row.models?.name,
+                m_code: row.models?.code,
+                customers: undefined, models: undefined,
+            }))
+            .sort((a, b) => (PRIORITY_ORDER[a.priority] || 9) - (PRIORITY_ORDER[b.priority] || 9));
+
         return NextResponse.json(orders);
-    } catch (err) {
-        return NextResponse.json({ error: err.message }, { status: 500 });
+    } catch (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
+// ============================================================
+// POST — Yeni sipariş
+// ============================================================
 export async function POST(request) {
     try {
-        const db = getDb();
+        // 🔒 Yetki kontrolü
+        const user = await checkAuth(request, 'POST');
+        if (!user) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+        if (user._forbidden) return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 });
+
         const body = await request.json();
 
-        const count = db.prepare('SELECT COUNT(*) as cnt FROM orders').get().cnt;
-        const orderNo = body.order_no || `SIP-${String(count + 1).padStart(4, '0')}`;
+        // Sipariş no: otomatik oluştur
+        let orderNo = body.order_no;
+        if (!orderNo) {
+            const { count } = await supabaseAdmin.from('orders').select('*', { count: 'exact', head: true });
+            orderNo = `SIP-${String((count || 0) + 1).padStart(4, '0')}`;
+        }
+
         const totalPrice = (parseFloat(body.quantity) || 0) * (parseFloat(body.unit_price) || 0);
 
-        const result = db.prepare(`
-      INSERT INTO orders (order_no, customer_id, customer_name, model_id, model_name, quantity, unit_price, total_price, delivery_date, priority, fabric_type, color, sizes, notes, status, product_image, model_description, size_distribution, color_details, accessories, lining_info, packaging, label_info, washing_instructions, sample_status, quality_criteria, stitch_details, delivery_method, special_requests)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-            orderNo,
-            body.customer_id || null,
-            body.customer_name || '',
-            body.model_id || null,
-            body.model_name || '',
-            parseInt(body.quantity) || 0,
-            parseFloat(body.unit_price) || 0,
-            totalPrice,
-            body.delivery_date || null,
-            body.priority || 'normal',
-            body.fabric_type || '',
-            body.color || '',
-            body.sizes || '',
-            body.notes || '',
-            body.status || 'siparis_alindi',
-            body.product_image || '',
-            body.model_description || '',
-            body.size_distribution || '',
-            body.color_details || '',
-            body.accessories || '',
-            body.lining_info || '',
-            body.packaging || '',
-            body.label_info || '',
-            body.washing_instructions || '',
-            body.sample_status || 'yok',
-            body.quality_criteria || '',
-            body.stitch_details || '',
-            body.delivery_method || '',
-            body.special_requests || ''
-        );
+        const insertData = {
+            order_no: orderNo,
+            customer_id: body.customer_id || null,
+            customer_name: body.customer_name || '',
+            model_id: body.model_id || null,
+            model_name: body.model_name || '',
+            quantity: parseInt(body.quantity) || 0,
+            unit_price: parseFloat(body.unit_price) || 0,
+            total_price: totalPrice,
+            delivery_date: body.delivery_date || null,
+            priority: body.priority || 'normal',
+            fabric_type: body.fabric_type || '',
+            color: body.color || '',
+            sizes: body.sizes || '',
+            notes: body.notes || '',
+            status: body.status || 'siparis_alindi',
+        };
 
-        return NextResponse.json({ id: result.lastInsertRowid, order_no: orderNo });
-    } catch (err) {
-        return NextResponse.json({ error: err.message }, { status: 500 });
+        const { data, error } = await supabaseAdmin
+            .from('orders')
+            .insert(insertData)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return NextResponse.json(data, { status: 201 });
+    } catch (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

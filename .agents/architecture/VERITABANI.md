@@ -3,11 +3,14 @@
 > **SQLite Dosyası:** `app/data/kamera-panel.db`  
 > **Motor:** SQLite (better-sqlite3) + ☁️ Supabase PostgreSQL  
 > **Pragma:** WAL mode + Foreign Keys ON  
-> **Son Güncelleme:** 2026-03-02
+> **Son Güncelleme:** 2026-03-03
 
-> ⚠️ **Hibrit Mimari (2026-03-02'den itibaren):**  
-> `personnel` tablosu → **Supabase PostgreSQL** (`cauptlsnqieegdrgotob.supabase.co`)  
-> Diğer tüm tablolar → **SQLite** (yerel dosya)
+> ⚠️ **Supabase Geçiş Süreci (2026-03-03'ten itibaren):**  
+> Tüm tablolar → **Supabase PostgreSQL** hedefliyor  
+> `personnel` → ✅ Zaten Supabase'de  
+> `machines` → ✅ API Supabase'e çevrildi  
+> `models`, `operations`, `production_logs`, `cost_entries`, `business_expenses` → ✅ API Supabase'e çevrildi  
+> Yeni tablolar: `prim_kayitlari`, `kar_zarar_ozet`, `karar_arsivi` → SQL hazır
 
 ---
 
@@ -159,13 +162,21 @@ P1-P11 kriterli tam personel profili.
 
 ---
 
-## 🔄 HİBRİT MİMARİ DURUMU (2026-03-02)
+## 🔄 SUPABASE GEÇİŞ DURUMU (2026-03-03)
 
-| Tablo | Motor | Durum |
-|-------|-------|-------|
-| `personnel` | ☁️ Supabase PostgreSQL | ✅ Taşındı |
-| `models` | SQLite | Bekliyor |
-| `operations` | SQLite | Bekliyor |
-| `production_logs` | SQLite | Bekliyor |
-| `orders` | SQLite | Bekliyor |
-| Diğer tüm tablolar | SQLite | Bekliyor |
+| Tablo | Motor | API Durumu | SQL Hazır |
+|-------|-------|------------|-----------|
+| `personnel` | ☁️ Supabase | ✅ Taşındı | ✅ Mevcut |
+| `machines` | ☁️ Supabase | ✅ API çevrildi | ✅ Hazır |
+| `models` | ☁️ Supabase | ✅ API çevrildi | ✅ Hazır |
+| `operations` | ☁️ Supabase | ✅ API çevrildi | ✅ birim_deger + standart_sure_dk eklendi |
+| `production_logs` | ☁️ Supabase | ✅ API çevrildi | ✅ katki_degeri_tutari eklendi |
+| `cost_entries` | ☁️ Supabase | ✅ API çevrildi | ✅ Hazır |
+| `business_expenses` | ☁️ Supabase | ✅ API çevrildi | ✅ Hazır |
+| `prim_kayitlari` | ☁️ Supabase | ⏳ API bekliyor | ✅ YENİ SQL hazır |
+| `kar_zarar_ozet` | ☁️ Supabase | ⏳ API bekliyor | ✅ YENİ SQL hazır |
+| `karar_arsivi` | ☁️ Supabase | ⏳ API bekliyor | ✅ YENİ SQL hazır |
+| `orders` | SQLite → Supabase | ⏳ Bekliyor | ⏳ |
+| `customers` | SQLite → Supabase | ⏳ Bekliyor | ⏳ |
+| `quality_checks` | SQLite → Supabase | ⏳ Bekliyor | ⏳ |
+| Diğer tüm tablolar | SQLite → Supabase | ⏳ Bekliyor | ⏳ |

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 
 
@@ -6005,7 +6005,7 @@ function ModelsPage({ models, loadModels, addToast }) {
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (data.url) setEditForm(prev => ({ ...prev, [side === 'front' ? 'front_image' : 'back_image']: data.url }));
-    } catch (err) { console.error('Edit upload hatasÄ±:', err); }
+    } catch (err) { console.error('Edit upload hatasi:', err); }
   };
 
   const handleUpdateModel = async (e) => {
@@ -6278,20 +6278,20 @@ function ModelsPage({ models, loadModels, addToast }) {
                     {(model.total_order > 0) && (() => {
                       const tamamlanan = model.completed_count || 0;
                       const toplam = model.total_order || 0;
-                      const hatalı = model.defective_count || 0;
-                      const yüzde = toplam > 0 ? Math.round((tamamlanan / toplam) * 100) : 0;
-                      const renk = yüzde >= 100 ? '#27ae60' : yüzde >= 60 ? '#f39c12' : '#3498db';
+                      const hatali = model.defective_count || 0;
+                      const yuzde = toplam > 0 ? Math.round((tamamlanan / toplam) * 100) : 0;
+                      const renk = yuzde >= 100 ? '#27ae60' : yuzde >= 60 ? '#f39c12' : '#3498db';
                       return (
                         <div style={{ marginTop: '8px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '3px' }}>
                             <span>✅ {tamamlanan.toLocaleString('tr-TR')} / {toplam.toLocaleString('tr-TR')} adet</span>
                             <span style={{ display: 'flex', gap: '8px' }}>
-                              {hatalı > 0 && <span style={{ color: '#e74c3c' }}>❌ {hatalı} hatalı</span>}
-                              <span style={{ fontWeight: '700', color: renk }}>%{yüzde}</span>
+                              {hatali > 0 && <span style={{ color: '#e74c3c' }}>❌ {hatali} hatali</span>}
+                              <span style={{ fontWeight: '700', color: renk }}>%{yuzde}</span>
                             </span>
                           </div>
                           <div style={{ height: '6px', background: 'var(--bg-input)', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ width: `${Math.min(yüzde, 100)}%`, height: '100%', background: renk, borderRadius: '3px', transition: 'width 0.5s ease' }} />
+                            <div style={{ width: `${Math.min(yuzde, 100)}%`, height: '100%', background: renk, borderRadius: '3px', transition: 'width 0.5s ease' }} />
                           </div>
                         </div>
                       );
@@ -12163,6 +12163,7 @@ function MuhasebeDepartmaniPage({ models, personnel, addToast }) {
     </div>
   );
 }
+
 
 
 // ========== MAIN APP ==========

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { checkAuth, logActivity } from '@/lib/auth';
 
 // ========================================================
 // Supabase personnel tablosundaki geçerli kolonlar whitelist
@@ -84,6 +85,11 @@ export async function GET() {
 // ========================================================
 export async function POST(request) {
     try {
+        // 🔒 Yetki kontrolü
+        const user = await checkAuth(request, 'POST');
+        if (!user) return NextResponse.json({ error: 'Yetkisiz erişim' }, { status: 401 });
+        if (user._forbidden) return NextResponse.json({ error: 'Bu işlem için yetkiniz yok' }, { status: 403 });
+
         const body = await request.json();
 
         if (!body.name) {

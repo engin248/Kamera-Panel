@@ -6,22 +6,23 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Supabase URL veya Anon Key eksik! .env.local dosyasını kontrol edin.');
+    // Throw yerine console.warn — sunucu çökmesini engelle
+    console.warn('[supabase.js] UYARI: Supabase URL veya Anon Key eksik! .env.local dosyasını kontrol edin.');
 }
 
+const url = supabaseUrl || 'https://localhost';
+const anonKey = supabaseAnonKey || 'placeholder';
+const serviceKey = supabaseServiceKey || anonKey;
+
 // Tarayıcı tarafında kullanılan public client (RLS aktif)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(url, anonKey);
 
 // Sunucu tarafında kullanılan admin client (RLS bypass - dikkatli kullanın)
-export const supabaseAdmin = createClient(
-    supabaseUrl,
-    supabaseServiceKey || supabaseAnonKey,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-        },
-    }
-);
+export const supabaseAdmin = createClient(url, serviceKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+    },
+});
 
 export default supabase;

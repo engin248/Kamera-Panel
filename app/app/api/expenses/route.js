@@ -1,24 +1,28 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
 // GET — İşletme giderlerini getir
 export async function GET(request) {
     try {
-        const db = getDb();
         const { searchParams } = new URL(request.url);
         const year = parseInt(searchParams.get('year')) || new Date().getFullYear();
         const month = searchParams.get('month');
 
-        let query = 'SELECT * FROM business_expenses WHERE year = ?';
-        const params = [year];
-        if (month) {
-            query += ' AND month = ?';
-            params.push(parseInt(month));
-        }
-        query += ' ORDER BY month DESC, category, created_at DESC';
+        let query = supabaseAdmin
+            .from('business_expenses')
+            .select('*')
+            .eq('year', year)
+            .is('deleted_at', null)
+            .order('month', { ascending: false })
+            .order('category');
 
-        const expenses = db.prepare(query).all(...params);
-        return NextResponse.json(expenses);
+        if (month) {
+            query = query.eq('month', parseInt(month));
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return NextResponse.json(data || []);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -27,7 +31,6 @@ export async function GET(request) {
 // POST — Yeni gider ekle
 export async function POST(request) {
     try {
-        const db = getDb();
         const body = await request.json();
         const { category, description, amount, year, month, is_recurring } = body;
 
@@ -35,12 +38,14 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Kategori, tutar, yıl ve ay zorunlu' }, { status: 400 });
         }
 
-        const result = db.prepare(
-            'INSERT INTO business_expenses (category, description, amount, year, month, is_recurring) VALUES (?, ?, ?, ?, ?, ?)'
-        ).run(category, description || '', amount, year, month, is_recurring ? 1 : 0);
+        const { data, error } = await supabaseAdmin
+            .from('business_expenses')
+            .insert({ category, description: description || '', amount, year, month, is_recurring: is_recurring || false })
+            .select()
+            .single();
 
-        const expense = db.prepare('SELECT * FROM business_expenses WHERE id = ?').get(result.lastInsertRowid);
-        return NextResponse.json(expense, { status: 201 });
+        if (error) throw error;
+        return NextResponse.json(data, { status: 201 });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -49,18 +54,26 @@ export async function POST(request) {
 // PUT — Gider güncelle
 export async function PUT(request) {
     try {
-        const db = getDb();
         const body = await request.json();
         const { id, category, description, amount, is_recurring } = body;
 
         if (!id) return NextResponse.json({ error: 'ID zorunlu' }, { status: 400 });
 
-        db.prepare(
-            'UPDATE business_expenses SET category = COALESCE(?, category), description = COALESCE(?, description), amount = COALESCE(?, amount), is_recurring = COALESCE(?, is_recurring) WHERE id = ?'
-        ).run(category, description, amount, is_recurring !== undefined ? (is_recurring ? 1 : 0) : undefined, id);
+        const updateData = {};
+        if (category !== undefined) updateData.category = category;
+        if (description !== undefined) updateData.description = description;
+        if (amount !== undefined) updateData.amount = amount;
+        if (is_recurring !== undefined) updateData.is_recurring = is_recurring;
 
-        const expense = db.prepare('SELECT * FROM business_expenses WHERE id = ?').get(id);
-        return NextResponse.json(expense);
+        const { data, error } = await supabaseAdmin
+            .from('business_expenses')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return NextResponse.json(data);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -69,17 +82,16 @@ export async function PUT(request) {
 // DELETE — Gider soft-delete
 export async function DELETE(request) {
     try {
-        const db = getDb();
         const { searchParams } = new URL(request.url);
         const id = searchParams.get('id');
         if (!id) return NextResponse.json({ error: 'ID zorunlu' }, { status: 400 });
 
-        const expense = db.prepare('SELECT * FROM business_expenses WHERE id = ? AND deleted_at IS NULL').get(id);
-        if (!expense) return NextResponse.json({ error: 'Gider bulunamadı' }, { status: 404 });
+        const { error } = await supabaseAdmin
+            .from('business_expenses')
+            .update({ deleted_at: new Date().toISOString(), deleted_by: 'admin' })
+            .eq('id', id);
 
-        db.prepare("UPDATE business_expenses SET deleted_at = datetime('now'), deleted_by = ? WHERE id = ?").run('Koordinatör', id);
-        try { db.prepare('INSERT INTO activity_log (user_name, action, table_name, record_id, record_summary) VALUES (?, ?, ?, ?, ?)').run('Koordinatör', 'SOFT_DELETE', 'business_expenses', id, `Gider #${id} soft-delete`); } catch (e) { }
-
+        if (error) throw error;
         return NextResponse.json({ success: true, message: 'Gider silindi (geri alınabilir)' });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });

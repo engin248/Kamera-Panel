@@ -2,9 +2,21 @@
 
 > **Sekme ID:** `personnel`
 > **Bot:** 🔩 Kamera (Gemini 2.0 Flash)
-> **Son Güncelleme:** 2026-03-02
-> **Veritabanı:** ☁️ Supabase PostgreSQL (`cauptlsnqieegdrgotob.supabase.co`)
+> **Son Güncelleme:** 2026-03-03
+> **Veritabanı:** ☁️ Supabase PostgreSQL
 > **Bu dosya:** Personel botu için tek bilgi kaynağı
+
+---
+
+## ⚠️ ANTİGRAVİTY ANALİZ NOTU (2026-03-03)
+
+| # | Eksik | Önem | Düzeltime |
+|---|-------|------|----------|
+| 1 | Katkı Değeri hesabı yok — prim vizyonunun temeli | Kritik | TODO eklendi |
+| 2 | Self-serve portal yok — personel kendi primini göremiyor | Kritik | TODO eklendi |
+| 3 | Kıdem tazminatı hesabı eksik | Yüksek | TODO eklendi |
+| 4 | İzin yönetimi modulu yok | Orta | TODO eklendi |
+| 5 | 5. pencereye veri akışı tanımlı değil | Orta | Cross-tab güncellendi |
 
 ---
 
@@ -105,10 +117,14 @@ KURAL: Sadece elindeki personel verisini kullan.
 
 - [ ] TODO: Diğer tabloları da Supabase'e geçir (models, orders vb.)
 - [ ] TODO: Supabase Auth ile GitHub OAuth kullanıcı yönetimi
-- [ ] TODO: Prim hesabı otomasyonu
+- [ ] **TODO (KRİTİK): Katkı Değeri hesabı** — SUM(uretilen_adet x birim_deger x (1-hata_orani)) her ay için
+- [ ] **TODO (KRİTİK): Prim self-serve portal** — personel kendi prim kartını ve formulünü görebilir
+- [ ] TODO: Prim hesabı otomasyonu (MALIYET sekme ile bağlantılı)
 - [ ] TODO: SGK/bordro rapor çıktısı
-- [ ] TODO: Personel karşılaştırma grafiği
-- [ ] TODO: İzin yönetimi modülü
+- [ ] TODO: Personel karşılaştırma grafiği (benchmark)
+- [ ] **TODO: Kıdem tazminatı hesabı** — çalışma süresi bazında otomatik
+- [ ] **TODO: İzin yönetimi** — yıllık/mazeret/ücretsiz izin takibi (gün sayısı + prim kesintisi bağlantısı)
+- [ ] TODO: 5. Pencere (Rapor) için personel verimlilik özeti veri akışı
 
 ---
 

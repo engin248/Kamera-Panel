@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { supabaseAdmin } from '@/lib/supabase';
 
 // ============================================================
 // 4 BOT SİSTEMİ — Her biri farklı uzmanlık alanı
@@ -88,49 +88,42 @@ export async function POST(request) {
         const { message, history = [], bot = 'gemini' } = await request.json();
         if (!message) return NextResponse.json({ error: 'Mesaj boş olamaz' }, { status: 400 });
 
-        // DB'den fabrika verisi çek
-        const db = getDb();
+        // DB'den fabrika verisi çek — SUPABASE
         const today = new Date().toISOString().split('T')[0];
         const ay = new Date().getMonth() + 1;
         const yil = new Date().getFullYear();
 
-        const orders = db.prepare(`
-      SELECT o.*, m.name as model_name 
-      FROM orders o LEFT JOIN models m ON o.model_id = m.id
-      WHERE o.deleted_at IS NULL AND o.status NOT IN ('tamamlandi','iptal')
-      ORDER BY o.delivery_date ASC LIMIT 10
-    `).all();
+        const [{ data: orders }, { data: uretim }, { data: personelData }, { data: modelData }, { data: maliyetData }] = await Promise.all([
+            supabaseAdmin.from('orders').select('customer_name, model_id, quantity, delivery_date, status, models(name)')
+                .is('deleted_at', null).not('status', 'in', '("tamamlandi","iptal")').order('delivery_date').limit(10),
+            supabaseAdmin.from('production_logs').select('total_produced, defective_count, personnel_id, model_id, models(name), personnel(name)')
+                .is('deleted_at', null).gte('start_time', `${today}T00:00:00Z`).lte('start_time', `${today}T23:59:59Z`).limit(20),
+            supabaseAdmin.from('personnel').select('id, base_salary').eq('status', 'active').is('deleted_at', null),
+            supabaseAdmin.from('models').select('name, fason_price, total_order').is('deleted_at', null).limit(5),
+            supabaseAdmin.from('business_expenses').select('amount').eq('year', yil).eq('month', ay).is('deleted_at', null),
+        ]);
 
-        const uretim = db.prepare(`
-      SELECT p.*, m.name as model_name, per.name as personel_name
-      FROM production_logs p
-      LEFT JOIN models m ON p.model_id = m.id
-      LEFT JOIN personnel per ON p.personnel_id = per.id
-      WHERE DATE(p.created_at) = ? AND p.deleted_at IS NULL
-      LIMIT 20
-    `).all(today);
+        // Gecikmiş siparişler
+        const { count: gecikenSayi } = await supabaseAdmin.from('orders').select('*', { count: 'exact', head: true })
+            .is('deleted_at', null).not('status', 'in', '("tamamlandi","iptal")').lt('delivery_date', today);
 
-        const personelSayisi = db.prepare(`SELECT COUNT(*) as cnt FROM personnel WHERE status = 'active' AND deleted_at IS NULL`).get();
-        const modelSayisi = db.prepare(`SELECT COUNT(*) as cnt FROM models WHERE deleted_at IS NULL`).get();
-        const geciken = db.prepare(`SELECT COUNT(*) as cnt FROM orders WHERE deleted_at IS NULL AND status NOT IN ('tamamlandi','iptal') AND delivery_date < date('now')`).get();
-        const maliyet = db.prepare(`SELECT COALESCE(SUM(amount), 0) as toplam FROM business_expenses WHERE year = ? AND month = ? AND deleted_at IS NULL`).get(yil, ay);
-
-        const personelMaas = db.prepare(`SELECT COALESCE(SUM(base_salary), 0) as toplam FROM personnel WHERE status = 'active' AND deleted_at IS NULL`).get();
-        const modeller = db.prepare(`SELECT name, fason_price, total_order FROM models WHERE deleted_at IS NULL LIMIT 5`).all();
-
-        const bugunUretim = uretim.reduce((s, r) => s + (r.total_produced || 0), 0);
-        const bugunHata = uretim.reduce((s, r) => s + (r.defective_count || 0), 0);
+        const personelSayisi = (personelData || []).length;
+        const modelSayisi = (modelData || []).length;
+        const bugunUretim = (uretim || []).reduce((s, r) => s + (r.total_produced || 0), 0);
+        const bugunHata = (uretim || []).reduce((s, r) => s + (r.defective_count || 0), 0);
+        const toplamMaliyet = (maliyetData || []).reduce((s, r) => s + (r.amount || 0), 0);
+        const toplamMaas = (personelData || []).reduce((s, p) => s + (p.base_salary || 0), 0);
 
         const fabrikaOzet = `
 === FABRİKA: 47 Sil Baştan 01 — ${new Date().toLocaleString('tr-TR')} ===
-Aktif Personel: ${personelSayisi.cnt} | Toplam Model: ${modelSayisi.cnt}
+Aktif Personel: ${personelSayisi} | Toplam Model: ${modelSayisi}
 Bugün Üretim: ${bugunUretim} adet | Hata: ${bugunHata} adet
-Aktif Sipariş: ${orders.length} | Gecikmiş: ${geciken.cnt}
-Bu Ay Gider: ${parseFloat(maliyet.toplam).toFixed(0)} ₺ | Personel Maaş: ${parseFloat(personelMaas.toplam).toFixed(0)} ₺
+Aktif Sipariş: ${(orders || []).length} | Gecikmiş: ${gecikenSayi || 0}
+Bu Ay Gider: ${Math.round(toplamMaliyet)} ₺ | Personel Maaş: ${Math.round(toplamMaas)} ₺
 
-Siparişler: ${orders.slice(0, 4).map(o => `${o.customer_name || '?'}→${o.model_name || '?'} ${o.quantity}adet [${o.delivery_date || '?'}]`).join(' | ')}
-Modeller: ${modeller.map(m => `${m.name}(${m.fason_price || '?'}₺/adet, ${m.total_order || 0}sipariş)`).join(' | ')}
-Bugün Üretim: ${uretim.slice(0, 4).map(u => `${u.personel_name || '?'}:${u.total_produced || 0}adet`).join(' | ')}
+Siparişler: ${(orders || []).slice(0, 4).map(o => `${o.customer_name || '?'}→${o.models?.name || '?'} ${o.quantity}adet [${o.delivery_date || '?'}]`).join(' | ')}
+Modeller: ${(modelData || []).map(m => `${m.name}(${m.fason_price || '?'}₺/adet, ${m.total_order || 0}sipariş)`).join(' | ')}
+Bugün Üretim: ${(uretim || []).slice(0, 4).map(u => `${u.personnel?.name || '?'}:${u.total_produced || 0}adet`).join(' | ')}
 `;
 
         const config = BOT_CONFIGS[bot] || BOT_CONFIGS.gemini;
@@ -148,7 +141,7 @@ Bugün Üretim: ${uretim.slice(0, 4).map(u => `${u.personel_name || '?'}:${u.tot
         } else if (bot === 'deepseek') {
             ({ reply, source } = await callDeepSeek(systemPrompt, message, history));
         } else {
-            reply = getKuralTabanliCevap(message, { orders, uretim, personelSayisi, modelSayisi, bugunUretim, geciken });
+            reply = getKuralTabanliCevap(message, { orders, personelSayisi, modelSayisi, bugunUretim, gecikenSayi });
             source = 'rule-based';
         }
 
@@ -294,8 +287,8 @@ function getKuralTabanliCevap(message, data) {
     const t = message.toLowerCase();
     const { orders, personelSayisi, modelSayisi, bugunUretim, geciken } = data;
     if (t.includes('üretim') || t.includes('bugün')) return `📊 Bugün **${bugunUretim} adet** üretildi. Aktif personel: ${personelSayisi.cnt} kişi.`;
-    if (t.includes('sipariş')) return `📋 Aktif: **${orders.length}** sipariş | Gecikmiş: **${geciken.cnt}**`;
-    if (t.includes('personel')) return `👥 Aktif çalışan: **${personelSayisi.cnt} kişi**`;
-    if (t.includes('model')) return `👗 Toplam model: **${modelSayisi.cnt}**`;
+    if (t.includes('sipariş')) return `📋 Aktif: **${(orders || []).length}** sipariş | Gecikmiş: **${gecikenSayi || 0}**`;
+    if (t.includes('personel')) return `👥 Aktif çalışan: **${personelSayisi} kişi**`;
+    if (t.includes('model')) return `👗 Toplam model: **${modelSayisi}**`;
     return `🤖 Üretim, sipariş, personel veya maliyet hakkında sorabilirsiniz.`;
 }

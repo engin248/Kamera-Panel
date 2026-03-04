@@ -1,0 +1,8 @@
+{
+    "crons": [
+        {
+            "path": "/api/cron/aylik-siralama",
+            "schedule": "30 23 * * *"
+        }
+    ]
+}

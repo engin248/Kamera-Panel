@@ -63,6 +63,8 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* ===== SIDEBAR ===== */
@@ -664,27 +666,16 @@ body {
   }
 }
 
-@keyframes pulse {
+/* @keyframes pulse — aşağıda tek tanım var, bu satır kaldırıldı */
 
+@keyframes breathe {
   0%,
   100% {
     opacity: 1;
   }
 
   50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes breathe {
-
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.02);
+    opacity: 0.85;
   }
 }
 
@@ -760,18 +751,15 @@ body {
   }
 }
 
-/* ========== SES KAYDI ANİMASYONLARI ========== */
+/* @keyframes pulse — tek, net tanım: sadece opacity değişimi, transform YOK */
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;
-    transform: scale(1);
   }
 
   50% {
-    opacity: 0.85;
-    transform: scale(1.02);
+    opacity: 0.6;
   }
 }
 
