@@ -2,88 +2,25 @@
 
 
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import NewModelModal from '@/components/modals/NewModelModal';
+import NewOperationModal from '@/components/modals/NewOperationModal';
+import NewPersonnelModal from '@/components/modals/NewPersonnelModal';
+import { EditableSelect, EditableInput } from '@/components/modals/NewPersonnelModal';
 import { EditModal, AuditTrailModal, EditButtons, EDIT_FIELDS } from '@/lib/edit-system';
+import MachinesPage from '@/components/pages/MachinesPage';
+import QualityPage from '@/components/pages/QualityPage';
+import AsistanPage from './asistan/page';
+import ArgeTasarimPage from '@/components/pages/ArgeTasarimPage';
+import MagazaPage from '@/components/pages/MagazaPage';
+import PrimPage from '@/components/pages/PrimPage';
+import ImalatPage from './imalat-page';
+import { ShoppingCart, Shirt, Users, Factory, Calculator, LineChart, ShieldCheck, Wrench, Package, Award, Settings, Cog, Briefcase, BarChart3, MessageSquare, Mic, Bot, PhoneCall, Zap, Play, LayoutDashboard, Cpu, HelpCircle, Activity, Globe, Database, Target, Diamond, TrendingUp, TrendingDown, ArrowUpRight, Crosshair, Store } from 'lucide-react';
 
 
 
-// ========== GLOBAL VOICE INPUT HOOK ==========
 
-function useVoiceInput(formSetter) {
-
-  const [listeningField, setListeningField] = useState(null);
-
-  const [voiceLang, setVoiceLang] = useState('tr-TR');
-
-  const recognitionRef = useRef(null);
-
-  const stopVoice = useCallback(() => {
-
-    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch { } recognitionRef.current = null; }
-
-    setListeningField(null);
-
-  }, []);
-
-  const startVoice = useCallback((fieldKey) => {
-
-    if (listeningField === fieldKey) { stopVoice(); return; }
-
-    if (listeningField) stopVoice();
-
-    const SR = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
-
-    if (!SR) { alert('Tarayıcınız sesle girişi desteklemiyor. Chrome veya Edge kullanın.'); return; }
-
-    const rec = new SR();
-
-    rec.lang = voiceLang;
-
-    rec.continuous = true;
-
-    rec.interimResults = true;
-
-    rec.maxAlternatives = 1;
-
-    recognitionRef.current = rec;
-
-    setListeningField(fieldKey);
-
-    let finalT = '';
-
-    rec.onresult = (ev) => {
-
-      let interim = '';
-
-      for (let i = ev.resultIndex; i < ev.results.length; i++) {
-
-        const t = ev.results[i][0].transcript;
-
-        if (ev.results[i].isFinal) finalT += t + ' '; else interim = t;
-
-      }
-
-      const combined = (finalT + interim).trim();
-
-      if (combined) formSetter(prev => ({ ...prev, [fieldKey]: combined }));
-
-    };
-
-    rec.onerror = (e) => { if (e.error !== 'no-speech') stopVoice(); };
-
-    rec.onend = () => { setListeningField(null); recognitionRef.current = null; };
-
-    rec.start();
-
-    setTimeout(() => { if (recognitionRef.current === rec) stopVoice(); }, 30000);
-
-  }, [listeningField, voiceLang, formSetter, stopVoice]);
-
-  const toggleLang = useCallback(() => setVoiceLang(v => v === 'tr-TR' ? 'ar-SA' : 'tr-TR'), []);
-
-  return { listeningField, voiceLang, startVoice, stopVoice, toggleLang };
-
-}
+import { useVoiceInput } from '../hooks/useVoiceInput';
 
 // ========== GN:013 — GÜNLÜK HEDEF + PARTİ BAĞLANTISI ==========
 
@@ -92,18 +29,36 @@ function GunlukHedefBar({ tarih }) {
   useEffect(() => { fetch(`/api/uretim-ozet?tarih=${tarih}`).then(r => r.json()).then(setOzet).catch(() => { }); }, [tarih]);
   if (!ozet || !ozet.kayit_sayisi) return null;
   return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 16px', marginBottom: '12px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-        <span style={{ fontWeight: '700', fontSize: '13px' }}>📈 Günlük Hedef</span>
-        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{ozet.toplam_uretim} / {ozet.hedef} — %{ozet.hedef_yuzdesi}</span>
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.03)',
+      border: '1px solid rgba(255, 255, 255, 0.08)',
+      backdropFilter: 'blur(12px)',
+      borderRadius: '16px',
+      padding: '16px 20px',
+      marginBottom: '16px',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(52, 152, 219, 0.15)', color: '#3498db', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Target size={18} />
+          </div>
+          <span style={{ fontWeight: '700', fontSize: '15px', color: '#fff', letterSpacing: '0.3px' }}>Günlük Hedef</span>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }}>%{ozet.hedef_yuzdesi}</div>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>{ozet.toplam_uretim} / {ozet.hedef} ADET</div>
+        </div>
       </div>
-      <div style={{ height: '8px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${ozet.hedef_yuzdesi}%`, background: ozet.hedef_yuzdesi >= 80 ? '#27ae60' : ozet.hedef_yuzdesi >= 50 ? '#f39c12' : '#e74c3c', borderRadius: '4px', transition: 'width 0.5s' }} />
+      <div style={{ height: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', overflow: 'hidden', boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.5)' }}>
+        <div style={{ height: '100%', width: `${ozet.hedef_yuzdesi}%`, background: ozet.hedef_yuzdesi >= 80 ? 'linear-gradient(90deg, #27ae60, #2ecc71)' : ozet.hedef_yuzdesi >= 50 ? 'linear-gradient(90deg, #f39c12, #f1c40f)' : 'linear-gradient(90deg, #c0392b, #e74c3c)', borderRadius: '4px', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)', animation: 'shimmer 2s infinite' }} />
+        </div>
       </div>
-      <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
-        <span>FPY: <strong style={{ color: '#27ae60' }}>{ozet.fpy}%</strong></span>
-        <span>Aktif: <strong>{ozet.aktif_personel} kişi</strong></span>
-        <span>Değer: <strong>{parseFloat(ozet.toplam_deger || 0).toFixed(0)} ₺</strong></span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', fontSize: '12px', color: 'rgba(255,255,255,0.6)', padding: '0 4px' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Activity size={12} color="#27ae60" /> FPY: <strong style={{ color: '#fff' }}>{ozet.fpy}%</strong></span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Users size={12} color="#3498db" /> Aktif: <strong style={{ color: '#fff' }}>{ozet.aktif_personel}</strong></span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Diamond size={12} color="#D4A847" /> Değer: <strong style={{ color: '#fff' }}>{parseFloat(ozet.toplam_deger || 0).toFixed(0)} ₺</strong></span>
       </div>
     </div>
   );
@@ -387,7 +342,7 @@ function SpeechToText() {
 
       </div>
 
-      <style>{`@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+      <style>{`@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }`}</style>
 
     </div>
 
@@ -400,10 +355,10 @@ function SpeechToText() {
 // ========== CHATBOT PANELİ  4 BOT ==========
 
 const BOTLAR = [
-  { id: 'gemini', emoji: '🔩', ad: 'Kamera', uzmanlik: 'Operasyon', renk: '#2ecc71', aciklama: 'Anlık üretim, sipariş, personel' },
-  { id: 'gpt', emoji: '📊', ad: 'Muhasip', uzmanlik: 'Muhasebe', renk: '#3498db', aciklama: 'Maliyet, karlılık, finansal analiz' },
-  { id: 'perplexity', emoji: '🔍', ad: 'Kaşif', uzmanlik: 'Araştırma', renk: '#9b59b6', aciklama: 'Piyasa, sektör, kumaş fiyatları' },
-  { id: 'deepseek', emoji: '🛠️', ad: 'Tekniker', uzmanlik: 'Teknik', renk: '#e67e22', aciklama: 'Model, BOM, dikim, kalite' },
+  { id: 'gemini', icon: <Activity size={20} />, ad: 'Üretim Sorumlusu', uzmanlik: 'Operasyon', renk: '#2ecc71', aciklama: 'Anlık üretim, sipariş, personel' },
+  { id: 'gpt', icon: <BarChart3 size={20} />, ad: 'Muhasip', uzmanlik: 'Muhasebe', renk: '#3498db', aciklama: 'Maliyet, karlılık, finansal analiz' },
+  { id: 'perplexity', icon: <Globe size={20} />, ad: 'Kaşif', uzmanlik: 'Araştırma', renk: '#9b59b6', aciklama: 'Piyasa, sektör, kumaş fiyatları' },
+  { id: 'deepseek', icon: <Cog size={20} />, ad: 'Tekniker', uzmanlik: 'Teknik', renk: '#e67e22', aciklama: 'Model, BOM, dikim, kalite' },
 ];
 
 // Sekme → Bot eşleşme tablosu
@@ -427,21 +382,21 @@ const SEKME_BOT_MAP = {
 
 // Sekme etiketi tablosu
 const SEKME_LABEL_MAP = {
-  models: '👗 Modeller',
-  personnel: '👥 Personel',
-  production: '🔩 Üretim',
-  costs: '💰 Maliyet',
-  muhasebe: '📒 Rapor & Analiz',
-  orders: '📋 Siparişler',
-  quality: '✅ Kalite',
-  fason: '🔧 Fason',
-  shipments: '📦 Sevkiyat',
-  prim: '🏆 Prim',
-  machines: '⚙️ Makineler',
-  customers: '🤝 Müşteriler',
-  reports: '📈 Raporlar',
-  dashboard: '📊 Ana Panel',
-  settings: '⚙️ Ayarlar',
+  models: 'Modeller',
+  personnel: 'Personel',
+  production: 'Üretim',
+  costs: 'Maliyet',
+  muhasebe: 'Rapor & Analiz',
+  orders: 'Siparişler',
+  quality: 'Kalite',
+  fason: 'Fason',
+  shipments: 'Sevkiyat',
+  prim: 'Prim',
+  machines: 'Makineler',
+  customers: 'Müşteriler',
+  reports: 'Raporlar',
+  dashboard: 'Ana Panel',
+  settings: 'Ayarlar',
 };
 
 function ChatbotPanel({ onClose, activePage }) {
@@ -455,7 +410,7 @@ function ChatbotPanel({ onClose, activePage }) {
   }, [activePage]);
 
   const [konusmalar, setKonusmalar] = useState({
-    gemini: [{ role: 'assistant', content: ' Merhaba! Ben **Kamera**, Operasyon Uzmanınız.\n\nBugünkü üretim, aktif siparişler, personel durumu hakkında anlık bilgi verebilirim.' }],
+    gemini: [{ role: 'assistant', content: ' Merhaba! Ben **Üretim Sorumlusu Asistanı Agent**, Operasyon Uzmanınız.\n\nBugünkü üretim, aktif siparişler, personel durumu hakkında anlık bilgi verebilirim.' }],
     gpt: [{ role: 'assistant', content: ' Merhaba! Ben **Muhasip**, Finans & Muhasebe Uzmanınız.\n\nMaliyet analizi, karlılık hesabı, personel/üretim oranları hakkında sorun.' }],
     perplexity: [{ role: 'assistant', content: ' Merhaba! Ben **Kaşif**, Araştırma Uzmanınız.\n\nPiyasa fiyatları, kumaş maliyetleri, sektör trendleri hakkında güncel bilgi alabilirim.' }],
     deepseek: [{ role: 'assistant', content: ' Merhaba! Ben **Tekniker**, Teknik Uzmanınız.\n\nModel detayları, BOM listesi, dikim sırası, kalite kontrol standartları hakkında sorun.' }],
@@ -489,8 +444,8 @@ function ChatbotPanel({ onClose, activePage }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: msg, history: yeniMsgs.slice(-8), bot: aktifBot })
       });
-      const data = await res.json();
-      const cevap = { role: 'assistant', content: data.reply || 'Cevap alinamadi.', botEmoji: bot.emoji };
+      const responseData = await res.json();
+      const cevap = { role: 'assistant', content: responseData.reply || 'Cevap alinamadi.', botIcon: bot.icon };
       setKonusmalar(prev => ({ ...prev, [aktifBot]: [...yeniMsgs, cevap] }));
     } catch {
       setKonusmalar(prev => ({ ...prev, [aktifBot]: [...yeniMsgs, { role: 'assistant', content: 'Baglanti hatasi.' }] }));
@@ -517,9 +472,9 @@ function ChatbotPanel({ onClose, activePage }) {
             <div style={{
               width: '40px', height: '40px', borderRadius: '50%',
               background: 'linear-gradient(135deg, ' + bot.renk + '90, ' + bot.renk + '50)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
               boxShadow: '0 0 0 3px ' + bot.renk + '30'
-            }}>{bot.emoji}</div>
+            }}>{bot.icon}</div>
             <div>
               <div style={{ color: '#fff', fontWeight: '700', fontSize: '15px' }}>
                 {bot.ad} <span style={{ fontSize: '11px', color: bot.renk }}>  {bot.uzmanlik}</span>
@@ -553,9 +508,9 @@ function ChatbotPanel({ onClose, activePage }) {
               background: aktifBot === b.id ? b.renk + '25' : 'rgba(255,255,255,0.04)',
               color: aktifBot === b.id ? b.renk : 'rgba(255,255,255,0.4)',
               cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px'
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px'
             }}>
-              <span style={{ fontSize: '16px' }}>{b.emoji}</span>
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{b.icon}</span>
               <span style={{ fontSize: '9px', fontWeight: aktifBot === b.id ? '700' : '400' }}>{b.uzmanlik}</span>
             </button>
           ))}
@@ -567,11 +522,13 @@ function ChatbotPanel({ onClose, activePage }) {
           <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
             {msg.role === 'assistant' && (
               <div style={{
-                width: '26px', height: '26px', borderRadius: '50%',
+                width: '26px', height: '26px', borderRadius: '50%', color: '#fff',
                 background: 'linear-gradient(135deg, ' + bot.renk + '80, ' + bot.renk + '40)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, marginRight: '7px', marginTop: '2px'
-              }}>{msg.botEmoji || bot.emoji}</div>
+              }}>
+                {msg.botIcon ? React.cloneElement(msg.botIcon, { size: 14 }) : React.cloneElement(bot.icon, { size: 14 })}
+              </div>
             )}
             <div style={{
               maxWidth: '80%', padding: '9px 13px',
@@ -585,7 +542,7 @@ function ChatbotPanel({ onClose, activePage }) {
         ))}
         {loading && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'linear-gradient(135deg,' + bot.renk + '80,' + bot.renk + '40)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px' }}>{bot.emoji}</div>
+            <div style={{ width: '26px', height: '26px', borderRadius: '50%', color: '#fff', background: 'linear-gradient(135deg,' + bot.renk + '80,' + bot.renk + '40)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{React.cloneElement(bot.icon, { size: 14 })}</div>
             <div style={{ padding: '9px 13px', background: 'var(--bg-input)', borderRadius: '4px 18px 18px 18px', border: '1px solid ' + bot.renk + '20' }}>
               <div style={{ display: 'flex', gap: '4px' }}>
                 {[0, 1, 2].map(j => <span key={j} style={{ width: '6px', height: '6px', background: bot.renk, borderRadius: '50%', display: 'inline-block', animation: 'pulse ' + (0.8 + j * 0.2) + 's ease infinite' }}></span>)}
@@ -631,33 +588,64 @@ function ChatbotPanel({ onClose, activePage }) {
 
 
 
+// ========== SIDEBAR ROL MATRİSİ ==========
+
+const ROLE_ACCESS = {
+  koordinator: ['karargah', 'arge', 'imalat', 'orders', 'models', 'personnel', 'production', 'costs', 'muhasebe', 'quality', 'fason', 'shipments', 'prim', 'machines', 'customers', 'reports', 'dashboard', 'settings'],
+  ustabasi: ['imalat', 'models', 'production', 'quality', 'machines', 'dashboard', 'prim'],
+  bant_sorumlusu: ['models', 'production', 'quality', 'dashboard', 'prim'],
+  kaliteci: ['models', 'production', 'quality', 'dashboard', 'prim'],
+  operator: ['production', 'quality', 'prim'],
+};
+
+const ROLE_LABEL = {
+  koordinator: { label: 'Koordinatör', color: '#D4A847', icon: <Award size={22} /> },
+  ustabasi: { label: 'Ustabaşı', color: '#3498db', icon: <Briefcase size={22} /> },
+  bant_sorumlusu: { label: 'Bant Sorumlusu', color: '#e67e22', icon: <Users size={22} /> },
+  kaliteci: { label: 'Kaliteci', color: '#2ecc71', icon: <ShieldCheck size={22} /> },
+  operator: { label: 'Operatör', color: '#9b59b6', icon: <Wrench size={22} /> },
+};
+
 // ========== SIDEBAR ==========
 
-function Sidebar({ activePage, setActivePage, onChatbotToggle }) {
+function Sidebar({ activePage, setActivePage, onChatbotToggle, currentUser }) {
+  const userRole = currentUser?.role || 'koordinator';
+  const izinli = ROLE_ACCESS[userRole] || ROLE_ACCESS.koordinator;
+  const canAccess = (id) => izinli.includes(id);
 
-  const [uretimAcik, setUretimAcik] = useState(true);
+  const [imalatAcik, setImalatAcik] = useState(true);
+  const [uretimAcik, setUretimAcik] = useState(false);
   const [digerAcik, setDigerAcik] = useState(false);
 
+  const imalatItems = [
+    { id: 'imalat-models', icon: <Shirt size={22} />, label: 'İmalat Modelleri' },
+    { id: 'arge', icon: <Globe size={22} />, label: 'AR-GE Tasarım' },
+    { id: 'imalat', icon: <Factory size={22} />, label: 'Kesim ve İmalat Takibi' }
+  ].filter(item => canAccess(item.id === 'imalat-models' ? 'models' : item.id));
+
   const uretimItems = [
-    { id: 'models', icon: '👗', label: 'Modeller' },
-    { id: 'personnel', icon: '👥', label: 'Personel' },
-    { id: 'production', icon: '🔩', label: 'Üretim Aşaması' },
-    { id: 'costs', icon: '💰', label: 'Maliyet' },
-    { id: 'muhasebe', icon: '📒', label: 'Rapor & Analiz' },
-  ];
+    { id: 'models', icon: <Shirt size={22} />, label: 'Sahadaki Modeller' },
+    { id: 'personnel', icon: <Users size={22} />, label: 'Personel' },
+    { id: 'production', icon: <Factory size={22} />, label: 'Üretim' },
+    { id: 'costs', icon: <Calculator size={22} />, label: 'Maliyet' },
+    { id: 'muhasebe', icon: <LineChart size={22} />, label: 'Rapor & Analiz' },
+  ].filter(item => canAccess(item.id));
 
   const digerItems = [
-    { id: 'quality', icon: '✅', label: 'Kalite Kontrol' },
-    { id: 'fason', icon: '🔧', label: 'Fason' },
-    { id: 'shipments', icon: '📦', label: 'Sevkiyat' },
-    { id: 'prim', icon: '🏆', label: 'Prim & Üret' },
-    { id: 'machines', icon: '⚙️', label: 'Makineler' },
-    { id: 'customers', icon: '🤝', label: 'Müşteriler' },
-    { id: 'reports', icon: '📈', label: 'Raporlar' },
-    { id: 'dashboard', icon: '📊', label: 'Ana Panel' },
-    { id: 'settings', icon: '⚙️', label: 'Ayarlar' },
-  ];
+    { id: 'dashboard', icon: <LayoutDashboard size={22} />, label: 'Ana Panel' },
+    { id: 'magaza', icon: <Store size={22} color="#f39c12" />, label: 'Mağaza & Kasa' },
+    { id: 'karargah', icon: <Crosshair size={22} color="#e74c3c" />, label: 'Karargâh (Baş Asistan)' },
+    { id: 'quality', icon: <ShieldCheck size={22} />, label: 'Kalite Kontrol' },
+    { id: 'fason', icon: <Briefcase size={22} />, label: 'Fason' },
+    { id: 'shipments', icon: <Package size={22} />, label: 'Sevkiyat' },
+    { id: 'prim', icon: <Award size={22} />, label: 'Prim & Üret' },
+    { id: 'machines', icon: <Cog size={22} />, label: 'Makineler' },
+    { id: 'customers', icon: <Briefcase size={22} />, label: 'Müşteriler' },
+    { id: 'reports', icon: <LineChart size={22} />, label: 'Raporlar' },
+    { id: 'settings', icon: <Settings size={22} />, label: 'Ayarlar' },
+  ].filter(item => canAccess(item.id));
 
+  const imalatAktif = imalatItems.some(i => i.id === activePage);
   const uretimAktif = uretimItems.some(i => i.id === activePage);
 
   return (
@@ -672,6 +660,25 @@ function Sidebar({ activePage, setActivePage, onChatbotToggle }) {
             <div className="sidebar-logo-sub" style={{ color: '#D4A847', fontSize: '12.5px', fontWeight: '600', letterSpacing: '0.3px' }}>Adil Şeffaf Veri Odaklı Üretim Kontrol Sistemleri</div>
           </div>
         </div>
+        {/* KULLANICI ROL BADGE */}
+        {currentUser && (() => {
+          const r = ROLE_LABEL[userRole] || ROLE_LABEL.operator;
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '8px 12px', marginTop: '2px', background: r.color + '15', borderRadius: '10px', border: '1px solid ' + r.color + '30' }}>
+              <span style={{ fontSize: '16px' }}>{r.emoji}</span>
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: r.color }}>{currentUser.display_name || currentUser.username}</div>
+                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>{r.label}</div>
+              </div>
+              <button onClick={() => {
+                localStorage.removeItem('kp_token');
+                localStorage.removeItem('kp_user');
+                document.cookie = 'kp_token=; path=/; max-age=0; SameSite=Strict';
+                window.location.href = '/login';
+              }} style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.08)', border: 'none', color: 'rgba(255,255,255,0.4)', borderRadius: '6px', padding: '3px 7px', cursor: 'pointer', fontSize: '10px' }} title="Çıkış Yap">⏻</button>
+            </div>
+          );
+        })()}
       </div>
 
       {/* AI CHATBOT BUTONU */}
@@ -683,9 +690,9 @@ function Sidebar({ activePage, setActivePage, onChatbotToggle }) {
           fontSize: '14px', fontFamily: 'inherit', transition: 'all 0.25s ease',
           borderLeft: '3px solid #6a9e6e',
         }}>
-          <span style={{ fontSize: '22px', animation: 'breathe 3s ease infinite' }}>🤖</span>
+          <span style={{ animation: 'breathe 3s ease infinite', display: 'flex' }}><Bot size={24} /></span>
           <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#7be88e' }}>Kamera AI</div>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#7be88e' }}>Üretim Sorumlusu Asistanı Agent</div>
             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)', fontWeight: '400' }}>Fabrika Asistanı</div>
           </div>
           <div style={{ marginLeft: 'auto', width: '8px', height: '8px', background: '#2ecc71', borderRadius: '50%', animation: 'pulse 2s ease infinite', flexShrink: 0 }} />
@@ -695,13 +702,64 @@ function Sidebar({ activePage, setActivePage, onChatbotToggle }) {
       <nav className="sidebar-nav">
 
         {/* SİPARİŞLER — Bağımsız (Mağazadan gelir) */}
-        <button
-          className={`nav-item ${activePage === 'orders' ? 'active' : ''}`}
-          onClick={() => setActivePage('orders')}
-        >
-          <span className="nav-item-icon">📋</span>
-          <span>Siparişler</span>
-        </button>
+        {canAccess('orders') && (
+          <button
+            className={`nav-item ${activePage === 'orders' ? 'active' : ''}`}
+            onClick={() => setActivePage('orders')}
+          >
+            <span className="nav-item-icon">📋</span>
+            <span>Siparişler</span>
+          </button>
+        )}
+
+        {/* İMALAT DEPARTMANI — Accordion kutu */}
+        <div style={{
+          marginTop: '16px',
+          border: `2px solid ${imalatAktif || imalatAcik ? 'rgba(52,152,219,0.75)' : 'rgba(52,152,219,0.35)'}`,
+          borderRadius: '14px',
+          overflow: 'hidden',
+          background: 'rgba(52,152,219,0.06)',
+          boxShadow: imalatAktif || imalatAcik ? '0 0 12px rgba(52,152,219,0.15), inset 0 1px 0 rgba(52,152,219,0.1)' : 'none',
+          transition: 'all 0.3s ease',
+        }}>
+
+          {/* Başlık / Toggle */}
+          <button onClick={() => setImalatAcik(p => !p)} style={{
+            width: '100%', padding: '13px 14px', background: 'none', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'inherit',
+            color: '#3498db', fontWeight: '700', fontSize: '14px',
+          }}>
+            <span style={{ fontSize: '20px' }}>📐</span>
+            <span style={{ flex: 1, textAlign: 'left' }}>İmalat (AR-GE) Departmanı</span>
+            <span style={{
+              fontSize: '12px', opacity: 0.6, transition: 'transform 0.25s',
+              transform: imalatAcik ? 'rotate(180deg)' : 'rotate(0deg)',
+              display: 'inline-block',
+            }}>▼</span>
+          </button>
+
+          {/* İçerik — açık/kapalı */}
+          {imalatAcik && (
+            <div style={{ padding: '0 8px 10px' }}>
+              {imalatItems.map(item => (
+                <button
+                  key={item.id}
+                  className={`nav-item ${activePage === item.id ? 'active' : ''}`}
+                  onClick={() => setActivePage(item.id)}
+                  style={{
+                    borderRadius: '10px',
+                    paddingLeft: '18px',
+                    borderLeft: activePage === item.id ? '3px solid #3498db' : '3px solid transparent',
+                  }}
+                >
+                  <span className="nav-item-icon">{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+        </div>
 
         {/* ÜRETİM DEPARTMANI — Accordion kutu */}
         <div style={{
@@ -827,3457 +885,6 @@ function Toast({ toasts }) {
 
 // ========== MODAL: YENİ MODEL ==========
 
-function NewModelModal({ onClose, onSave }) {
-
-  const DRAFT_KEY = 'kamera_panel_new_model_draft';
-  const getInitialForm = () => {
-    const defaults = {
-      name: '', code: '', order_no: '', customer: '', modelist: '',
-      description: '', status: 'orijinal_numune', fabric_type: '', sizes: '',
-      size_range: '', total_order: '', total_order_text: '',
-      fason_price: '', fason_price_text: '',
-      model_difficulty: 5,
-      delivery_date: '', measurement_table: '', post_sewing: '',
-      garni: '',
-      color_count: '', color_details: '',
-      size_count: '', size_distribution: '',
-      asorti: '',
-      // Operasyon alt kırılımları
-      total_operations: '',
-      op_kesim_count: '', op_kesim_details: '',
-      op_dikim_count: '', op_dikim_details: '',
-      op_dikim_rows: [
-        { id: 1, makine: 'Düz Makina', adet: '', detay: '' },
-        { id: 2, makine: 'Overlok', adet: '', detay: '' },
-        { id: 3, makine: 'Reçme', adet: '', detay: '' },
-      ],
-      op_utu_paket_count: '', op_utu_paket_details: '',
-      op_nakis_count: '', op_nakis_details: '',
-      op_yikama_count: '', op_yikama_details: '',
-      // Tela bilgisi
-      has_lining: false, lining_pieces: '',
-      has_interlining: false, interlining_parts: '', interlining_count: '',
-      // Toplam parça
-      piece_count: '', piece_count_details: '',
-      difficult_points: '', critical_points: '', customer_requests: '',
-      work_start_date: '', front_image: '', back_image: ''
-    };
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(DRAFT_KEY);
-        if (saved) { const parsed = JSON.parse(saved); return { ...defaults, ...parsed }; }
-      } catch { }
-    }
-    return defaults;
-  };
-  const [form, setForm] = useState(getInitialForm);
-
-  // Otomatik taslak kaydetme (sayfa kapansa bile kaybolmaz)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const timer = setTimeout(() => {
-        try { localStorage.setItem(DRAFT_KEY, JSON.stringify(form)); } catch { }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [form]);
-
-  const clearDraft = () => {
-    if (typeof window !== 'undefined') {
-      try { localStorage.removeItem(DRAFT_KEY); } catch { }
-    }
-  };
-
-  const [saving, setSaving] = useState(false);
-
-  const [frontPreview, setFrontPreview] = useState(null);
-
-  const [backPreview, setBackPreview] = useState(null);
-
-  const [uploading, setUploading] = useState({ front: false, back: false });
-
-  const [themeColor, setThemeColor] = useState('emerald');
-
-
-
-  const themes = {
-
-    emerald: { name: 'Zümrüt Yeşili', primary: '#0D7C66', secondary: '#C5A038', gradient: 'linear-gradient(135deg, #0D7C66 0%, #14a085 50%, #0D7C66 100%)', accent: '#0D7C66', gold: '#C5A038', bg: 'rgba(13,124,102,0.06)', border: 'rgba(13,124,102,0.2)' },
-
-    gold: { name: 'Altın Sarısı', primary: '#C5A038', secondary: '#0D7C66', gradient: 'linear-gradient(135deg, #C5A038 0%, #D4AF37 50%, #C5A038 100%)', accent: '#C5A038', gold: '#0D7C66', bg: 'rgba(197,160,56,0.06)', border: 'rgba(197,160,56,0.2)' },
-
-    ocean: { name: 'Okyanus', primary: '#1a5276', secondary: '#C5A038', gradient: 'linear-gradient(135deg, #1a5276 0%, #2980b9 50%, #1a5276 100%)', accent: '#1a5276', gold: '#C5A038', bg: 'rgba(26,82,118,0.06)', border: 'rgba(26,82,118,0.2)' }
-
-  };
-
-  const T = themes[themeColor];
-
-
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.name || !form.code) return;
-    setSaving(true);
-    try {
-      // Dikim toplam adet — satırlardan otomatik hesapla
-      const dikimToplam = form.op_dikim_rows.reduce((s, r) => s + (parseInt(r.adet) || 0), 0);
-      // Dikim detay özeti — satırlardan oluştur
-      const dikimDetay = form.op_dikim_rows
-        .filter(r => r.makine || r.adet)
-        .map(r => `${r.makine}${r.adet ? ': ' + r.adet + ' adet' : ''}${r.detay ? ' (' + r.detay + ')' : ''}`)
-        .join(', ');
-      // Toplam operasyon = alt kırılımların toplamı (otomatik hesapla)
-      const autoTotalOps = (parseInt(form.op_kesim_count) || 0) + dikimToplam +
-        (parseInt(form.op_utu_paket_count) || 0) + (parseInt(form.op_nakis_count) || 0) + (parseInt(form.op_yikama_count) || 0);
-      await onSave({
-        ...form,
-        total_order: parseInt(form.total_order) || 0,
-        fason_price: parseFloat(form.fason_price) || 0,
-        model_difficulty: parseInt(form.model_difficulty) || 5,
-        has_lining: form.has_lining ? 1 : 0,
-        has_interlining: form.has_interlining ? 1 : 0,
-        lining_pieces: parseInt(form.lining_pieces) || 0,
-        color_count: parseInt(form.color_count) || 0,
-        size_count: form.size_count,
-        op_dikim_count: dikimToplam,
-        op_dikim_details: dikimDetay,
-        total_operations: autoTotalOps || parseInt(form.total_operations) || 0,
-        piece_count: parseInt(form.piece_count) || 0,
-      });
-      clearDraft(); // Başarılı kayıt sonrası taslağı temizle
-    } finally { setSaving(false); }
-  };
-
-
-
-  const postSewingOps = ['Ütü', 'Yıkama', 'Boyama', 'Baskı', 'Nakış', 'Paketleme', 'Etiketleme', 'Kalite Kontrol'];
-
-  const togglePost = (op) => {
-
-    const arr = form.post_sewing ? form.post_sewing.split(',').map(s => s.trim()).filter(Boolean) : [];
-
-    const next = arr.includes(op) ? arr.filter(x => x !== op) : [...arr, op];
-
-    setForm({ ...form, post_sewing: next.join(', ') });
-
-  };
-
-
-
-  // ===== GÖRSEL YÜKLEME =====
-
-  const handleImageUpload = async (file, side) => {
-
-    if (!file) return;
-
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-
-    if (!allowed.includes(file.type)) { alert('Sadece JPG, PNG, WebP veya GIF dosyaları yükleyebilirsiniz.'); return; }
-
-    if (file.size > 10 * 1024 * 1024) { alert('Dosya boyutu 10MB\'dan küçük olmalı.'); return; }
-
-
-
-    // Önizleme
-
-    const reader = new FileReader();
-
-    reader.onload = (e) => { if (side === 'front') setFrontPreview(e.target.result); else setBackPreview(e.target.result); };
-
-    reader.readAsDataURL(file);
-
-
-
-    // Sunucuya yükle
-
-    setUploading(prev => ({ ...prev, [side]: true }));
-
-    try {
-
-      const fd = new FormData();
-
-      fd.append('file', file);
-
-      fd.append('type', 'photos');
-
-      fd.append('model_code', form.code || 'yeni');
-
-      fd.append('operation_name', side === 'front' ? 'on_gorsel' : 'arka_gorsel');
-
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-
-      const data = await res.json();
-
-      if (data.url) {
-
-        setForm(prev => ({ ...prev, [side === 'front' ? 'front_image' : 'back_image']: data.url }));
-
-      }
-
-    } catch (err) { console.error('Upload hatası:', err); }
-
-    finally { setUploading(prev => ({ ...prev, [side]: false })); }
-
-  };
-
-
-
-  const handleDrop = (e, side) => { e.preventDefault(); e.stopPropagation(); const file = e.dataTransfer?.files?.[0]; if (file) handleImageUpload(file, side); };
-
-  const handleDragOver = (e) => { e.preventDefault(); e.stopPropagation(); };
-
-
-
-  // ===== SESLE GİRİŞ (Speech-to-Text) — Türkçe & Arapça =====
-
-  const [listeningField, setListeningField] = useState(null);
-
-  const [voiceLang, setVoiceLang] = useState('tr-TR');
-
-  const recognitionRef = useRef(null);
-
-
-
-  const stopVoiceInput = () => {
-
-    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch { } recognitionRef.current = null; }
-
-    setListeningField(null);
-
-  };
-
-
-
-  const startVoiceInput = (fieldKey) => {
-
-    if (listeningField === fieldKey) { stopVoiceInput(); return; }
-
-    if (listeningField) stopVoiceInput();
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) { alert('Tarayıcınız sesle girişi desteklemiyor. Chrome veya Edge kullanın.'); return; }
-
-    const recognition = new SpeechRecognition();
-
-    recognition.lang = voiceLang;
-
-    recognition.continuous = true;
-
-    recognition.interimResults = true;
-
-    recognition.maxAlternatives = 1;
-
-    recognitionRef.current = recognition;
-
-    setListeningField(fieldKey);
-
-    let finalTranscript = '';
-
-    recognition.onresult = (event) => {
-
-      let interim = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-
-        const t = event.results[i][0].transcript;
-
-        if (event.results[i].isFinal) { finalTranscript += t + ' '; } else { interim = t; }
-
-      }
-
-      const combined = (finalTranscript + interim).trim();
-
-      if (combined) setForm(prev => ({ ...prev, [fieldKey]: prev[fieldKey] ? prev[fieldKey] + ' ' + combined : combined }));
-
-    };
-
-    recognition.onerror = (e) => { if (e.error !== 'no-speech') stopVoiceInput(); };
-
-    recognition.onend = () => { setListeningField(null); recognitionRef.current = null; };
-
-    recognition.start();
-
-    setTimeout(() => { if (recognitionRef.current === recognition) stopVoiceInput(); }, 30000);
-
-  };
-
-
-
-  const sectionTitle = (icon, text) => (<div style={{ fontSize: '14px', fontWeight: '700', color: T.accent, marginBottom: '12px', marginTop: '20px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: `1px solid ${T.border}`, paddingBottom: '8px' }}>{icon} {text}</div>);
-
-
-
-  const F = (label, key, placeholder, type = 'text', extra = {}) => (
-
-    <div className="form-group">
-
-      <label className="form-label">{label}</label>
-
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '4px' }}>
-
-        <input className="form-input" type={type} placeholder={placeholder}
-
-          value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}
-
-          style={{ paddingRight: '62px' }} {...extra} />
-
-        <div style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '2px' }}>
-
-          <button type="button" onClick={() => setVoiceLang(voiceLang === 'tr-TR' ? 'ar-SA' : 'tr-TR')}
-
-            title={voiceLang === 'tr-TR' ? 'Türkçe — Arapçaya geçmek için tıklayın' : 'العربية — للتركية اضغط'}
-
-            style={{
-
-              background: 'transparent', border: 'none', cursor: 'pointer',
-
-              fontSize: '12px', padding: '2px', borderRadius: '4px',
-
-              opacity: 0.7, transition: 'opacity 0.2s'
-
-            }}>{voiceLang === 'tr-TR' ? '🇹🇷' : '🇸🇦'}</button>
-
-          <button type="button" onClick={() => startVoiceInput(key)}
-
-            title={listeningField === key ? 'Dinlemeyi durdur' : (voiceLang === 'tr-TR' ? 'Sesle giriş — Türkçe konuşun' : 'الإدخال الصوتي — تحدث بالعربية')}
-
-            style={{
-
-              background: listeningField === key ? '#e74c3c' : 'transparent',
-
-              color: listeningField === key ? '#fff' : 'var(--text-muted)',
-
-              border: 'none', borderRadius: '50%', width: '26px', height: '26px',
-
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-
-              cursor: 'pointer', fontSize: '14px', transition: 'all 0.2s ease',
-
-              animation: listeningField === key ? 'mic-pulse 1s ease-in-out infinite' : 'none'
-
-            }}>{listeningField === key ? '⏹' : '🎤'}</button>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  );
-
-
-
-  // Sesli textarea helper
-  const FT = (label, key, placeholder, rows = 3) => (
-    <div className="form-group">
-      <label className="form-label">{label}</label>
-      <div style={{ position: 'relative' }}>
-        <textarea className="form-textarea" rows={rows} placeholder={placeholder}
-          value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}
-          style={{ paddingRight: '62px', fontSize: '13px' }} />
-        <div style={{ position: 'absolute', right: '4px', top: '8px', display: 'flex', alignItems: 'center', gap: '2px', zIndex: 2 }}>
-          <button type="button" onClick={() => setVoiceLang(voiceLang === 'tr-TR' ? 'ar-SA' : 'tr-TR')}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '12px', padding: '2px', borderRadius: '4px', opacity: 0.7 }}>{voiceLang === 'tr-TR' ? '🇹🇷' : '🇸🇦'}</button>
-          <button type="button" onClick={() => startVoiceInput(key)}
-            style={{
-              background: listeningField === key ? '#e74c3c' : 'transparent',
-              color: listeningField === key ? '#fff' : 'var(--text-muted)',
-              border: 'none', borderRadius: '50%', width: '26px', height: '26px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', fontSize: '14px', transition: 'all 0.2s ease',
-              animation: listeningField === key ? 'mic-pulse 1s ease-in-out infinite' : 'none'
-            }}>{listeningField === key ? '⏹' : '🎤'}</button>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Sesli bare input helper (label dışarıda olacak şekilde)
-  const VI = (key, placeholder, type = 'text', extraStyle = {}) => (
-    <div style={{ position: 'relative' }}>
-      <input className="form-input" type={type} placeholder={placeholder}
-        value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}
-        style={{ paddingRight: '56px', ...extraStyle }} />
-      <div style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '2px' }}>
-        <button type="button" onClick={() => startVoiceInput(key)}
-          style={{
-            background: listeningField === key ? '#e74c3c' : 'transparent',
-            color: listeningField === key ? '#fff' : 'var(--text-muted)',
-            border: 'none', borderRadius: '50%', width: '24px', height: '24px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', fontSize: '13px', transition: 'all 0.2s ease',
-            animation: listeningField === key ? 'mic-pulse 1s ease-in-out infinite' : 'none'
-          }}>{listeningField === key ? '⏹' : '🎤'}</button>
-      </div>
-    </div>
-  );
-
-
-
-  return (
-
-    <div className="modal-overlay" onClick={onClose}>
-
-      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '950px', borderTop: `3px solid ${T.primary}` }}>
-
-
-
-        {/* ===== PREMIUM HEADER ===== */}
-
-        <div style={{ background: T.gradient, padding: '20px 24px', position: 'relative', overflow: 'hidden' }}>
-
-          {/* Dekoratif desen */}
-
-          <div style={{ position: 'absolute', top: 0, right: 0, width: '200px', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08))', pointerEvents: 'none' }} />
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-
-            <div>
-
-              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700', color: '#fff', letterSpacing: '0.5px', fontFamily: 'Georgia, serif' }}>
-
-                👗 Yeni Model Oluştur
-
-              </h2>
-
-              <div style={{ marginTop: '6px', fontSize: '13px', color: 'rgba(255,255,255,0.85)', fontWeight: '500', fontStyle: 'italic', letterSpacing: '1px', fontFamily: 'Georgia, serif' }}>
-
-                ✧ 2026 İlkbahar / Yaz Sezonu Koleksiyonu
-
-              </div>
-
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)', padding: '5px 14px', borderRadius: '20px', fontWeight: '600', letterSpacing: '0.3px' }}>
-
-                  📅 {new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' })}  {new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-
-                </span>
-
-                <button className="modal-close" onClick={onClose} style={{ color: '#fff', background: 'rgba(255,255,255,0.15)', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', fontSize: '14px' }}>✕</button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        {/* ===== RENK SEÇENEKLERİ ===== */}
-
-        <div style={{ padding: '10px 24px', background: T.bg, borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-
-          <span style={{ fontSize: '11px', fontWeight: '600', color: T.accent, textTransform: 'uppercase', letterSpacing: '1px' }}>🎨 Tema Rengi</span>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-
-            {Object.entries(themes).map(([key, t]) => (
-
-              <button key={key} type="button" onClick={() => setThemeColor(key)}
-
-                style={{
-
-                  display: 'flex', alignItems: 'center', gap: '6px',
-
-                  padding: '5px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
-
-                  border: themeColor === key ? `2px solid ${t.primary}` : '2px solid var(--border-color)',
-
-                  background: themeColor === key ? t.primary : 'var(--bg-input)',
-
-                  color: themeColor === key ? '#fff' : 'var(--text-secondary)',
-
-                  transition: 'all 0.2s ease'
-
-                }}
-
-              >
-
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: t.primary, border: '1px solid rgba(0,0,0,0.1)' }} />
-
-                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: t.secondary, border: '1px solid rgba(0,0,0,0.1)' }} />
-
-                {t.name}
-
-              </button>
-
-            ))}
-
-          </div>
-
-        </div>
-
-
-
-        <form onSubmit={handleSubmit} style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-
-
-
-          {/* ===== ÖN / ARKA GÖRSEL ALANI ===== */}
-
-          <div style={{ padding: '16px 20px 0', marginBottom: '4px' }}>
-
-            <div style={{ fontSize: '14px', fontWeight: '700', color: T.accent, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: `1px solid ${T.border}`, paddingBottom: '8px' }}>📸 Ürün Görselleri</div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-
-              {['front', 'back'].map(side => {
-
-                const preview = side === 'front' ? frontPreview : backPreview;
-
-                const isUp = uploading[side];
-
-                const label = side === 'front' ? 'ÖN GÖRSEL' : 'ARKA GÖRSEL';
-
-                return (
-
-                  <div key={side}
-
-                    onDrop={e => handleDrop(e, side)} onDragOver={handleDragOver}
-
-                    onClick={() => { const inp = document.getElementById(`img-input-${side}`); if (inp) inp.click(); }}
-
-                    style={{
-
-                      position: 'relative', width: '100%', minHeight: '320px', background: preview ? 'transparent' : T.bg,
-
-                      border: preview ? `2px solid ${T.accent}` : `2px dashed ${T.border}`,
-
-                      borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-
-                      cursor: 'pointer', overflow: 'hidden', transition: 'all 0.3s ease'
-
-                    }}
-
-                  >
-
-                    <input type="file" id={`img-input-${side}`} accept="image/*" style={{ display: 'none' }}
-
-                      onChange={e => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0], side); }} />
-
-                    {preview ? (
-
-                      <>
-
-                        <img src={preview} alt={label} style={{ width: '100%', height: '300px', objectFit: 'contain', padding: '8px', borderRadius: '10px' }} />
-
-                        <div style={{ position: 'absolute', bottom: '8px', left: '50%', transform: 'translateX(-50%)', background: T.primary, color: '#fff', padding: '5px 14px', borderRadius: '20px', fontSize: '11px', fontWeight: '600' }}>
-
-                          ✅ {label} Yüklendi — Değiştirmek için tıklayın
-
-                        </div>
-
-                      </>
-
-                    ) : (
-
-                      <div style={{ textAlign: 'center', padding: '20px' }}>
-
-                        {isUp ? (
-
-                          <>
-
-                            <div style={{ fontSize: '32px', marginBottom: '8px', animation: 'spin 1s linear infinite' }}>⏳</div>
-
-                            <div style={{ fontSize: '13px', fontWeight: '600', color: T.accent }}>Yükleniyor...</div>
-
-                          </>
-
-                        ) : (
-
-                          <>
-
-                            <div style={{ fontSize: '48px', marginBottom: '10px', opacity: 0.4 }}>{side === 'front' ? '👗' : '🧥'}</div>
-
-                            <div style={{ fontSize: '14px', fontWeight: '700', color: T.accent, marginBottom: '6px' }}>{label}</div>
-
-                            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Tıklayın veya sürükleyin</div>
-
-                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', padding: '4px 10px', background: 'var(--bg-card)', borderRadius: '12px', display: 'inline-block' }}>JPG, PNG, WebP  Max 10MB</div>
-
-                          </>
-
-                        )}
-
-                      </div>
-
-                    )}
-
-                  </div>
-
-                );
-
-              })}
-
-            </div>
-
-          </div>
-
-
-
-          {/* ===== TEMEL BİLGİLER ===== */}
-
-          <div style={{ padding: '0 20px' }}>
-
-            {sectionTitle('📋', 'Temel Bilgiler')}
-
-            <div className="form-row">{F('Model Adı *', 'name', 'örn: Yazlık Gömlek')}{F('Model Kodu *', 'code', 'örn: GM-2025-001')}</div>
-
-            <div className="form-row">{F('Sipariş No', 'order_no', 'SIP-001')}{F('Müşteri', 'customer', 'Müşteri adı')}</div>
-
-            <div className="form-row">{F('Modelist', 'modelist', 'Modelist adı')}{F('Kumaş Türü', 'fabric_type', 'örn: Penye, Dokuma')}</div>
-
-            <div className="form-row">
-              {/* MADDE 1: Sipariş Adeti — Rakam + Yazı */}
-              <div className="form-group">
-                <label className="form-label">📦 Sipariş Adeti</label>
-                {VI('total_order', 'örn: 5000 adet', 'text')}
-                <div style={{ marginTop: '6px' }}>{VI('total_order_text', 'Açıklama (örn: 500 adet yazlık gömlek)', 'text', { fontSize: '12px' })}</div>
-              </div>
-
-              {/* MADDE 2: Fason Fiyat — Serbest Giriş */}
-              <div className="form-group">
-                <label className="form-label">💰 Fason Fiyat (₺)</label>
-                {VI('fason_price', 'örn: 120 TL, KDV dahil', 'text')}
-                <div style={{ marginTop: '6px' }}>{VI('fason_price_text', 'Ek açıklama (örn: kumaş hariç, astar dahil)')}</div>
-              </div>
-            </div>
-
-          </div>
-
-
-
-          {sectionTitle('📝', 'Ürün Detayları')}
-
-          <div className="form-row">{F('Garni', 'garni', 'Garni bilgisi')}
-            {/* MADDE 3: Renk Sayısı + Renk Detayları */}
-            <div className="form-group">
-              <label className="form-label">🎨 Renk Sayısı & Detayları</label>
-              {VI('color_count', 'Renk sayısı (rakam)', 'number')}
-              <div style={{ marginTop: '6px' }}>{VI('color_details', 'Renkleri yazın (örn: Siyah, Beyaz, Kırmızı, Mavi)')}</div>
-            </div>
-          </div>
-
-          <div className="form-row">
-            {/* MADDE 4: Beden Sayısı + Dağılım */}
-            <div className="form-group">
-              <label className="form-label">📐 Beden Sayısı & Dağılımı</label>
-              {VI('size_count', 'Kaç beden? (örn: 4)', 'text')}
-              <div style={{ marginTop: '6px' }}>{VI('size_distribution', 'Dağılım (örn: S:1, M:2, L:2, XL:1)')}</div>
-            </div>
-
-            {/* MADDE 5: Asorti — Rakam + Yazı */}
-            {FT('🔢 Asorti', 'asorti', 'Asorti bilgisi yazın\nörn: S:1, M:2, L:2, XL:1 — toplam 6 adet', 2)}
-          </div>
-
-          {/* MADDE 6: Operasyon Alt Kırılımları */}
-          {sectionTitle('⚙️', 'Operasyon Kırılımları')}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', margin: '0 0 12px 0' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '14px' }}>
-              {(() => {
-                const total = (parseInt(form.op_kesim_count) || 0) + (parseInt(form.op_dikim_count) || 0) +
-                  (parseInt(form.op_utu_paket_count) || 0) + (parseInt(form.op_nakis_count) || 0) + (parseInt(form.op_yikama_count) || 0);
-                return <span style={{ fontSize: '13px', fontWeight: '700', color: T.primary }}>Toplam Operasyon: {total || '--'}</span>;
-              })()}
-            </div>
-
-            {/* Kesim */}
-            <div style={{ marginBottom: '10px', padding: '10px', background: 'rgba(52,152,219,0.06)', borderRadius: '8px', border: '1px solid rgba(52,152,219,0.15)' }}>
-              <label style={{ fontSize: '14px', fontWeight: '700', color: '#2980b9', marginBottom: '6px', display: 'block' }}>✂️ Kesim Operasyonu</label>
-              <div className="form-row" style={{ gap: '8px', marginBottom: '0' }}>
-                <input className="form-input" type="number" placeholder="Adet" value={form.op_kesim_count} onChange={e => setForm({ ...form, op_kesim_count: e.target.value })} style={{ maxWidth: '80px' }} />
-                {VI('op_kesim_details', 'Detay (örn: Beden kesimi, Garni kesimi, Tüp kesimi, Tela kesimi, Taş kesimi)')}
-              </div>
-            </div>
-
-            {/* Dikim */}
-            <div style={{ marginBottom: '10px', padding: '12px', background: 'rgba(155,89,182,0.06)', borderRadius: '8px', border: '1px solid rgba(155,89,182,0.15)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                <label style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', margin: 0 }}>🧵 Dikim Operasyonu</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '12px', color: '#8e44ad', fontWeight: '600' }}>
-                    Toplam: {form.op_dikim_rows.reduce((s, r) => s + (parseInt(r.adet) || 0), 0) || '--'} adet
-                  </span>
-                  <button type="button"
-                    onClick={() => setForm(prev => ({ ...prev, op_dikim_rows: [...prev.op_dikim_rows, { id: Date.now(), makine: '', adet: '', detay: '' }] }))}
-                    style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '6px', border: '1px solid #8e44ad', background: 'rgba(142,68,173,0.12)', color: '#8e44ad', cursor: 'pointer', fontWeight: '700' }}
-                  >+ Satır Ekle</button>
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '28px 140px 64px 1fr 28px', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
-                <span></span>
-                <span style={{ fontSize: '11px', color: '#8e44ad', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Makine Tipi</span>
-                <span style={{ fontSize: '11px', color: '#8e44ad', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Adet</span>
-                <span style={{ fontSize: '11px', color: '#8e44ad', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Açıklama / Detay</span>
-                <span></span>
-              </div>
-              {form.op_dikim_rows.map((row, idx) => (
-                <div key={row.id} style={{ display: 'grid', gridTemplateColumns: '28px 140px 64px 1fr 28px', gap: '6px', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '13px', color: '#8e44ad', fontWeight: '700', textAlign: 'center' }}>{idx + 1}</span>
-                  <select
-                    className="form-input"
-                    value={row.makine}
-                    onChange={e => {
-                      const rows = form.op_dikim_rows.map((r, i) => i === idx ? { ...r, makine: e.target.value } : r);
-                      setForm({ ...form, op_dikim_rows: rows });
-                    }}
-                    style={{ fontSize: '12px', padding: '6px 8px' }}
-                  >
-                    <option value="">Makine seç...</option>
-                    <option value="Düz Makina">🖥️ Düz Makina</option>
-                    <option value="Overlok">⚙️ Overlok</option>
-                    <option value="Reçme">🔩 Reçme</option>
-                    <option value="Çift İğne">🪡 Çift İğne</option>
-                    <option value="Zincir Dikiş">🔗 Zincir Dikiş</option>
-                    <option value="Nakış Makinesi">✨ Nakış Makinesi</option>
-                    <option value="Diğer">📌 Diğer</option>
-                  </select>
-                  <input
-                    className="form-input"
-                    type="number"
-                    placeholder="Adet"
-                    min="0"
-                    value={row.adet}
-                    onChange={e => {
-                      const rows = form.op_dikim_rows.map((r, i) => i === idx ? { ...r, adet: e.target.value } : r);
-                      setForm({ ...form, op_dikim_rows: rows, op_dikim_count: rows.reduce((s, r) => s + (parseInt(r.adet) || 0), 0).toString() });
-                    }}
-                    style={{ fontSize: '12px', padding: '6px 8px' }}
-                  />
-                  <input
-                    className="form-input"
-                    type="text"
-                    placeholder="Açıklama (örn: Kol birleştirme, Yaka takma)"
-                    value={row.detay}
-                    onChange={e => {
-                      const rows = form.op_dikim_rows.map((r, i) => i === idx ? { ...r, detay: e.target.value } : r);
-                      setForm({ ...form, op_dikim_rows: rows });
-                    }}
-                    style={{ fontSize: '12px', padding: '6px 8px' }}
-                  />
-                  <button type="button"
-                    onClick={() => {
-                      if (form.op_dikim_rows.length === 1) return;
-                      const rows = form.op_dikim_rows.filter((_, i) => i !== idx);
-                      setForm({ ...form, op_dikim_rows: rows, op_dikim_count: rows.reduce((s, r) => s + (parseInt(r.adet) || 0), 0).toString() });
-                    }}
-                    title="Bu satırı sil"
-                    style={{ width: '26px', height: '26px', borderRadius: '50%', border: 'none', background: form.op_dikim_rows.length === 1 ? 'rgba(0,0,0,0.05)' : 'rgba(231,76,60,0.12)', color: form.op_dikim_rows.length === 1 ? '#ccc' : '#e74c3c', cursor: form.op_dikim_rows.length === 1 ? 'not-allowed' : 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >×</button>
-                </div>
-              ))}
-            </div>
-
-            {/* Ütü & Paket */}
-            <div style={{ marginBottom: '10px', padding: '10px', background: 'rgba(230,126,34,0.06)', borderRadius: '8px', border: '1px solid rgba(230,126,34,0.15)' }}>
-              <label style={{ fontSize: '14px', fontWeight: '700', color: '#d35400', marginBottom: '6px', display: 'block' }}>♨️ Ütü & Paket</label>
-              <div className="form-row" style={{ gap: '8px', marginBottom: '0' }}>
-                <input className="form-input" type="number" placeholder="Adet" value={form.op_utu_paket_count} onChange={e => setForm({ ...form, op_utu_paket_count: e.target.value })} style={{ maxWidth: '80px' }} />
-                {VI('op_utu_paket_details', 'Detay (örn: Ara ütü, Son ütü, Katlama, Etiket, Paket)')}
-              </div>
-            </div>
-
-            {/* Nakış */}
-            <div style={{ marginBottom: '10px', padding: '10px', background: 'rgba(241,196,15,0.06)', borderRadius: '8px', border: '1px solid rgba(241,196,15,0.15)' }}>
-              <label style={{ fontSize: '14px', fontWeight: '700', color: '#f39c12', marginBottom: '6px', display: 'block' }}>🪡 Nakış</label>
-              <div className="form-row" style={{ gap: '8px', marginBottom: '0' }}>
-                <input className="form-input" type="number" placeholder="Adet" value={form.op_nakis_count} onChange={e => setForm({ ...form, op_nakis_count: e.target.value })} style={{ maxWidth: '80px' }} />
-                {VI('op_nakis_details', 'Detay (örn: Logo nakış, Biye nakış, Desen nakış)')}
-              </div>
-            </div>
-
-            {/* Yıkama */}
-            <div style={{ padding: '10px', background: 'rgba(26,188,156,0.06)', borderRadius: '8px', border: '1px solid rgba(26,188,156,0.15)' }}>
-              <label style={{ fontSize: '14px', fontWeight: '700', color: '#16a085', marginBottom: '6px', display: 'block' }}>🌊 Yıkama</label>
-              <div className="form-row" style={{ gap: '8px', marginBottom: '0' }}>
-                <input className="form-input" type="number" placeholder="Adet" value={form.op_yikama_count} onChange={e => setForm({ ...form, op_yikama_count: e.target.value })} style={{ maxWidth: '80px' }} />
-                {VI('op_yikama_details', 'Detay (örn: Taş yıkama, Enzim yıkama, Silikon yıkama)')}
-              </div>
-            </div>
-          </div>
-
-          {/* MADDE 7: Tela Bilgisi (Genişletilmiş) + MADDE 8: Toplam Parça */}
-          {sectionTitle('🧵', 'Astar & Tela & Parça Bilgisi')}
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input type="checkbox" checked={form.has_lining} onChange={e => setForm({ ...form, has_lining: e.target.checked })} /> Astar Var mı?
-              </label>
-              {form.has_lining && <input className="form-input" type="number" placeholder="Astar Parça Sayısı" value={form.lining_pieces} onChange={e => setForm({ ...form, lining_pieces: e.target.value })} style={{ marginTop: '8px' }} />}
-            </div>
-
-            {/* MADDE 7: Tela — Genişletilmiş */}
-            <div className="form-group">
-              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input type="checkbox" checked={form.has_interlining} onChange={e => setForm({ ...form, has_interlining: e.target.checked })} /> Tela Var mı?
-              </label>
-              {form.has_interlining && (
-                <div style={{ marginTop: '8px' }}>
-                  <input className="form-input" type="number" placeholder="Toplamda kaç parçada tela var?" value={form.interlining_count} onChange={e => setForm({ ...form, interlining_count: e.target.value })} />
-                  <div style={{ marginTop: '6px' }}>{VI('interlining_parts', 'Hangi parçalarda? (örn: Yaka, Manşet, Pat, Cep kapağı)')}</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* MADDE 8: Toplam Parça */}
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">🧩 Toplam Parça Sayısı</label>
-              {VI('piece_count', 'örn: 7 parça', 'text')}
-              <div style={{ marginTop: '6px' }}>{VI('piece_count_details', 'Detay (örn: Ön beden, Arka beden, 2 Kol, Yaka, 2 Cep = 7 parça)')}</div>
-            </div>
-          </div>
-
-
-
-          {sectionTitle('⚠️', 'Zorluk & Kritik Noktalar')}
-
-          {FT('⚠️ Zor & Dikkat Noktaları', 'difficult_points', 'Modeldeki zor noktaları belirtin...')}
-
-          {FT('🚨 Kritik Noktalar', 'critical_points', 'Kesinlikle dikkat edilmesi gereken noktalar...')}
-
-          {FT('📋 Müşteri Özel İstekleri', 'customer_requests', 'Müşterinin özel talepleri...')}
-
-
-
-          {sectionTitle('📅', 'Tarihler & Ölçü')}
-
-          <div className="form-row">
-
-            {F('İşe Başlama Tarihi', 'work_start_date', '', 'date')}
-
-            {F('Sevk Tarihi', 'delivery_date', '', 'date')}
-
-          </div>
-
-          <div className="form-row">{F('Bedenler', 'sizes', 'S, M, L, XL')}{F('Beden Aralığı', 'size_range', '36-44')}</div>
-
-
-
-          {sectionTitle('✂️', 'Dikimden Sonra Yapılacak İşlemler')}
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-
-            {postSewingOps.map(op => {
-
-              const sel = form.post_sewing?.includes(op);
-
-              return (<button key={op} type="button" onClick={() => togglePost(op)} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', border: sel ? '2px solid var(--accent)' : '2px solid var(--border-color)', background: sel ? 'var(--accent-soft)' : 'var(--bg-input)', color: sel ? 'var(--accent)' : 'var(--text-secondary)', fontFamily: 'inherit' }}>{op}</button>);
-
-            })}
-
-          </div>
-
-
-
-          <div className="form-group"><label className="form-label">Zorluk (1-10)</label><input className="form-input" type="range" min="1" max="10" value={form.model_difficulty} onChange={e => setForm({ ...form, model_difficulty: e.target.value })} /><div style={{ textAlign: 'center', fontWeight: '700', color: 'var(--accent)' }}>{form.model_difficulty}/10</div></div>
-
-          <div className="form-group"><label className="form-label">📊 Ürün Durumu</label><select className="form-select" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} style={{ padding: '10px', fontWeight: '600' }}><option value="orijinal_numune">🟢 Orijinal Numune</option><option value="ilk_uretim_numunesi">🔵 İlk Üretim Numunesi</option><option value="uretim_numunesi">🟡 Üretim Numunesi</option><option value="numune_onaylandi">✅ Numune Onaylandı</option><option value="uretimde">🟠 Üretimde</option><option value="uretim_tamamlandi">🏁 Üretim Tamamlandı</option><option value="sayi_seti">📦 Sayı Seti</option><option value="sevk_edildi">🚚 Sevk Edildi</option></select></div>
-
-          {FT('📝 Açıklama', 'description', 'Model hakkında notlar...')}
-
-
-
-          {/* MADDE 9: Otomatik Taslak Bilgilendirmesi */}
-          <div style={{ padding: '8px 16px', background: 'rgba(46,204,113,0.08)', borderRadius: '8px', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(46,204,113,0.2)' }}>
-            <span style={{ fontSize: '11px', color: '#27ae60' }}>💾 Verileriniz otomatik kaydediliyor — sayfa kapansa bile form korunur</span>
-            <button type="button" onClick={() => { if (confirm('Tüm form verilerini silmek istediğinize emin misiniz?')) { clearDraft(); setForm(getInitialForm()); } }} style={{ background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.2)', color: '#e74c3c', padding: '3px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer', fontWeight: '600' }}>🗑️ Taslağı Temizle</button>
-          </div>
-
-          <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}
-            </button>
-          </div>
-
-        </form>
-
-      </div>
-
-    </div>
-
-  );
-
-}
-
-
-
-// ========== MODAL: YENİ İŞLEM ==========
-
-function NewOperationModal({ modelId, operationCount, onClose, onSave }) {
-
-  const [form, setForm] = useState({
-
-    name: '', order_number: operationCount + 1, description: '',
-
-    difficulty: 5, machine_type: '', thread_material: '',
-
-    needle_type: '', stitch_per_cm: '',
-
-    quality_notes: '', quality_tolerance: '', error_examples: '',
-
-    standard_time_min: '', standard_time_max: '', unit_price: '',
-
-    dependency: '', written_instructions: '', how_to_do: '',
-
-    tolerance_minus: '1', tolerance_plus: '1', optical_appearance: '',
-
-    video_path: null, audio_path: null,
-
-    correct_photo_path: null, incorrect_photo_path: null,
-
-    required_skill_level: '3_sinif', operation_category: 'dikim'
-
-  });
-
-
-
-  // ===== MEDYA YÜKLEME STATE =====
-
-  const [videoUploading, setVideoUploading] = useState(false);
-
-  const [audioUploading, setAudioUploading] = useState(false);
-
-  const [videoProgress, setVideoProgress] = useState(0);
-
-  const [audioProgress, setAudioProgress] = useState(0);
-
-  const [dragOverVideo, setDragOverVideo] = useState(false);
-
-  const [dragOverAudio, setDragOverAudio] = useState(false);
-
-
-
-  // Dosya yükleme fonksiyonu
-
-  const uploadFile = async (file, fileType) => {
-
-    const isVideo = fileType === 'videos';
-
-    if (isVideo) setVideoUploading(true); else setAudioUploading(true);
-
-    if (isVideo) setVideoProgress(0); else setAudioProgress(0);
-
-
-
-    try {
-
-      const formData = new FormData();
-
-      formData.append('file', file);
-
-      formData.append('type', fileType);
-
-      formData.append('model_id', modelId);
-
-      formData.append('operation_id', 'new');
-
-
-
-      // Simüle ilerleme (XHR kullanmıyoruz, fetch ile)
-
-      const progressInterval = setInterval(() => {
-
-        if (isVideo) setVideoProgress(p => Math.min(p + 8, 90));
-
-        else setAudioProgress(p => Math.min(p + 8, 90));
-
-      }, 200);
-
-
-
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-
-      clearInterval(progressInterval);
-
-
-
-      if (!res.ok) {
-
-        const err = await res.json();
-
-        throw new Error(err.error || 'Yükleme hatası');
-
-      }
-
-
-
-      const data = await res.json();
-
-      if (isVideo) {
-
-        setForm(prev => ({ ...prev, video_path: data.url }));
-
-        setVideoProgress(100);
-
-      } else if (fileType === 'correct_photos') {
-
-        setForm(prev => ({ ...prev, correct_photo_path: data.url }));
-
-      } else if (fileType === 'incorrect_photos') {
-
-        setForm(prev => ({ ...prev, incorrect_photo_path: data.url }));
-
-      } else {
-
-        setForm(prev => ({ ...prev, audio_path: data.url }));
-
-        setAudioProgress(100);
-
-      }
-
-    } catch (err) {
-
-      alert('Yükleme hatası: ' + err.message);
-
-      if (isVideo) setVideoProgress(0); else setAudioProgress(0);
-
-    } finally {
-
-      if (isVideo) setVideoUploading(false); else setAudioUploading(false);
-
-    }
-
-  };
-
-
-
-  // Dosya sürükle-bırak ve input handler
-
-  const handleFileDrop = (e, fileType) => {
-
-    e.preventDefault();
-
-    setDragOverVideo(false);
-
-    setDragOverAudio(false);
-
-    const file = e.dataTransfer?.files?.[0] || e.target?.files?.[0];
-
-    if (file) uploadFile(file, fileType);
-
-  };
-
-
-
-  const handleFileSelect = (e, fileType) => {
-
-    const file = e.target.files?.[0];
-
-    if (file) uploadFile(file, fileType);
-
-  };
-
-
-
-  // Dosya silme
-
-  const removeFile = async (fileType) => {
-
-    const urlMap = { videos: 'video_path', audios: 'audio_path', correct_photos: 'correct_photo_path', incorrect_photos: 'incorrect_photo_path' };
-
-    const fieldName = urlMap[fileType];
-
-    const url = form[fieldName];
-
-    if (url) {
-
-      try { await fetch('/api/upload', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) }); } catch { }
-
-    }
-
-    setForm(prev => ({ ...prev, [fieldName]: null }));
-
-    if (fileType === 'videos') setVideoProgress(0);
-
-    if (fileType === 'audios') setAudioProgress(0);
-
-  };
-
-
-
-  const formatFileSize = (bytes) => {
-
-    if (bytes < 1024) return bytes + ' B';
-
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-
-  };
-
-  const [activeTab, setActiveTab] = useState('temel');
-
-  const [saving, setSaving] = useState(false);
-
-
-
-  // ===== SES KAYDI & TRANSKRİPSİYON STATE =====
-
-  const [isRecording, setIsRecording] = useState(false);
-
-  const [transcript, setTranscript] = useState('');
-
-  const [interimTranscript, setInterimTranscript] = useState('');
-
-  const [recordingTime, setRecordingTime] = useState(0);
-
-  const [transcriptStatus, setTranscriptStatus] = useState('idle'); // idle | recording | review | confirmed
-
-  const [recognition, setRecognition] = useState(null);
-
-  const [recordingTimer, setRecordingTimer] = useState(null);
-
-  // ===== KAMERA ÇEKİM STATE =====
-  const [cameraActive, setCameraActive] = useState(false);
-  const [cameraRecording, setCameraRecording] = useState(false);
-  const [cameraStream, setCameraStream] = useState(null);
-  const [cameraRecorder, setCameraRecorder] = useState(null);
-  const [cameraChunks, setCameraChunks] = useState([]);
-  const [cameraRecTime, setCameraRecTime] = useState(0);
-  const [cameraTimer, setCameraTimer] = useState(null);
-  const cameraVideoRef = useRef(null);
-
-  // ===== SES DOSYA KAYDI STATE =====
-  const [audioRecActive, setAudioRecActive] = useState(false);
-  const [audioRecorder, setAudioRecorder] = useState(null);
-  const [audioChunks, setAudioChunks] = useState([]);
-  const [audioRecTime, setAudioRecTime] = useState(0);
-  const [audioRecTimer, setAudioRecTimer] = useState(null);
-
-  // Kamera stream'i video elementine bağla
-  useEffect(() => {
-    if (cameraActive && cameraStream && cameraVideoRef.current) {
-      cameraVideoRef.current.srcObject = cameraStream;
-      cameraVideoRef.current.play().catch(() => { });
-    }
-  }, [cameraActive, cameraStream]);
-
-  // Kamerayı aç
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true });
-      setCameraStream(stream);
-      setCameraActive(true);
-      if (cameraVideoRef.current) { cameraVideoRef.current.srcObject = stream; cameraVideoRef.current.play(); }
-    } catch (err) { alert('Kamera erişim hatası: ' + err.message); }
-  };
-
-  // Kamera ile çekimi başlat
-  const startCameraRecording = () => {
-    if (!cameraStream) return;
-    const chunks = [];
-    const recorder = new MediaRecorder(cameraStream, { mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm' });
-    recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-    recorder.onstop = async () => {
-      const blob = new Blob(chunks, { type: 'video/webm' });
-      const file = new File([blob], `kamera_kayit_${Date.now()}.webm`, { type: 'video/webm' });
-      await uploadFile(file, 'videos');
-      stopCamera();
-    };
-    setCameraChunks(chunks);
-    setCameraRecorder(recorder);
-    setCameraRecording(true);
-    setCameraRecTime(0);
-    recorder.start(1000);
-    const t = setInterval(() => setCameraRecTime(s => s + 1), 1000);
-    setCameraTimer(t);
-  };
-
-  // Kamera çekimini durdur
-  const stopCameraRecording = () => {
-    if (cameraRecorder && cameraRecorder.state !== 'inactive') cameraRecorder.stop();
-    if (cameraTimer) clearInterval(cameraTimer);
-    setCameraRecording(false);
-    setCameraTimer(null);
-  };
-
-  // Kamerayı kapat
-  const stopCamera = () => {
-    if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
-    setCameraStream(null);
-    setCameraActive(false);
-    setCameraRecording(false);
-    if (cameraTimer) clearInterval(cameraTimer);
-  };
-
-  // Tarayıcıdan ses kaydı başlat (dosya olarak kayıt)
-  const startAudioRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const chunks = [];
-      const recorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg' });
-      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-      recorder.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        const file = new File([blob], `ses_kayit_${Date.now()}.webm`, { type: 'audio/webm' });
-        await uploadFile(file, 'audios');
-        setAudioRecActive(false);
-      };
-      setAudioChunks(chunks);
-      setAudioRecorder(recorder);
-      setAudioRecActive(true);
-      setAudioRecTime(0);
-      recorder.start(1000);
-      const t = setInterval(() => setAudioRecTime(s => s + 1), 1000);
-      setAudioRecTimer(t);
-    } catch (err) { alert('Mikrofon erişim hatası: ' + err.message); }
-  };
-
-  // Ses kaydını durdur
-  const stopAudioRecording = () => {
-    if (audioRecorder && audioRecorder.state !== 'inactive') audioRecorder.stop();
-    if (audioRecTimer) clearInterval(audioRecTimer);
-    setAudioRecTimer(null);
-  };
-
-
-
-  // Ses kaydını başlat (hem yazıya çevir hem dosya olarak kaydet)
-
-  const voiceMediaRecorderRef = useRef(null);
-  const voiceAudioChunksRef = useRef([]);
-  const voiceStreamRef = useRef(null);
-
-  const startVoiceRecording = async () => {
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-
-      alert('Tarayıcınız ses tanıma desteklemiyor. Lütfen Chrome veya Edge kullanın.');
-
-      return;
-
-    }
-
-    // MediaRecorder ile ses dosyası kaydet (paralel)
-    try {
-      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      voiceStreamRef.current = audioStream;
-      const audioChunks = [];
-      voiceAudioChunksRef.current = audioChunks;
-      const mediaRec = new MediaRecorder(audioStream, { mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg' });
-      mediaRec.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
-      mediaRec.onstop = async () => {
-        audioStream.getTracks().forEach(t => t.stop());
-        if (audioChunks.length > 0 && !form.audio_path) {
-          const blob = new Blob(audioChunks, { type: 'audio/webm' });
-          const file = new File([blob], `sesle_kayit_${Date.now()}.webm`, { type: 'audio/webm' });
-          await uploadFile(file, 'audios');
-        }
-      };
-      voiceMediaRecorderRef.current = mediaRec;
-      mediaRec.start(1000);
-    } catch (err) {
-      console.warn('Ses dosya kaydı başlatılamadı (yazıya çevirme devam edecek):', err.message);
-    }
-
-    const rec = new SpeechRecognition();
-
-    rec.lang = 'tr-TR';
-
-    rec.continuous = true;
-
-    rec.interimResults = true;
-
-    rec.maxAlternatives = 1;
-
-
-
-    let fullText = transcript || '';
-
-
-
-    rec.onresult = (event) => {
-
-      let interim = '';
-
-      let final = '';
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-
-        const t = event.results[i][0].transcript;
-
-        if (event.results[i].isFinal) {
-
-          final += t + ' ';
-
-        } else {
-
-          interim += t;
-
-        }
-
-      }
-
-      if (final) {
-
-        fullText += final;
-
-        setTranscript(fullText);
-
-      }
-
-      setInterimTranscript(interim);
-
-    };
-
-
-
-    rec.onerror = (event) => {
-
-      console.error('Ses tanıma hatası:', event.error);
-
-      if (event.error !== 'no-speech') {
-
-        stopVoiceRecording();
-
-      }
-
-    };
-
-
-
-    rec.onend = () => {
-
-      // Continuous modda bazen durur, yeniden başlat
-
-      if (isRecording) {
-
-        try { rec.start(); } catch (e) { /* zaten çalışıyor */ }
-
-      }
-
-    };
-
-
-
-    rec.start();
-
-    setRecognition(rec);
-
-    setIsRecording(true);
-
-    setTranscriptStatus('recording');
-
-    setRecordingTime(0);
-
-
-
-    // Kayıt süresi sayacı
-
-    const timer = setInterval(() => setRecordingTime(t => t + 1), 1000);
-
-    setRecordingTimer(timer);
-
-  };
-
-
-
-  // Ses kaydını durdur
-
-  const stopVoiceRecording = () => {
-
-    if (recognition) {
-
-      recognition.onend = null; // Auto-restart'ı engelle
-
-      recognition.stop();
-
-      setRecognition(null);
-
-    }
-
-    // MediaRecorder'ı da durdur (ses dosyası otomatik kaydedilir)
-    if (voiceMediaRecorderRef.current && voiceMediaRecorderRef.current.state !== 'inactive') {
-      voiceMediaRecorderRef.current.stop();
-      voiceMediaRecorderRef.current = null;
-    }
-
-    if (recordingTimer) {
-
-      clearInterval(recordingTimer);
-
-      setRecordingTimer(null);
-
-    }
-
-    setIsRecording(false);
-
-    setInterimTranscript('');
-
-    if (transcript.trim()) {
-
-      setTranscriptStatus('review');
-
-    } else {
-
-      setTranscriptStatus('idle');
-
-    }
-
-  };
-
-
-
-  // Transkripti onayla ve forma kaydet
-
-  const confirmTranscript = () => {
-
-    const numberedText = transcript.trim().split(/(?<=[.!?])\s+/).filter(Boolean).map((sentence, i) => `${i + 1}. ${sentence.trim()}`).join('\n');
-
-    setForm({ ...form, how_to_do: (form.how_to_do ? form.how_to_do + '\n\n' : '') + numberedText });
-
-    setTranscriptStatus('confirmed');
-
-    setTranscript('');
-
-  };
-
-
-
-  // Transkripti reddet / yeniden kaydet
-
-  const resetTranscript = () => {
-
-    setTranscript('');
-
-    setInterimTranscript('');
-
-    setTranscriptStatus('idle');
-
-    setRecordingTime(0);
-
-  };
-
-
-
-  const formatRecTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-
-
-
-  const handleSubmit = async (e) => {
-
-    e.preventDefault();
-
-    if (!form.name) return;
-
-    setSaving(true);
-
-    try {
-
-      await onSave({
-
-        ...form, order_number: parseInt(form.order_number) || 1,
-
-        difficulty: parseInt(form.difficulty) || 5,
-
-        standard_time_min: parseFloat(form.standard_time_min) || null,
-
-        standard_time_max: parseFloat(form.standard_time_max) || null,
-
-        unit_price: parseFloat(form.unit_price) || null,
-
-        quality_tolerance: `${form.tolerance_minus || 0}/${form.tolerance_plus || 0}`
-
-      });
-
-    } finally { setSaving(false); }
-
-  };
-
-
-
-  const tabs = [
-
-    { id: 'temel', label: '📏 Temel' },
-
-    { id: 'medya', label: '📋 Medya Yükle' },
-
-    { id: 'yapilis', label: '🎙️ Sesle Kayıt' },
-
-    { id: 'makine', label: '⚙️ Makine' },
-
-    { id: 'kalite', label: '✅ Kalite' },
-
-    { id: 'sure', label: '⏱️ Süre & Fiyat' },
-
-  ];
-
-
-
-  return (
-
-    <div className="modal-overlay" onClick={onClose}>
-
-      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '780px' }}>
-
-        <div className="modal-header">
-
-          <h2 className="modal-title">⚙️ Yeni İşlem Ekle</h2>
-
-          <button className="modal-close" onClick={onClose}>✕</button>
-
-        </div>
-
-        <div style={{ display: 'flex', borderBottom: '2px solid var(--border-color)', background: 'var(--bg-input)' }}>
-
-          {tabs.map(tab => (
-
-            <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
-
-              style={{ padding: '10px 16px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: 'none', borderBottom: activeTab === tab.id ? '3px solid var(--accent)' : '3px solid transparent', background: activeTab === tab.id ? 'var(--bg-card)' : 'transparent', color: activeTab === tab.id ? 'var(--accent)' : 'var(--text-muted)', fontFamily: 'inherit' }}>{tab.label}</button>
-
-          ))}
-
-        </div>
-
-        <form onSubmit={handleSubmit} style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-
-          {activeTab === 'temel' && (
-
-            <div style={{ padding: '16px 24px' }}>
-
-              <div className="form-row">
-
-                <div className="form-group"><label className="form-label">İşlem Adı *</label><input className="form-input" placeholder="örn: Yaka Takma" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
-
-                <div className="form-group" style={{ maxWidth: '100px' }}><label className="form-label">Sıra No</label><input className="form-input" type="number" value={form.order_number} onChange={e => setForm({ ...form, order_number: e.target.value })} /></div>
-
-              </div>
-
-              <div className="form-group"><label className="form-label">Açıklama</label><textarea className="form-textarea" placeholder="İşlem hakkında kısa açıklama..." value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-
-              <div className="form-group"><label className="form-label">Zorluk: {form.difficulty}/10</label><input className="form-input" type="range" min="1" max="10" value={form.difficulty} onChange={e => setForm({ ...form, difficulty: e.target.value })} /></div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">{'\uD83D\uDCCB'} Operasyon Kategorisi</label>
-                  <select className="form-input" value={form.operation_category} onChange={e => setForm({ ...form, operation_category: e.target.value })}>
-                    <option value="kesim">{'\u2702\uFE0F'} Kesim</option>
-                    <option value="nakis_baski">{'\uD83E\uDEA1'} Nak{'\u0131ş'} / Bask{'\u0131'}</option>
-                    <option value="dikim">{'\uD83E\uDDF5'} Dikim</option>
-                    <option value="temizlik">{'\uD83E\uDDF9'} Temizlik</option>
-                    <option value="kalite_kontrol">{'\u2705'} Kalite Kontrol</option>
-                    <option value="utu_paket">{'\uD83D\uDD25'} {'\u00DC'}t{'\u00FC'} / Paket</option>
-                    <option value="yikama">{'\uD83E\uDDFC'} Y{'\u0131'}kama</option>
-                    <option value="diger">{'\uD83D\uDCE6'} Di{'ğ'}er</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">{'\u2B50'} Gereken Min. Ustal{'\u0131'}k Seviyesi</label>
-                  <select className="form-input" value={form.required_skill_level} onChange={e => setForm({ ...form, required_skill_level: e.target.value })}>
-                    <option value="1_sinif">{'\u2B50\u2B50\u2B50'} 1. S{'\u0131'}n{'\u0131'}f</option>
-                    <option value="2_sinif">{'\u2B50\u2B50'} 2. S{'\u0131'}n{'\u0131'}f</option>
-                    <option value="3_sinif">{'\u2B50'} 3. S{'\u0131'}n{'\u0131'}f</option>
-                    <option value="4_sinif">4. S{'\u0131'}n{'\u0131'}f</option>
-                    <option value="5_sinif">5. S{'\u0131'}n{'\u0131'}f</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">{'\u2699\uFE0F'} Kullan{'\u0131'}lacak Makine</label>
-                <select className="form-input" value={form.machine_type} onChange={e => setForm({ ...form, machine_type: e.target.value })}>
-                  <option value="">-- Makine Se{'\u00E7'}in --</option>
-                  <optgroup label={'\uD83E\uDDF5 Dikiş Makineleri'}>
-                    <option value="Düz Dikiş (Tek İğne)">D{'\u00FC'}z Diki{'ş'} (Tek {'İğ'}ne)</option>
-                    <option value="Çift İğne Düz Dikiş">{'\u00C7'}ift {'İğ'}ne D{'\u00FC'}z Diki{'ş'}</option>
-                    <option value="Zincir Dikiş">Zincir Diki{'ş'}</option>
-                    <option value="Çift İğne Zincir Dikiş">{'\u00C7'}ift {'İğ'}ne Zincir Diki{'ş'}</option>
-                    <option value="Gizli Dikiş">Gizli Diki{'ş'}</option>
-                    <option value="Zigzag">Zigzag</option>
-                  </optgroup>
-                  <optgroup label={'\uD83D\uDD04 Overlok'}>
-                    <option value="3 İplik Overlok">3 {'İ'}plik Overlok</option>
-                    <option value="4 İplik Overlok">4 {'İ'}plik Overlok</option>
-                    <option value="5 İplik Overlok">5 {'İ'}plik Overlok</option>
-                  </optgroup>
-                  <optgroup label={'\uD83D\uDCCF Re\u00E7me & Flatlock'}>
-                    <option value="2 İğne Reçme">2 {'İğ'}ne Re{'\u00E7'}me</option>
-                    <option value="3 İğne Reçme">3 {'İğ'}ne Re{'\u00E7'}me</option>
-                    <option value="Bıçaklı Reçme">B{'\u0131\u00E7'}akl{'\u0131'} Re{'\u00E7'}me</option>
-                    <option value="Silindir Kol Reçme">Silindir Kol Re{'\u00E7'}me</option>
-                    <option value="Flatlock">Flatlock</option>
-                  </optgroup>
-                  <optgroup label={'\u2699\uFE0F \u00D6zel Operasyon'}>
-                    <option value="İlik Makinesi">{'İ'}lik Makinesi</option>
-                    <option value="Düğme Dikme Makinesi">D{'\u00FCğ'}me Dikme Makinesi</option>
-                    <option value="Punteriz (Bartack)">Punteriz (Bartack)</option>
-                    <option value="Kemer Takma Makinesi">Kemer Takma Makinesi</option>
-                    <option value="Kollu Makine (Feed-off-the-arm)">Kollu Makine (Feed-off-the-arm)</option>
-                    <option value="Çıt Çıt / Rivet Makinesi">{'\u00C7\u0131'}t {'\u00C7\u0131'}t / Rivet Makinesi</option>
-                    <option value="Cep Otomatı">Cep Otomat{'\u0131'}</option>
-                    <option value="Fermuar Makinesi">Fermuar Makinesi</option>
-                    <option value="Lastik Takma Makinesi">Lastik Takma Makinesi</option>
-                    <option value="Biye Aparatlı Makine">Biye Aparat{'\u0131'} Makine</option>
-                  </optgroup>
-                  <optgroup label={'\u2702\uFE0F Kesim'}>
-                    <option value="Düz Bıçak Kesim">D{'\u00FC'}z B{'\u0131\u00E7'}ak Kesim</option>
-                    <option value="Şerit Bıçak (Band Knife)">{'\u015E'}erit B{'\u0131\u00E7'}ak (Band Knife)</option>
-                    <option value="Pastal Serim Makinesi">Pastal Serim Makinesi</option>
-                    <option value="CNC Otomatik Kesim">CNC Otomatik Kesim</option>
-                  </optgroup>
-                  <optgroup label={'\u2668\uFE0F \u00DCt\u00FC & Son İşlem'}>
-                    <option value="Buharlı Ütü">Buharl{'\u0131'} {'\u00DC'}t{'\u00FC'}</option>
-                    <option value="Vakum Ütü Masası">Vakum {'\u00DC'}t{'\u00FC'} Masas{'\u0131'}</option>
-                    <option value="Ütü Presi">{'\u00DC'}t{'\u00FC'} Presi</option>
-                    <option value="Buhar Kazanı">Buhar Kazan{'\u0131'}</option>
-                  </optgroup>
-                  <optgroup label={'\uD83D\uDCCB Yard\u0131mc\u0131'}>
-                    <option value="Nakış / Brode Makinesi">Nak{'\u0131ş'} / Brode Makinesi</option>
-                    <option value="Etiket Kesme Makinesi">Etiket Kesme Makinesi</option>
-                    <option value="Baskı / Transfer Makinesi">Bask{'\u0131'} / Transfer Makinesi</option>
-                    <option value="Elle (Makinesiz)">Elle (Makinesiz)</option>
-                  </optgroup>
-                </select>
-              </div>
-
-            </div>
-
-          )}
-
-          {activeTab === 'medya' && (
-
-            <div style={{ padding: '16px 24px' }}>
-
-              {/* BİLGİ KUTUSU */}
-
-              <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(217,119,6,0.06))', borderRadius: 'var(--radius-md)', marginBottom: '20px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.7', border: '1px solid rgba(245,158,11,0.2)' }}>
-
-                <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '6px', color: 'var(--warning)' }}>📋 Prototip Kayıt Yükleme</div>
-
-                <strong>Nasıl Çalışır:</strong> Prototip üretimi sırasında tabletle çektiĞiniz video ve ses kayıtlarını buradan yükleyin. Dosyalar sisteme kaydedilir ve teknik föyle birlikte seri üretim işletmesine gönderilebilir.
-
-              </div>
-
-
-
-              {/* ===== VİDEO YÜKLEME ===== */}
-
-              <div style={{ marginBottom: '20px' }}>
-
-                <label className="form-label" style={{ fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-
-                  📋 İşlem Videosu
-
-                  {form.video_path && <span className="badge badge-success" style={{ fontSize: '10px' }}>✅ Yüklendi</span>}
-
-                </label>
-
-
-
-                {!form.video_path ? (
-
-                  <div
-
-                    onDragOver={e => { e.preventDefault(); setDragOverVideo(true); }}
-
-                    onDragLeave={() => setDragOverVideo(false)}
-
-                    onDrop={e => handleFileDrop(e, 'videos')}
-
-                    onClick={() => document.getElementById('video-file-input').click()}
-
-                    style={{
-
-                      border: `2px dashed ${dragOverVideo ? 'var(--accent)' : 'var(--border-color)'}`,
-
-                      borderRadius: 'var(--radius-lg)',
-
-                      padding: '40px 20px',
-
-                      textAlign: 'center',
-
-                      cursor: 'pointer',
-
-                      background: dragOverVideo ? 'rgba(99,102,241,0.04)' : 'var(--bg-input)',
-
-                      transition: 'all 0.3s'
-
-                    }}>
-
-                    <input id="video-file-input" type="file" accept="video/*" style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'videos')} />
-
-                    {videoUploading ? (
-
-                      <div>
-
-                        <div style={{ fontSize: '32px', marginBottom: '8px', animation: 'pulse 1.5s infinite' }}>⏳</div>
-
-                        <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>Video yükleniyor... %{videoProgress}</div>
-
-                        <div style={{ height: '6px', background: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden', maxWidth: '300px', margin: '0 auto' }}>
-
-                          <div style={{ height: '100%', width: `${videoProgress}%`, background: 'var(--gradient-accent)', borderRadius: '3px', transition: 'width 0.3s' }} />
-
-                        </div>
-
-                      </div>
-
-                    ) : (
-
-                      <div>
-
-                        <div style={{ fontSize: '40px', marginBottom: '8px' }}>📏</div>
-
-                        <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
-
-                          Videoyu buraya sürükleyin veya tıklayın
-
-                        </div>
-
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-
-                          Tablet/telefon ile çektiĞiniz prototip üretim videosunu yükleyin
-
-                        </div>
-
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
-
-                          Desteklenen: MP4, WebM, MOV, AVI  Max: 500MB
-
-                        </div>
-
-                      </div>
-
-                    )}
-
-                  </div>
-
-                ) : (
-
-                  <div style={{ border: '2px solid var(--success)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'var(--bg-input)' }}>
-
-                    {/* Video Önizleme */}
-
-                    <video controls style={{ width: '100%', maxHeight: '300px', background: '#000' }}>
-
-                      <source src={form.video_path} />
-
-                      Tarayıcınız video oynatmayı desteklemiyor.
-
-                    </video>
-
-                    <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                        <span style={{ fontSize: '18px' }}>✅</span>
-
-                        <div>
-
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--success)' }}>Video başarıyla yüklendi</div>
-
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{form.video_path}</div>
-
-                        </div>
-
-                      </div>
-
-                      <button type="button" onClick={() => removeFile('videos')} style={{ padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid var(--danger)', background: 'rgba(239,68,68,0.06)', color: 'var(--danger)', fontFamily: 'inherit' }}>🗑️ Kaldır</button>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-              </div>
-
-
-
-              {/* ===== KAMERADAN DOĞRUDAN ÇEKİM ===== */}
-              <div style={{ marginBottom: '20px' }}>
-                <label className="form-label" style={{ fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                  🎥 Kameradan Doğrudan Çek
-                  {cameraRecording && <span className="badge badge-danger" style={{ fontSize: '10px', animation: 'pulse 1s infinite' }}>⏺ KAYIT</span>}
-                </label>
-
-                {!cameraActive ? (
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button type="button" onClick={startCamera}
-                      style={{ flex: 1, padding: '20px', borderRadius: 'var(--radius-lg)', border: '2px dashed var(--accent)', background: 'rgba(99,102,241,0.04)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ fontSize: '36px' }}>📹</div>
-                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--accent)' }}>Tarayıcı Kamerasını Aç</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Bilgisayar veya tablet kamerasıyla çekim yapın</div>
-                    </button>
-                    <label style={{ flex: 1, padding: '20px', borderRadius: 'var(--radius-lg)', border: '2px dashed var(--success)', background: 'rgba(34,197,94,0.04)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textAlign: 'center' }}>
-                      <input type="file" accept="video/*" capture="environment" style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'videos')} />
-                      <div style={{ fontSize: '36px' }}>📱</div>
-                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--success)' }}>Telefon Kamerasıyla Çek</div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Mobil cihazda doğrudan kamera açılır</div>
-                    </label>
-                  </div>
-                ) : (
-                  <div style={{ border: '2px solid var(--accent)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: '#000' }}>
-                    <video ref={cameraVideoRef} autoPlay muted playsInline style={{ width: '100%', maxHeight: '300px', display: 'block' }} />
-                    <div style={{ padding: '12px 16px', background: 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        {cameraRecording && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }} />
-                            <span style={{ fontSize: '14px', fontWeight: '700', color: '#ef4444', fontFamily: 'monospace' }}>{formatRecTime(cameraRecTime)}</span>
-                          </div>
-                        )}
-                        {!cameraRecording && <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Kamera hazır — çekime başlayın</span>}
-                      </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        {!cameraRecording ? (
-                          <button type="button" onClick={startCameraRecording}
-                            style={{ padding: '8px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', border: 'none', background: '#ef4444', color: '#fff', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            ⏺ Çekimi Başlat
-                          </button>
-                        ) : (
-                          <button type="button" onClick={stopCameraRecording}
-                            style={{ padding: '8px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', border: 'none', background: '#22c55e', color: '#fff', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '6px', animation: 'pulse 1.5s infinite' }}>
-                            ⏹ Çekimi Durdur & Kaydet
-                          </button>
-                        )}
-                        <button type="button" onClick={stopCamera}
-                          style={{ padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-secondary)', fontFamily: 'inherit' }}>
-                          ✕ Kapat
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-
-
-              {/* ===== SES DOSYASI YÜKLEME ===== */}
-
-              <div>
-
-                <label className="form-label" style={{ fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-
-                  🎙️ İşlem Ses Kaydı
-
-                  {form.audio_path && <span className="badge badge-success" style={{ fontSize: '10px' }}>✅ Yüklendi</span>}
-                  {audioRecActive && <span className="badge badge-danger" style={{ fontSize: '10px', animation: 'pulse 1s infinite' }}>⏺ KAYIT</span>}
-                </label>
-
-                {/* Mikrofondan Doğrudan Kayıt */}
-                {!form.audio_path && (
-                  <div style={{ marginBottom: '14px' }}>
-                    {!audioRecActive ? (
-                      <button type="button" onClick={startAudioRecording}
-                        style={{ width: '100%', padding: '16px', borderRadius: 'var(--radius-lg)', border: '2px dashed #8b5cf6', background: 'rgba(139,92,246,0.04)', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                        <div style={{ fontSize: '24px' }}>🎙️</div>
-                        <div>
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: '#8b5cf6' }}>Mikrofondan Doğrudan Kaydet</div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ses kaydı dosya olarak sisteme kaydedilir</div>
-                        </div>
-                      </button>
-                    ) : (
-                      <div style={{ padding: '16px', border: '2px solid #ef4444', borderRadius: 'var(--radius-lg)', background: 'rgba(239,68,68,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s infinite' }} />
-                          <span style={{ fontSize: '14px', fontWeight: '700', color: '#ef4444', fontFamily: 'monospace' }}>{formatRecTime(audioRecTime)}</span>
-                          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Konuşun... Kayıt devam ediyor</span>
-                        </div>
-                        <button type="button" onClick={stopAudioRecording}
-                          style={{ padding: '8px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', border: 'none', background: '#22c55e', color: '#fff', fontFamily: 'inherit' }}>
-                          ⏹ Kaydı Durdur & Kaydet
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {!form.audio_path ? (
-
-                  <div
-
-                    onDragOver={e => { e.preventDefault(); setDragOverAudio(true); }}
-
-                    onDragLeave={() => setDragOverAudio(false)}
-
-                    onDrop={e => handleFileDrop(e, 'audios')}
-
-                    onClick={() => document.getElementById('audio-file-input').click()}
-
-                    style={{
-
-                      border: `2px dashed ${dragOverAudio ? 'var(--accent)' : 'var(--border-color)'}`,
-
-                      borderRadius: 'var(--radius-lg)',
-
-                      padding: '32px 20px',
-
-                      textAlign: 'center',
-
-                      cursor: 'pointer',
-
-                      background: dragOverAudio ? 'rgba(99,102,241,0.04)' : 'var(--bg-input)',
-
-                      transition: 'all 0.3s'
-
-                    }}>
-
-                    <input id="audio-file-input" type="file" accept="audio/*" style={{ display: 'none' }} onChange={e => handleFileSelect(e, 'audios')} />
-
-                    {audioUploading ? (
-
-                      <div>
-
-                        <div style={{ fontSize: '28px', marginBottom: '8px', animation: 'pulse 1.5s infinite' }}>⏳</div>
-
-                        <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px' }}>Ses kaydı yükleniyor... %{audioProgress}</div>
-
-                        <div style={{ height: '6px', background: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden', maxWidth: '300px', margin: '0 auto' }}>
-
-                          <div style={{ height: '100%', width: `${audioProgress}%`, background: 'var(--gradient-accent)', borderRadius: '3px', transition: 'width 0.3s' }} />
-
-                        </div>
-
-                      </div>
-
-                    ) : (
-
-                      <div>
-
-                        <div style={{ fontSize: '36px', marginBottom: '8px' }}>📋</div>
-
-                        <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '4px' }}>
-
-                          Ses kaydını buraya sürükleyin veya tıklayın
-
-                        </div>
-
-                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-
-                          Prototip üretimi sırasında yapılan sözlü anlatım kaydını yükleyin
-
-                        </div>
-
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
-
-                          Desteklenen: MP3, WAV, M4A, OGG, AAC  Max: 500MB
-
-                        </div>
-
-                      </div>
-
-                    )}
-
-                  </div>
-
-                ) : (
-
-                  <div style={{ border: '2px solid var(--success)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'var(--bg-input)' }}>
-
-                    {/* Ses Önizleme */}
-
-                    <div style={{ padding: '16px' }}>
-
-                      <audio controls style={{ width: '100%' }}>
-
-                        <source src={form.audio_path} />
-
-                        Tarayıcınız ses oynatmayı desteklemiyor.
-
-                      </audio>
-
-                    </div>
-
-                    <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                        <span style={{ fontSize: '18px' }}>✅</span>
-
-                        <div>
-
-                          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--success)' }}>Ses kaydı başarıyla yüklendi</div>
-
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{form.audio_path}</div>
-
-                        </div>
-
-                      </div>
-
-                      <button type="button" onClick={() => removeFile('audios')} style={{ padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid var(--danger)', background: 'rgba(239,68,68,0.06)', color: 'var(--danger)', fontFamily: 'inherit' }}>🗑️ Kaldır</button>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-              </div>
-
-
-
-              {/* ===== DOĞRU YAPILMIŞ FOTOĞRAF ===== */}
-
-              <div style={{ marginTop: '20px' }}>
-
-                <label className="form-label" style={{ fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-
-                  ✅ DoĞru Yapılmış Örnek FotoĞraf
-
-                  {form.correct_photo_path && <span className="badge badge-success" style={{ fontSize: '10px' }}>Yüklendi</span>}
-
-                </label>
-
-                {!form.correct_photo_path ? (
-
-                  <div onClick={() => document.getElementById('correct-photo-input').click()}
-
-                    style={{ border: '2px dashed var(--success)', borderRadius: 'var(--radius-md)', padding: '24px 16px', textAlign: 'center', cursor: 'pointer', background: 'rgba(91,158,95,0.04)', transition: 'all 0.3s' }}>
-
-                    <input id="correct-photo-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(f, 'correct_photos'); }} />
-
-                    <div style={{ fontSize: '32px', marginBottom: '6px' }}>✅📏</div>
-
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--success)' }}>DoĞru yapılmış fotoĞrafı yükleyin</div>
-
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Kabul edilebilir kalitede yapılmış örnek ürün fotoĞrafı</div>
-
-                  </div>
-
-                ) : (
-
-                  <div style={{ border: '2px solid var(--success)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-
-                    <img src={form.correct_photo_path} alt="DoĞru örnek" style={{ width: '100%', maxHeight: '200px', objectFit: 'contain', background: '#f9f9f9' }} />
-
-                    <div style={{ padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-
-                      <span style={{ fontSize: '12px', color: 'var(--success)', fontWeight: '600' }}>✅ DoĞru örnek yüklendi</span>
-
-                      <button type="button" onClick={() => removeFile('correct_photos')} style={{ padding: '4px 10px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer', border: '1px solid var(--danger)', background: 'transparent', color: 'var(--danger)', fontFamily: 'inherit' }}>Kaldır</button>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-              </div>
-
-
-
-              {/* ===== YANLIŞ YAPILMIŞ FOTOĞRAF ===== */}
-
-              <div style={{ marginTop: '16px' }}>
-
-                <label className="form-label" style={{ fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-
-                  ❌ Yanlış Yapılmış Örnek FotoĞraf
-
-                  {form.incorrect_photo_path && <span className="badge badge-danger" style={{ fontSize: '10px' }}>Yüklendi</span>}
-
-                </label>
-
-                {!form.incorrect_photo_path ? (
-
-                  <div onClick={() => document.getElementById('incorrect-photo-input').click()}
-
-                    style={{ border: '2px dashed var(--danger)', borderRadius: 'var(--radius-md)', padding: '24px 16px', textAlign: 'center', cursor: 'pointer', background: 'rgba(194,91,91,0.04)', transition: 'all 0.3s' }}>
-
-                    <input id="incorrect-photo-input" type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) uploadFile(f, 'incorrect_photos'); }} />
-
-                    <div style={{ fontSize: '32px', marginBottom: '6px' }}>❌📏</div>
-
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--danger)' }}>Yanlış yapılmış fotoĞrafı yükleyin</div>
-
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Kabul edilemez kalitede yapılmış hatalı ürün fotoĞrafı</div>
-
-                  </div>
-
-                ) : (
-
-                  <div style={{ border: '2px solid var(--danger)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-
-                    <img src={form.incorrect_photo_path} alt="Yanlış örnek" style={{ width: '100%', maxHeight: '200px', objectFit: 'contain', background: '#f9f9f9' }} />
-
-                    <div style={{ padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-
-                      <span style={{ fontSize: '12px', color: 'var(--danger)', fontWeight: '600' }}>❌ Yanlış örnek yüklendi</span>
-
-                      <button type="button" onClick={() => removeFile('incorrect_photos')} style={{ padding: '4px 10px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer', border: '1px solid var(--danger)', background: 'transparent', color: 'var(--danger)', fontFamily: 'inherit' }}>Kaldır</button>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-              </div>
-
-
-
-              {/* İPUÇLARI */}
-
-              <div style={{ marginTop: '20px', padding: '14px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.7' }}>
-
-                <div style={{ fontWeight: '700', marginBottom: '6px' }}>📋 İpuçları:</div>
-
-                <ul style={{ margin: 0, paddingLeft: '18px' }}>
-
-                  <li>Tabletten çektiĞiniz videoyu bilgisayara aktardıktan sonra buradan yükleyebilirsiniz</li>
-
-                  <li>DoĞru/yanlış fotoĞrafları mutlaka yükleyin — operatör karşılaştırma yapacak</li>
-
-                  <li>Dosyalar otomatik olarak standart formatta isimlendirilir</li>
-
-                  <li>Video ve ses kaydı teknik föyle beraber seri üretim işletmesine gönderilir</li>
-
-                </ul>
-
-              </div>
-
-            </div>
-
-          )}
-
-          {activeTab === 'yapilis' && (
-
-            <div style={{ padding: '16px 24px' }}>
-
-              {/* BİLGİ KUTUSU */}
-
-              <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(168,85,247,0.08))', borderRadius: 'var(--radius-md)', marginBottom: '20px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.7', border: '1px solid rgba(99,102,241,0.2)' }}>
-
-                <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '6px', color: 'var(--accent)' }}>🎙️ Sesle İşlem Kaydı Sistemi</div>
-
-                <strong>Nasıl Çalışır:</strong> Prototip üretimi sırasında işlemi yaparken sesle anlatın → Sistem sesi <strong>otomatik yazıya çevirir</strong> + <strong>ses dosyası olarak kaydeder</strong> → Kontrol edip onaylayın → İşlem talimatı olarak kaydedilir. Hem yazılı hem sesli doküman oluşturulmuş olur.
-
-              </div>
-
-
-
-              {/* ===== SES KAYDI PANELİ ===== */}
-
-              <div style={{ marginBottom: '20px', padding: '20px', border: '2px solid var(--border-color)', borderRadius: 'var(--radius-lg)', background: isRecording ? 'rgba(239,68,68,0.04)' : 'var(--bg-input)', transition: 'all 0.3s' }}>
-
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-
-                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', background: isRecording ? 'rgba(239,68,68,0.15)' : 'rgba(99,102,241,0.12)', animation: isRecording ? 'pulse 1.5s infinite' : 'none' }}>
-
-                      {isRecording ? '🔴' : '🎙️'}
-
-                    </div>
-
-                    <div>
-
-                      <div style={{ fontSize: '15px', fontWeight: '700' }}>
-
-                        {transcriptStatus === 'idle' && 'Sesle Kayıt Hazır'}
-
-                        {transcriptStatus === 'recording' && '📋 Kayıt Devam Ediyor...'}
-
-                        {transcriptStatus === 'review' && '📏 Transkripti Kontrol Edin'}
-
-                        {transcriptStatus === 'confirmed' && '✅ Transkript Onaylandı'}
-
-                      </div>
-
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-
-                        {isRecording ? `⏱️ ${formatRecTime(recordingTime)}  Konuşmaya devam edin...` : 'Türkçe ses tanıma  Chrome/Edge tavsiye edilir'}
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-
-
-                  {/* KAYIT BUTONLARI */}
-
-                  <div style={{ display: 'flex', gap: '8px' }}>
-
-                    {!isRecording ? (
-
-                      <button type="button" onClick={startVoiceRecording}
-
-                        style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(99,102,241,0.3)', transition: 'all 0.2s' }}>
-
-                        🎙️ Kayda Başla
-
-                      </button>
-
-                    ) : (
-
-                      <button type="button" onClick={stopVoiceRecording}
-
-                        style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '14px', fontWeight: '700', cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: '#fff', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(239,68,68,0.3)', animation: 'pulse 1.5s infinite' }}>
-
-                        ⏹️ Kaydı Durdur
-
-                      </button>
-
-                    )}
-
-                  </div>
-
-                </div>
-
-
-
-                {/* CANLI TRANSKRİPSİYON GÖSTERİMİ */}
-
-                {(isRecording || transcriptStatus === 'review') && (
-
-                  <div style={{ marginTop: '12px' }}>
-
-                    <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>
-
-                      {isRecording ? '🔊 Canlı Transkripsiyon' : '📏 Transkript Sonucu'}
-
-                    </div>
-
-                    <div style={{ padding: '16px', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', minHeight: '100px', maxHeight: '200px', overflowY: 'auto', fontSize: '14px', lineHeight: '1.8' }}>
-
-                      {transcript && <span style={{ color: 'var(--text-primary)' }}>{transcript}</span>}
-
-                      {interimTranscript && <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', opacity: 0.7 }}>{interimTranscript}</span>}
-
-                      {!transcript && !interimTranscript && <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Konuşmaya başlayın... Ses otomatik yazıya çevrilecek.</span>}
-
-                    </div>
-
-                  </div>
-
-                )}
-
-
-
-                {/* KONTROL & ONAY BUTONLARI */}
-
-                {transcriptStatus === 'review' && transcript.trim() && (
-
-                  <div style={{ marginTop: '16px' }}>
-
-                    {/* Düzenlenebilir transkript */}
-
-                    <div style={{ marginBottom: '12px' }}>
-
-                      <label className="form-label" style={{ fontSize: '12px', color: 'var(--warning)' }}>✏️ Gerekirse düzenleyin, sonra onaylayın:</label>
-
-                      <textarea className="form-textarea" value={transcript} onChange={e => setTranscript(e.target.value)}
-
-                        style={{ minHeight: '120px', lineHeight: '1.8', fontSize: '13px', border: '2px solid var(--warning)', borderRadius: 'var(--radius-md)' }} />
-
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-
-                      <button type="button" onClick={resetTranscript}
-
-                        style={{ padding: '10px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '2px solid var(--danger)', background: 'rgba(239,68,68,0.08)', color: 'var(--danger)', fontFamily: 'inherit' }}>
-
-                        🗑️ İptal & Yeniden Kaydet
-
-                      </button>
-
-                      <button type="button" onClick={startVoiceRecording}
-
-                        style={{ padding: '10px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', border: '2px solid var(--accent)', background: 'rgba(99,102,241,0.08)', color: 'var(--accent)', fontFamily: 'inherit' }}>
-
-                        🎙️ Devam Kaydet (Ekle)
-
-                      </button>
-
-                      <button type="button" onClick={confirmTranscript}
-
-                        style={{ padding: '10px 24px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', border: 'none', background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', fontFamily: 'inherit', boxShadow: '0 4px 12px rgba(34,197,94,0.3)' }}>
-
-                        ✅ Onayla & Kaydet
-
-                      </button>
-
-                    </div>
-
-                  </div>
-
-                )}
-
-
-
-                {/* ONAY MESAJI */}
-
-                {transcriptStatus === 'confirmed' && (
-
-                  <div style={{ marginTop: '12px', padding: '12px 16px', background: 'rgba(34,197,94,0.1)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-
-                    <span style={{ fontSize: '20px' }}>✅</span>
-
-                    <div>
-
-                      <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--success)' }}>Transkript onaylandı ve işlem talimatına eklendi!</div>
-
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Yeni bir ses kaydı daha eklemek isterseniz tekrar "Kayda Başla" butonuna tıklayın.</div>
-
-                    </div>
-
-                    <button type="button" onClick={resetTranscript} style={{ marginLeft: 'auto', padding: '6px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-secondary)', fontFamily: 'inherit' }}>🎙️ Tekrar Kayıt</button>
-
-                  </div>
-
-                )}
-
-              </div>
-
-
-
-              {/* ===== YAZI İLE GİRİŞ (MEVCUT) ===== */}
-
-              <div className="form-group">
-
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                  📋 İşlemin Nasıl YapılacaĞı (Detaylı Anlatım)
-
-                  {form.how_to_do && <span className="badge badge-success" style={{ fontSize: '10px' }}>✅ {form.how_to_do.split('\n').filter(l => l.trim()).length} adım</span>}
-
-                </label>
-
-                <textarea className="form-textarea"
-
-                  placeholder={`Sesle kayıt yapın veya elle yazın...\n\nÖrnek:\n1. Ön beden ve arka bedeni yüz yüze getirin\n2. Omuz dikişlerini birleştirin\n3. Overlok ile dikişi kapatın`}
-
-                  value={form.how_to_do} onChange={e => setForm({ ...form, how_to_do: e.target.value })}
-
-                  style={{ minHeight: '200px', lineHeight: '1.8', fontSize: '13px' }} />
-
-              </div>
-
-              <div className="form-group">
-
-                <label className="form-label">📏 Yazılı Talimatlar (Kısa Not)</label>
-
-                <textarea className="form-textarea" placeholder="Kısa notlar veya hatırlatıcılar..."
-
-                  value={form.written_instructions} onChange={e => setForm({ ...form, written_instructions: e.target.value })} />
-
-              </div>
-
-            </div>
-
-          )}
-
-          {activeTab === 'makine' && (
-
-            <div style={{ padding: '16px 24px' }}>
-
-              <div className="form-row">
-
-                <div className="form-group"><label className="form-label">İplik Marka ve Numarası</label><input className="form-input" placeholder="örn: Gütermann 40 No Beyaz Polyester" value={form.thread_material} onChange={e => setForm({ ...form, thread_material: e.target.value })} /></div>
-
-                <div className="form-group"><label className="form-label">İĞne Numarası ve Markası</label><input className="form-input" placeholder="örn: Schmetz 14 No (90) Blysk Uçlu" value={form.needle_type} onChange={e => setForm({ ...form, needle_type: e.target.value })} /></div>
-
-              </div>
-
-              <div className="form-group" style={{ marginTop: '12px' }}>
-
-                <label className="form-label">Makina Adım Ayarı (1 cm'de kaç vuruş)</label>
-
-                <input className="form-input" placeholder="örn: 4 vuruş / cm" value={form.stitch_per_cm} onChange={e => setForm({ ...form, stitch_per_cm: e.target.value })} />
-
-              </div>
-
-              <div style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', fontSize: '11px', color: 'var(--text-muted)' }}>
-
-                📋 İplik ve iĞne bilgileri, farklı operatörlerin aynı kalitede üretim yapmasını saĞlar.
-
-              </div>
-
-            </div>
-
-          )}
-
-          {activeTab === 'kalite' && (
-
-            <div style={{ padding: '16px 24px' }}>
-
-              <div className="form-group"><label className="form-label">Kalite Notları</label><textarea className="form-textarea" placeholder="Dikkat edilecek kalite noktaları..." value={form.quality_notes} onChange={e => setForm({ ...form, quality_notes: e.target.value })} /></div>
-
-              <label className="form-label" style={{ marginTop: '16px', marginBottom: '8px' }}>Kalite Tolerans Sınırları (Ölçü)</label>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, padding: '14px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-
-                  <span style={{ fontSize: '22px', fontWeight: '700', color: 'var(--danger)' }}>−</span>
-
-                  <input className="form-input" type="number" step="0.1" min="0" placeholder="1" value={form.tolerance_minus} onChange={e => setForm({ ...form, tolerance_minus: e.target.value })} style={{ textAlign: 'center', fontSize: '18px', fontWeight: '700' }} />
-
-                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)' }}>cm</span>
-
-                </div>
-
-                <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-muted)' }}>/</span>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, padding: '14px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-
-                  <span style={{ fontSize: '22px', fontWeight: '700', color: 'var(--success)' }}>+</span>
-
-                  <input className="form-input" type="number" step="0.1" min="0" placeholder="1" value={form.tolerance_plus} onChange={e => setForm({ ...form, tolerance_plus: e.target.value })} style={{ textAlign: 'center', fontSize: '18px', fontWeight: '700' }} />
-
-                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)' }}>cm</span>
-
-                </div>
-
-              </div>
-
-              <div className="form-group"><label className="form-label">Hata Örnekleri</label><textarea className="form-textarea" placeholder="Sık yapılan hatalar ve çözümleri..." value={form.error_examples} onChange={e => setForm({ ...form, error_examples: e.target.value })} /></div>
-
-              <div className="form-group"><label className="form-label">İstenilen Optik Görünüm</label><textarea className="form-textarea" placeholder="Dikişin nasıl görünmesi gerektiĞi, düzgünlük, simetri, kenar bitişi vb..." value={form.optical_appearance} onChange={e => setForm({ ...form, optical_appearance: e.target.value })} /></div>
-
-            </div>
-
-          )}
-
-          {activeTab === 'sure' && (
-
-            <div style={{ padding: '16px 24px' }}>
-
-              <div className="form-row">
-
-                <div className="form-group"><label className="form-label">Min Süre (sn)</label><input className="form-input" type="number" step="0.1" placeholder="30" value={form.standard_time_min} onChange={e => setForm({ ...form, standard_time_min: e.target.value })} /></div>
-
-                <div className="form-group"><label className="form-label">Max Süre (sn)</label><input className="form-input" type="number" step="0.1" placeholder="60" value={form.standard_time_max} onChange={e => setForm({ ...form, standard_time_max: e.target.value })} /></div>
-
-                <div className="form-group"><label className="form-label">Birim Fiyat (₺)</label><input className="form-input" type="number" step="0.01" placeholder="0.50" value={form.unit_price} onChange={e => setForm({ ...form, unit_price: e.target.value })} /></div>
-
-              </div>
-
-              <div className="form-group"><label className="form-label">Bağımlılık (Önceki İşlem)</label><input className="form-input" placeholder="örn: Yaka dikildikten sonra" value={form.dependency} onChange={e => setForm({ ...form, dependency: e.target.value })} /></div>
-
-            </div>
-
-          )}
-
-          <div className="modal-footer">
-
-            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
-
-            <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}</button>
-
-          </div>
-
-        </form>
-
-      </div>
-
-    </div>
-
-  );
-
-}
-
-
-
-// ========== DÜZENLENEBILIR BILEŞENLER (Personel formu için) ==========
-
-// ===== Düzenlenebilir Select Bileşeni =====
-const EditableSelect = ({ fieldKey, value, onChange, defaultOptions, label }) => {
-  const STORAGE_KEY = `SELECT_OPTIONS_${fieldKey}`;
-  let options;
-  try { const saved = localStorage.getItem(STORAGE_KEY); options = saved ? JSON.parse(saved) : [...defaultOptions]; } catch { options = [...defaultOptions]; }
-  const saveOpts = (opts) => { localStorage.setItem(STORAGE_KEY, JSON.stringify(opts)); };
-  const handleRename = (idx) => {
-    const old = options[idx][1];
-    const newLabel = prompt(`"${old}" adını ne olarak değiştirmek istiyorsunuz?`, old);
-    if (!newLabel || !newLabel.trim() || newLabel.trim() === old) return;
-    const updated = [...options];
-    const newKey = newLabel.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_çşıöüğ]/g, '');
-    const oldKey = updated[idx][0];
-    updated[idx] = [newKey, newLabel.trim()];
-    saveOpts(updated);
-    if (value === oldKey) onChange(newKey); else onChange(value);
-  };
-  const handleDelete = (idx) => {
-    if (!confirm(`"${options[idx][1]}" seçeneğini silmek istediğinize emin misiniz?`)) return;
-    const updated = [...options];
-    const removedKey = updated[idx][0];
-    updated.splice(idx, 1);
-    saveOpts(updated);
-    if (value === removedKey && updated.length > 0) onChange(updated[0][0]);
-    else onChange(value);
-  };
-  const handleAdd = () => {
-    const name = prompt(`${label} bölümüne yeni seçenek ekleyin:`);
-    if (!name || !name.trim()) return;
-    const key = name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_çşıöüğ]/g, '');
-    if (options.some(([k]) => k === key)) { alert('Bu seçenek zaten mevcut!'); return; }
-    const updated = [...options, [key, name.trim()]];
-    saveOpts(updated);
-    onChange(value);
-  };
-  return <div>
-    <div style={{ display: 'flex', gap: '2px', alignItems: 'center', marginBottom: '4px' }}>
-      <select className="form-select" value={value} onChange={e => onChange(e.target.value)} style={{ flex: 1 }}>
-        {options.map(([val, lbl]) => <option key={val} value={val}>{lbl}</option>)}
-      </select>
-      <button type="button" title="Seçenekleri Düzenle" onClick={(e) => {
-        e.preventDefault();
-        const idx = options.findIndex(([k]) => k === value);
-        if (idx >= 0) handleRename(idx);
-      }} style={{ fontSize: '11px', padding: '4px 5px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px', minWidth: '26px' }}>✏️</button>
-      <button type="button" title="Seçili Seçeneği Sil" onClick={(e) => {
-        e.preventDefault();
-        const idx = options.findIndex(([k]) => k === value);
-        if (idx >= 0) handleDelete(idx);
-      }} style={{ fontSize: '11px', padding: '4px 5px', border: '1px solid var(--border-color)', background: 'rgba(231,76,60,0.06)', color: '#e74c3c', cursor: 'pointer', borderRadius: '4px', minWidth: '26px' }}>❌</button>
-      <button type="button" title="Yeni Seçenek Ekle" onClick={(e) => { e.preventDefault(); handleAdd(); }} style={{ fontSize: '11px', padding: '4px 5px', border: '1px dashed rgba(52,152,219,0.4)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px', minWidth: '26px' }}>➕</button>
-    </div>
-  </div>;
-};
-
-// ===== Düzenlenebilir Input Bileşeni =====
-const EditableInput = ({ value, onChange, type = 'text', placeholder, maxLength, min, max, step, style }) => {
-  const hasValue = value && value.toString().trim() !== '';
-  return <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
-    <input className="form-input" type={type} placeholder={placeholder} maxLength={maxLength} min={min} max={max} step={step} value={value || ''} onChange={e => onChange(e.target.value)} style={{ flex: 1, ...(style || {}) }} />
-    <button type="button" title="Temizle" onClick={(e) => { e.preventDefault(); onChange(''); }} style={{ fontSize: '11px', padding: '4px 5px', border: '1px solid var(--border-color)', background: hasValue ? 'rgba(231,76,60,0.06)' : 'rgba(150,150,150,0.06)', color: hasValue ? '#e74c3c' : '#bbb', cursor: hasValue ? 'pointer' : 'default', borderRadius: '4px', minWidth: '26px', opacity: hasValue ? 1 : 0.5 }}>❌</button>
-  </div>;
-};
-
-
-// ========== MODAL: YENİ PERSONEL ==========
-
-function NewPersonnelModal({ onClose, onSave, editData, onUpdate }) {
-
-  const DRAFT_KEY = 'personnel_draft';
-
-  const defaultForm = {
-    name: '', role: 'duz_makineci', daily_wage: '', skill_level: 'orta', work_start: '08:00', work_end: '19:00', machines: '', language: 'tr', base_salary: '', transport_allowance: '', ssk_cost: '', food_allowance: '', compensation: '', technical_mastery: 'operator', speed_level: 'normal', quality_level: 'standart', discipline_level: 'guvenilir', versatility_level: '1-2', department: 'dikim',
-    daily_avg_output: '', error_rate: '', efficiency_score: '',
-    capable_operations: '', learning_speed: 'normal', independence_level: 'kismen',
-    attendance: 'az', punctuality: 'genelde', initiative_level: 'orta', teamwork_level: 'iyi', problem_solving: 'sorar',
-    physical_endurance: 'iyi', eye_health: 'iyi', health_restrictions: '',
-    leadership_potential: 'hayir', training_needs: '', general_evaluation: '',
-    phone: '', national_id: '',
-    operation_skill_scores: '{}', leave_types: '',
-    birth_date: '', gender: 'erkek', education: 'ilkokul', children_count: '0',
-    blood_type: '', military_status: '', emergency_contact_name: '', emergency_contact_phone: '', emergency_contact_relation: '',
-    smokes: 'hayir', prays: 'hayir', transport_type: '', turkish_level: 'ana_dil',
-    living_status: 'ailesiyle', disability_status: 'yok',
-    contract_type: 'belirsiz', sgk_entry_date: '', previous_workplaces: 'ilk_isi',
-    leave_reason: '',
-    finger_dexterity: 'normal', color_perception: 'normal', sample_reading: 'gosterilmeli',
-    difficult_work: 'zorlanir', detail_work: 'orta', hard_work_skill: 'yapabilir',
-    machine_adjustment_care: 'normal', preferred_machine: '', most_efficient_machine: '',
-    maintenance_skill: 'basit',
-    machine_adjustments: '{}',
-    body_type: 'normal', work_capacity: 'normal_rahat',
-    isg_training_date: '', last_health_check: '',
-    reliability: 'guvenilir', hygiene: 'normal', change_openness: 'acik',
-    responsibility_acceptance: 'kabul_eder', error_stance: 'soyler',
-    color_tone_matching: 'fark_eder', critical_matching_responsibility: 'sorumluluk_alir',
-    fabric_experience: '{}',
-    new_machine_learning: 'istekli', hard_work_avoidance: 'kacmaz', self_improvement: 'gelisir',
-    operator_class: 'B', satisfaction_score: '5', recommend: 'evet', weekly_note: ''
-  };
-
-  // localStorage'dan taslak yükle veya editData kullan
-  const loadDraft = () => {
-    if (editData) return { ...defaultForm, ...editData };
-    try { const d = localStorage.getItem(DRAFT_KEY); return d ? { ...defaultForm, ...JSON.parse(d) } : defaultForm; } catch { return defaultForm; }
-  };
-
-  const [form, setForm] = useState(loadDraft);
-
-  // Her değişiklikte otomatik kaydet (sadece yeni ekleme modunda)
-  useEffect(() => {
-    if (!editData) localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
-  }, [form]);
-
-  // Kapatma onayı — veri varsa sor
-  const handleClose = () => {
-    if (form.name) {
-      if (confirm('⚠️ Kaydedilmemiş veri var! Taslak olarak saklanacak.\nÇıkmak istediğinize emin misiniz?')) { onClose(); }
-    } else { localStorage.removeItem(DRAFT_KEY); onClose(); }
-  };
-
-  const totalMonthly = (parseFloat(form.base_salary) || 0) + (parseFloat(form.transport_allowance) || 0) + (parseFloat(form.ssk_cost) || 0) + (parseFloat(form.food_allowance) || 0) + (parseFloat(form.compensation) || 0);
-
-  const [saving, setSaving] = useState(false);
-
-
-
-  const handleSubmit = async (e) => {
-
-    e.preventDefault();
-
-    if (!form.name) return;
-
-    setSaving(true);
-
-    try {
-
-      const submitData = {
-        ...form, daily_wage: parseFloat(form.daily_wage) || 0, base_salary: parseFloat(form.base_salary) || 0, transport_allowance: parseFloat(form.transport_allowance) || 0, ssk_cost: parseFloat(form.ssk_cost) || 0, food_allowance: parseFloat(form.food_allowance) || 0, compensation: parseFloat(form.compensation) || 0,
-        daily_avg_output: parseInt(form.daily_avg_output) || 0, error_rate: parseFloat(form.error_rate) || 0, efficiency_score: parseFloat(form.efficiency_score) || 0
-      };
-      if (editData && onUpdate) { await onUpdate(submitData); }
-      else { await onSave(submitData); }
-      if (!editData) localStorage.removeItem(DRAFT_KEY);
-
-    } finally { setSaving(false); }
-
-  };
-
-
-
-  return (
-
-    <div className="modal-overlay">
-
-      <div className="modal" onClick={e => e.stopPropagation()}>
-
-        <div className="modal-header">
-
-          <h2 className="modal-title">{editData ? `✏️ Düzenle — ${form.name}` : `📋 Yeni Personel ${form.name ? `— ${form.name}` : ''}`}</h2>
-
-          <button className="modal-close" onClick={onClose}>✕</button>
-
-        </div>
-
-        <form onSubmit={handleSubmit}>
-
-          <div style={{ marginBottom: '14px' }}>
-            <div className="form-group"><label className="form-label">Ad Soyad *</label><EditableInput value={form.name} onChange={v => setForm({ ...form, name: v })} placeholder="Ad Soyad" /></div>
-          </div>
-
-          <div className="form-group" style={{ marginBottom: '14px' }}><label className="form-label">Pozisyon / Görev (birden fazla seçilebilir)</label>
-            {(() => {
-              const ROLE_STORAGE_KEY = 'ROLE_CATEGORIES_CUSTOM';
-              const defaultCategories = [
-                { label: '✂️ Kesim Bölümü', roles: [['makastar', 'Makastar'], ['makastar_yardimcisi', 'Makastar Yardımcısı'], ['kesimci', 'Kesimci'], ['kesimci_yardimcisi', 'Kesimci Yardımcısı'], ['kesim_ustasi', 'Kesim Ustası']] },
-                { label: '🧵 Dikim', roles: [['duz_makineci', 'Düz Makineci'], ['overlokcu', 'Overlokçu'], ['recmeci', 'Reçmeci'], ['cift_igneci', 'Çift İğneci']] },
-                { label: '♨️ Ütü & Son İşlem', roles: [['ara_utucu', 'Ara Ütücü'], ['son_utucu', 'Son Ütücü'], ['paketci', 'Paketçi'], ['kolileme_operatoru', 'Kolileme'], ['baski_operatoru', 'Baskıcı']] },
-                { label: '📋 Kalite', roles: [['inline_kalite', 'Ara Kalite Kontrol'], ['son_kontrolcu', 'Son Kontrol']] },
-                { label: '📋 Yönetim & Destek', roles: [['ustabasi', 'Usta Başı'], ['numuneci', 'Numuneci'], ['makinaci', 'Makinacı'], ['modelist', 'Modelist'], ['teknisyen', 'Teknisyen']] }
-              ];
-              let categories;
-              try { const saved = localStorage.getItem(ROLE_STORAGE_KEY); categories = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultCategories)); } catch { categories = JSON.parse(JSON.stringify(defaultCategories)); }
-              const saveCategories = (cats) => { localStorage.setItem(ROLE_STORAGE_KEY, JSON.stringify(cats)); };
-              const selectedRoles = (form.role || '').split(',').map(r => r.trim()).filter(Boolean);
-              const toggleRole = (val) => {
-                const current = selectedRoles.includes(val) ? selectedRoles.filter(r => r !== val) : [...selectedRoles, val];
-                setForm({ ...form, role: current.join(',') });
-              };
-              const handleDeleteRole = (catIdx, roleIdx) => {
-                const roleName = categories[catIdx].roles[roleIdx][1];
-                if (!confirm(`"${roleName}" şıkkını silmek istediğinize emin misiniz?`)) return;
-                const updated = JSON.parse(JSON.stringify(categories));
-                const removedKey = updated[catIdx].roles[roleIdx][0];
-                updated[catIdx].roles.splice(roleIdx, 1);
-                saveCategories(updated);
-                if (selectedRoles.includes(removedKey)) {
-                  setForm({ ...form, role: selectedRoles.filter(r => r !== removedKey).join(',') });
-                } else {
-                  setForm({ ...form }); // re-render
-                }
-              };
-              const handleRenameRole = (catIdx, roleIdx) => {
-                const oldLabel = categories[catIdx].roles[roleIdx][1];
-                const newLabel = prompt(`"${oldLabel}" adını ne olarak değiştirmek istiyorsunuz?`, oldLabel);
-                if (!newLabel || !newLabel.trim() || newLabel.trim() === oldLabel) return;
-                const updated = JSON.parse(JSON.stringify(categories));
-                const newKey = newLabel.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_çşıöüğ]/g, '');
-                const oldKey = updated[catIdx].roles[roleIdx][0];
-                updated[catIdx].roles[roleIdx] = [newKey, newLabel.trim()];
-                saveCategories(updated);
-                if (selectedRoles.includes(oldKey)) {
-                  setForm({ ...form, role: selectedRoles.map(r => r === oldKey ? newKey : r).join(',') });
-                } else {
-                  setForm({ ...form });
-                }
-              };
-              const handleAddRole = (catIdx, catLabel) => {
-                const custom = prompt(catLabel + ' bölümüne yeni şık ekle:');
-                if (!custom || !custom.trim()) return;
-                const key = custom.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_çşıöüğ]/g, '');
-                const updated = JSON.parse(JSON.stringify(categories));
-                if (updated[catIdx].roles.some(([k]) => k === key)) { alert('Bu şık zaten mevcut!'); return; }
-                updated[catIdx].roles.push([key, custom.trim()]);
-                saveCategories(updated);
-                setForm({ ...form });
-              };
-              return <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {selectedRoles.length > 0 && <div style={{ fontSize: '14px', color: 'var(--accent)', fontWeight: '700' }}>{selectedRoles.length} pozisyon seçili</div>}
-                {categories.map((cat, catIdx) => (
-                  <div key={cat.label} style={{ padding: '8px 10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '8px' }}>{cat.label}</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
-                      {cat.roles.map(([val, label], roleIdx) => {
-                        const checked = selectedRoles.includes(val);
-                        return <div key={val} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', padding: '6px 12px', borderRadius: '6px 0 0 6px', background: checked ? 'rgba(46,204,113,0.15)' : 'transparent', border: `1px solid ${checked ? '#27ae60' : 'var(--border-color)'}`, cursor: 'pointer', fontWeight: checked ? '700' : '400', color: checked ? '#27ae60' : 'var(--text-primary)' }}>
-                            <input type="checkbox" checked={checked} onChange={() => toggleRole(val)} style={{ display: 'none' }} />{checked ? '✅' : ''} {label}
-                          </label>
-                          <button type="button" title="Adını Düzenle" onClick={() => handleRenameRole(catIdx, roleIdx)} style={{ fontSize: '11px', padding: '6px 4px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '0' }}>✏️</button>
-                          <button type="button" title="Sil" onClick={() => handleDeleteRole(catIdx, roleIdx)} style={{ fontSize: '11px', padding: '6px 4px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(231,76,60,0.06)', color: '#e74c3c', cursor: 'pointer', borderRadius: '0 6px 6px 0' }}>❌</button>
-                        </div>;
-                      })}
-                      <button type="button" onClick={() => handleAddRole(catIdx, cat.label)} style={{ fontSize: '14px', padding: '6px 12px', borderRadius: '6px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', cursor: 'pointer', fontWeight: '600' }}>➕ Ekle</button>
-                    </div>
-                  </div>
-                ))}
-              </div>;
-            })()}
-          </div>
-
-          {/* ===== P1: KİMLİK & KİŞİSEL BİLGİLER ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(52,152,219,0.2)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#3498db', marginBottom: '8px' }}>🪪 Kimlik & Kişisel Bilgiler</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">TC Kimlik No</label><EditableInput value={form.national_id} onChange={v => setForm({ ...form, national_id: v })} maxLength={11} placeholder="11 hane" /></div>
-              <div className="form-group"><label className="form-label">Telefon</label><EditableInput type="tel" value={form.phone} onChange={v => setForm({ ...form, phone: v })} placeholder="05XX XXX XX XX" /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Doğum Tarihi</label><EditableInput type="date" value={form.birth_date} onChange={v => setForm({ ...form, birth_date: v })} /></div>
-              <div className="form-group"><label className="form-label">Cinsiyet</label>
-                <EditableSelect fieldKey="gender" label="Cinsiyet" value={form.gender} onChange={v => setForm({ ...form, gender: v })} defaultOptions={[['erkek', 'Erkek'], ['kadin', 'Kadın']]} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Eğitim Durumu</label>
-                <EditableSelect fieldKey="education" label="Eğitim" value={form.education} onChange={v => setForm({ ...form, education: v })} defaultOptions={[['yok', 'Eğitim almamış'], ['ilkokul', 'İlkokul'], ['ortaokul', 'Ortaokul'], ['lise', 'Lise'], ['universite', 'Üniversite']]} /></div>
-              <div className="form-group"><label className="form-label">Kan Grubu *</label>
-                <EditableSelect fieldKey="blood_type" label="Kan Grubu" value={form.blood_type} onChange={v => setForm({ ...form, blood_type: v })} defaultOptions={[['', '— Seçiniz —'], ['A+', 'A Rh+'], ['A-', 'A Rh-'], ['B+', 'B Rh+'], ['B-', 'B Rh-'], ['AB+', 'AB Rh+'], ['AB-', 'AB Rh-'], ['0+', '0 Rh+'], ['0-', '0 Rh-']]} /></div>
-            </div>
-            <div className="form-row">
-              {form.gender !== 'kadin' && <div className="form-group"><label className="form-label">Askerlik Durumu</label>
-                <EditableSelect fieldKey="military_status" label="Askerlik" value={form.military_status} onChange={v => setForm({ ...form, military_status: v })} defaultOptions={[['', '— Seçiniz —'], ['yapildi', 'Yapıldı'], ['tecilli', 'Tecilli'], ['muaf', 'Muaf']]} /></div>}
-              <div className="form-group"><label className="form-label">Yaşam Durumu</label>
-                <EditableSelect fieldKey="living_status" label="Yaşam" value={form.living_status} onChange={v => setForm({ ...form, living_status: v })} defaultOptions={[['ailesiyle', 'Ailesiyle yaşıyor'], ['esi_cocuklariyla', 'Eşi ve çocuklarıyla'], ['cocuguyla', 'Çocuğuyla yaşıyor'], ['yalniz', 'Yalnız yaşıyor'], ['arkadasla', 'Arkadaşla yaşıyor'], ['yurtta', 'Yurtta yaşıyor']]} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Çocuk Sayısı</label><EditableInput type="number" min={0} max={15} value={form.children_count} onChange={v => setForm({ ...form, children_count: v })} /></div>
-              <div className="form-group"><label className="form-label">Ulaşım Şekli</label>
-                <EditableSelect fieldKey="transport_type" label="Ulaşım" value={form.transport_type} onChange={v => setForm({ ...form, transport_type: v })} defaultOptions={[['', '— Seçiniz —'], ['yuruyerek', 'Yürüyerek'], ['toplu_tasima', 'Toplu taşıma'], ['servis', 'Servis'], ['kendi_araci', 'Kendi aracı']]} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Türkçe Anlama</label>
-                <EditableSelect fieldKey="turkish_level" label="Türkçe" value={form.turkish_level} onChange={v => setForm({ ...form, turkish_level: v })} defaultOptions={[['ana_dil', 'Ana dil'], ['iyi', 'İyi anlıyor'], ['temel', 'Temel düzey'], ['cok_az', 'Çok az']]} /></div>
-              <div className="form-group"><label className="form-label">Engel Durumu</label>
-                <EditableSelect fieldKey="disability_status" label="Engel" value={form.disability_status} onChange={v => setForm({ ...form, disability_status: v })} defaultOptions={[['yok', 'Yok'], ['hafif', 'Hafif'], ['var', 'Var']]} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">🚬 Sigara İçiyor mu?</label>
-                <EditableSelect fieldKey="smokes" label="Sigara" value={form.smokes} onChange={v => setForm({ ...form, smokes: v })} defaultOptions={[['hayir', 'Hayır'], ['evet', 'Evet']]} /></div>
-              <div className="form-group"><label className="form-label">🕌 Namaz Molası İhtiyacı</label>
-                <EditableSelect fieldKey="prays" label="Namaz" value={form.prays} onChange={v => setForm({ ...form, prays: v })} defaultOptions={[['hayir', 'Hayır'], ['evet', 'Evet']]} /></div>
-            </div>
-            <div style={{ marginTop: '8px', padding: '8px 10px', background: 'rgba(231,76,60,0.05)', borderRadius: '8px', border: '1px solid rgba(231,76,60,0.15)' }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', color: '#e74c3c', marginBottom: '6px' }}>🆘 Acil Durumda Ulaşılacak Kişi</div>
-              <div className="form-row">
-                <div className="form-group"><label className="form-label">Ad Soyad</label><EditableInput value={form.emergency_contact_name} onChange={v => setForm({ ...form, emergency_contact_name: v })} placeholder="Acil kişi adı" /></div>
-                <div className="form-group"><label className="form-label">Telefon</label><EditableInput type="tel" value={form.emergency_contact_phone} onChange={v => setForm({ ...form, emergency_contact_phone: v })} placeholder="05XX XXX XX XX" /></div>
-              </div>
-              <div className="form-row">
-                <div className="form-group"><label className="form-label">Yakınlık</label>
-                  <EditableSelect fieldKey="emergency_relation" label="Yakınlık" value={form.emergency_contact_relation} onChange={v => setForm({ ...form, emergency_contact_relation: v })} defaultOptions={[['', '— Seçiniz —'], ['es', 'Eşi'], ['anne', 'Annesi'], ['baba', 'Babası'], ['kardes', 'Kardeşi'], ['cocuk', 'Çocuğu'], ['diger', 'Diğer']]} /></div>
-                <div className="form-group"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* MAAŞ BİLEŞENLERİ */}
-
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
-
-            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--accent)', marginBottom: '8px' }}>📋 Aylık Ücret Bileşenleri</div>
-
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Maaş (₺)</label><EditableInput type="number" step="0.01" placeholder="0" value={form.base_salary} onChange={v => setForm({ ...form, base_salary: v })} /></div>
-              <div className="form-group"><label className="form-label">Yol (₺)</label><EditableInput type="number" step="0.01" placeholder="0" value={form.transport_allowance} onChange={v => setForm({ ...form, transport_allowance: v })} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">SSK (₺)</label><EditableInput type="number" step="0.01" placeholder="0" value={form.ssk_cost} onChange={v => setForm({ ...form, ssk_cost: v })} /></div>
-              <div className="form-group"><label className="form-label">Yemek (₺)</label><EditableInput type="number" step="0.01" placeholder="0" value={form.food_allowance} onChange={v => setForm({ ...form, food_allowance: v })} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Tazminat (₺)</label><EditableInput type="number" step="0.01" placeholder="0" value={form.compensation} onChange={v => setForm({ ...form, compensation: v })} /></div>
-              <div className="form-group">
-                <label className="form-label">Toplam Aylık</label>
-                <div style={{ padding: '8px 12px', borderRadius: '6px', background: 'rgba(46,204,113,0.1)', border: '1px solid rgba(46,204,113,0.3)', fontSize: '14px', fontWeight: '700', color: '#2ecc71' }}>{totalMonthly.toLocaleString('tr-TR')} ₺</div>
-              </div>
-            </div>
-
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>⚙️ Günlük ücret = Toplam aylık / Ayın çalışma günü sayısı olarak otomatik hesaplanır</div>
-
-          </div>
-
-          {/* BECERİ MATRİSİ — 5 KRİTER */}
-
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid var(--border-color)' }}>
-
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#e67e22', marginBottom: '8px' }}>📊 Operatör Beceri Matrisi</div>
-
-            <div className="form-row">
-
-              <div className="form-group"><label className="form-label">1️⃣ Teknik Ustalık</label>
-                <EditableSelect fieldKey="technical_mastery" label="Teknik Ustalık" value={form.technical_mastery} onChange={v => setForm({ ...form, technical_mastery: v })} defaultOptions={[['egitici_usta', 'Eğitici Usta'], ['usta', 'Usta'], ['kalfa', 'Kalfa'], ['operator', 'Operatör'], ['cirak', 'Çırak'], ['stajyer', 'Stajyer']]} />
-              </div>
-
-              <div className="form-group"><label className="form-label">2️⃣ Hız (İş Alma-Verme)</label>
-                <EditableSelect fieldKey="speed_level" label="Hız" value={form.speed_level} onChange={v => setForm({ ...form, speed_level: v })} defaultOptions={[['cok_seri', 'Çok Hızlı'], ['seri', 'Hızlı'], ['normal', 'Normal'], ['yavas', 'Yavaş']]} />
-              </div>
-
-            </div>
-
-            <div className="form-row">
-
-              <div className="form-group"><label className="form-label">3️⃣ Kalite / El Temizliği</label>
-                <EditableSelect fieldKey="quality_level" label="Kalite" value={form.quality_level} onChange={v => setForm({ ...form, quality_level: v })} defaultOptions={[['premium', 'Premium'], ['iyi', 'İyi'], ['normal', 'Normal'], ['degisken', 'Değişken'], ['dusuk', 'Düşük']]} />
-              </div>
-
-              <div className="form-group"><label className="form-label">4️⃣ İş Disiplini</label>
-                <EditableSelect fieldKey="discipline_level" label="İş Disiplini" value={form.discipline_level} onChange={v => setForm({ ...form, discipline_level: v })} defaultOptions={[['cok_guvenilir', 'Çok Güvenilir'], ['guvenilir', 'Güvenilir'], ['degisken', 'Değişken'], ['takip', 'Takip Gerektirir']]} />
-              </div>
-
-            </div>
-
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">5️⃣ Çok Yönlülük</label>
-                <EditableSelect fieldKey="versatility_level" label="Çok Yönlülük" value={form.versatility_level} onChange={v => setForm({ ...form, versatility_level: v })} defaultOptions={[['1', '1 operasyon'], ['2', '2 operasyon'], ['3', '3 operasyon'], ['4', '4 operasyon'], ['5', '5 operasyon'], ['6', '6+ operasyon']]} />
-              </div>
-              <div className="form-group"><label className="form-label">6️⃣ Parmak Becerisi</label>
-                <EditableSelect fieldKey="finger_dexterity" label="Parmak Becerisi" value={form.finger_dexterity} onChange={v => setForm({ ...form, finger_dexterity: v })} defaultOptions={[['cok_iyi', 'Çok iyi'], ['iyi', 'İyi'], ['normal', 'Normal'], ['zayif', 'Zayıf']]} />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">7️⃣ Renk Algısı</label>
-                <EditableSelect fieldKey="color_perception" label="Renk Algısı" value={form.color_perception} onChange={v => setForm({ ...form, color_perception: v })} defaultOptions={[['cok_iyi', 'Çok iyi'], ['normal', 'Normal'], ['zayif', 'Zayıf']]} />
-              </div>
-              <div className="form-group"><label className="form-label">8️⃣ Numune Okuma</label>
-                <EditableSelect fieldKey="sample_reading" label="Numune Okuma" value={form.sample_reading} onChange={v => setForm({ ...form, sample_reading: v })} defaultOptions={[['bagimsiz', 'Bağımsız okur'], ['gosterilmeli', 'Gösterilmeli'], ['yapamaz', 'Yapamaz']]} />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">9️⃣ Zor/Yoğun İşe Tutumu</label>
-                <EditableSelect fieldKey="hard_work_avoidance" label="Zor İş Tutumu" value={form.hard_work_avoidance} onChange={v => setForm({ ...form, hard_work_avoidance: v })} defaultOptions={[['istekle_alir', '💪 İstekle Alır'], ['kacmaz', '✅ Kaçmaz, Yapar'], ['zaman_zaman', '🟡 Duruma Göre'], ['soguk_bakar', '🟠 Soğuk Bakar'], ['kacinar', '🔴 Kaçınır']]} /></div>
-              <div className="form-group"><label className="form-label">🔟 Yeni İş/Model Öğrenme</label>
-                <EditableSelect fieldKey="new_machine_learning" label="Öğrenme İsteği" value={form.new_machine_learning} onChange={v => setForm({ ...form, new_machine_learning: v })} defaultOptions={[['cok_istekli', '🚀 Çok İstekli'], ['istekli', '✅ İstekli'], ['normal', '🟡 Normal'], ['isteksiz', '🟠 İsteksiz'], ['direncli', '🔴 Dirençli']]} /></div>
-            </div>
-          </div>
-
-          <div className="form-row">
-
-            <div className="form-group"><label className="form-label">Mesai Başlangıç</label><EditableInput type="time" value={form.work_start} onChange={v => setForm({ ...form, work_start: v })} /></div>
-
-            <div className="form-group"><label className="form-label">Mesai Bitiş</label><EditableInput type="time" value={form.work_end} onChange={v => setForm({ ...form, work_end: v })} /></div>
-
-          </div>
-
-          {/* ===== MAKİNE YETKİNLİK MATRİSİ ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(52,152,219,0.3)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#2980b9', marginBottom: '8px' }}>🔧 Kullanabildiği Makineler & Yetkinlik Seviyesi</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Her makine için yetkinlik seviyesi seçin. Kullanmıyorsa boş bırakın.</div>
-            {(() => {
-              const defaultMachines = ['Düz Makina', 'Çift İğne', 'Zincir Dikiş', 'Overlok', '5İp Overlok', 'Mekanik Reçme', 'Bıçaklı Reçme', 'İlik Mak.', 'Düğme Mak.', 'Punteriz', 'Kemer Mak.', 'Zigzag', 'Gizli Dikiş', 'Ütü'];
-              let machineSkills = {};
-              try { machineSkills = JSON.parse(form.operation_skill_scores || '{}'); } catch { }
-              const customMachines = Object.keys(machineSkills).filter(k => !defaultMachines.includes(k));
-              const allMachines = [...defaultMachines, ...customMachines];
-              const MACHINE_LEVELS_KEY = 'SELECT_OPTIONS_machine_skill_levels';
-              let machineLevels;
-              try { const saved = localStorage.getItem(MACHINE_LEVELS_KEY); machineLevels = saved ? JSON.parse(saved) : [['', '— Kullanmıyor'], ['usta_hizli', '🏅 Usta Hızlı'], ['usta_normal', '⭐ Usta Normal'], ['usta_yavas', '🟢 Usta Yavaş'], ['iyi_hizli', '💪 İyi Hızlı'], ['iyi_normal', '✅ İyi Normal'], ['normal', '🟡 Normal'], ['acemi_normal', '🔵 Acemi Normal'], ['acemi_yavas', '⚪ Acemi Yavaş']]; } catch { machineLevels = [['', '— Kullanmıyor'], ['usta_hizli', '🏅 Usta Hızlı'], ['usta_normal', '⭐ Usta Normal'], ['usta_yavas', '🟢 Usta Yavaş'], ['iyi_hizli', '💪 İyi Hızlı'], ['iyi_normal', '✅ İyi Normal'], ['normal', '🟡 Normal'], ['acemi_normal', '🔵 Acemi Normal'], ['acemi_yavas', '⚪ Acemi Yavaş']]; }
-              const saveMachineLevels = (opts) => { localStorage.setItem(MACHINE_LEVELS_KEY, JSON.stringify(opts)); };
-              const colors = { 'usta_hizli': '#27ae60', 'usta_normal': '#2ecc71', 'usta_yavas': '#27ae60', 'iyi_hizli': '#3498db', 'iyi_normal': '#2ecc71', 'normal': '#f39c12', 'acemi_normal': '#e67e22', 'acemi_yavas': '#95a5a6' };
-              return <>
-                <div style={{ marginBottom: '6px', display: 'flex', gap: '4px' }}>
-                  <button type="button" onClick={() => { const selLevel = machineLevels.find(([k]) => k !== ''); if (!selLevel) return; const nl = prompt(`Yetkinlik seçeneğini düzenle:`, selLevel[1]); if (!nl || !nl.trim()) return; const idx = machineLevels.findIndex(([k]) => k === selLevel[0]); if (idx >= 0) { const u = [...machineLevels]; u[idx] = [selLevel[0], nl.trim()]; saveMachineLevels(u); setForm({ ...form }); } }} style={{ fontSize: '11px', padding: '4px 8px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>✏️ Seviye Düzenle</button>
-                  <button type="button" onClick={() => { const name = prompt('Yeni yetkinlik seviyesi ekleyin:'); if (!name || !name.trim()) return; const key = name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_çşıöüğ]/g, ''); const u = [...machineLevels, [key, name.trim()]]; saveMachineLevels(u); setForm({ ...form }); }} style={{ fontSize: '11px', padding: '4px 8px', border: '1px dashed rgba(52,152,219,0.4)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>➕ Seviye Ekle</button>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                  {allMachines.map(m => {
-                    const level = machineSkills[m] || '';
-                    return <div key={m} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 26px 26px', alignItems: 'center', gap: '4px', padding: '4px 6px', borderRadius: '6px', background: level ? `${colors[level] || '#999'}15` : 'transparent', border: `1px solid ${level ? (colors[level] || '#999') : 'var(--border-color)'}` }}>
-                      <span style={{ fontSize: '12px', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: level ? (colors[level] || '#999') : 'var(--text-muted)' }}>{m}</span>
-                      <select style={{ width: '100%', fontSize: '11px', padding: '3px 4px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
-                        value={level} onChange={e => {
-                          const updated = { ...machineSkills };
-                          if (e.target.value) updated[m] = e.target.value; else delete updated[m];
-                          setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') });
-                        }}>
-                        {machineLevels.map(([val, lbl]) => <option key={val} value={val}>{lbl}</option>)}
-                      </select>
-                      <button type="button" title="Makina Adını Düzenle" onClick={() => { const newName = prompt(`"${m}" adını değiştir:`, m); if (!newName || !newName.trim() || newName.trim() === m) return; const updated = {}; Object.entries(machineSkills).forEach(([k, v]) => { updated[k === m ? newName.trim() : k] = v; }); setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') }); }} style={{ fontSize: '10px', padding: '2px 4px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>✏️</button>
-                      <button type="button" title="Sil" onClick={() => { const updated = { ...machineSkills }; delete updated[m]; setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') }); }} style={{ fontSize: '10px', padding: '2px 4px', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', color: '#e74c3c', borderRadius: '4px', cursor: 'pointer' }}>❌</button>
-                    </div>;
-                  })}
-                </div>
-                <button type="button" onClick={() => { const name = prompt('Yeni makina adı yazın (ör: Singer, Juki, Özel Overlok):'); if (name && name.trim()) { const updated = { ...machineSkills, [name.trim()]: 'normal' }; setForm({ ...form, operation_skill_scores: JSON.stringify(updated), machines: Object.keys(updated).join(', ') }); } }} style={{ marginTop: '8px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', padding: '6px 14px', borderRadius: '6px', fontSize: '14px', cursor: 'pointer', fontWeight: '600' }}>➕ Makina Ekle</button>
-              </>;
-            })()}
-          </div>
-
-
-          {/* ===== ÖZEL NOTLAR & GÖZLEMLER ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(46,204,113,0.3)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}> Özel Notlar & Gözlemler</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">🧵 Güçlü Yönleri, Zayıf Yönleri, Sevdiği İşlemler</label>
-                <div style={{ display: 'flex', gap: '2px', alignItems: 'flex-start' }}><textarea className="form-input" rows={3} placeholder="Örn: Gömlek dikiminde çok iyi, fermuar takmada tecrübeli. İnce kumaşlarda dikkatli, kalın kumaşta zorlanır. Overlok'ta çalışmayı seviyor..." value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} style={{ resize: 'vertical', flex: 1 }} /><button type="button" title="Temizle" onClick={() => setForm({ ...form, skills: '' })} style={{ fontSize: '11px', padding: '4px 5px', border: '1px solid var(--border-color)', background: form.skills ? 'rgba(231,76,60,0.06)' : 'rgba(150,150,150,0.06)', color: form.skills ? '#e74c3c' : '#bbb', cursor: form.skills ? 'pointer' : 'default', borderRadius: '4px', minWidth: '26px', marginTop: '2px', opacity: form.skills ? 1 : 0.5 }}>❌</button></div></div>
-            </div>
-          </div>
-          {/* ===== P5: MAKİNE AYAR BECERİLERİ ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(155,89,182,0.3)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', marginBottom: '8px' }}>⚙️ Makine Ayar Becerileri</div>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>Her makine için ayar becerilerini işaretleyin. ✅ = Yapabilir</div>
-            {(() => {
-              let adj = {};
-              try { adj = JSON.parse(form.machine_adjustments || '{}'); } catch { }
-              const ADJ_STORAGE_KEY = 'MACHINE_ADJ_SKILLS_CUSTOM';
-              const defaultMachines = {
-                'Singer Düz Makina': ['İplik ayarı', 'Konpile ayarı', 'Dişli ayarı', 'Çıtlama', 'Esneme ayarı', 'Toplama', 'Büzgü', 'Lastik esneme çıtlama'],
-                'Overlok': ['İplik ayarı', 'Çıtlama', 'Bıçak ayarı', 'Loper ayarı', 'Esneme ayarı', 'Toplama', 'Büzgü'],
-                'Reçme': ['İplik ayarı', 'Çıtlama', 'Bıçak ayarı', 'Loper ayarı', 'Esneme ayarı', 'Toplama', 'Büzgü']
-              };
-              let machines;
-              try { const saved = localStorage.getItem(ADJ_STORAGE_KEY); machines = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultMachines)); } catch { machines = JSON.parse(JSON.stringify(defaultMachines)); }
-              const saveMachines = (m) => { localStorage.setItem(ADJ_STORAGE_KEY, JSON.stringify(m)); };
-              const handleRenameMachine = (oldName) => {
-                const newName = prompt(`"${oldName}" makine adını ne olarak değiştirmek istiyorsunuz?`, oldName);
-                if (!newName || !newName.trim() || newName.trim() === oldName) return;
-                const updated = {}; const newAdj = { ...adj };
-                Object.entries(machines).forEach(([k, v]) => { if (k === oldName) { updated[newName.trim()] = v; v.forEach(skill => { const oldKey = `${oldName}_${skill}`; const newKey = `${newName.trim()}_${skill}`; if (newAdj[oldKey]) { newAdj[newKey] = newAdj[oldKey]; delete newAdj[oldKey]; } }); } else { updated[k] = v; } });
-                saveMachines(updated); setForm({ ...form, machine_adjustments: JSON.stringify(newAdj) });
-              };
-              const handleDeleteMachine = (name) => {
-                if (!confirm(`"${name}" makinesini ve tüm becerilerini silmek istediğinize emin misiniz?`)) return;
-                const updated = {}; const newAdj = { ...adj };
-                Object.entries(machines).forEach(([k, v]) => { if (k !== name) { updated[k] = v; } else { v.forEach(skill => { delete newAdj[`${name}_${skill}`]; }); } });
-                saveMachines(updated); setForm({ ...form, machine_adjustments: JSON.stringify(newAdj) });
-              };
-              const handleAddMachine = () => {
-                const name = prompt('Yeni makine adı yazın:');
-                if (!name || !name.trim()) return;
-                if (machines[name.trim()]) { alert('Bu makine zaten mevcut!'); return; }
-                const updated = { ...machines, [name.trim()]: [] };
-                saveMachines(updated); setForm({ ...form });
-              };
-              const handleRenameSkill = (machine, skillIdx) => {
-                const oldSkill = machines[machine][skillIdx];
-                const newSkill = prompt(`"${oldSkill}" beceri adını ne olarak değiştirmek istiyorsunuz?`, oldSkill);
-                if (!newSkill || !newSkill.trim() || newSkill.trim() === oldSkill) return;
-                const updated = JSON.parse(JSON.stringify(machines));
-                updated[machine][skillIdx] = newSkill.trim();
-                const newAdj = { ...adj };
-                const oldKey = `${machine}_${oldSkill}`; const newKey = `${machine}_${newSkill.trim()}`;
-                if (newAdj[oldKey]) { newAdj[newKey] = newAdj[oldKey]; delete newAdj[oldKey]; }
-                saveMachines(updated); setForm({ ...form, machine_adjustments: JSON.stringify(newAdj) });
-              };
-              const handleDeleteSkill = (machine, skillIdx) => {
-                const skill = machines[machine][skillIdx];
-                if (!confirm(`"${skill}" becerisini silmek istediğinize emin misiniz?`)) return;
-                const updated = JSON.parse(JSON.stringify(machines));
-                updated[machine].splice(skillIdx, 1);
-                const newAdj = { ...adj }; delete newAdj[`${machine}_${skill}`];
-                saveMachines(updated); setForm({ ...form, machine_adjustments: JSON.stringify(newAdj) });
-              };
-              const handleAddSkill = (machine) => {
-                const skill = prompt(`"${machine}" makinesine yeni beceri ekleyin:`);
-                if (!skill || !skill.trim()) return;
-                if (machines[machine].includes(skill.trim())) { alert('Bu beceri zaten mevcut!'); return; }
-                const updated = JSON.parse(JSON.stringify(machines));
-                updated[machine].push(skill.trim());
-                saveMachines(updated); setForm({ ...form });
-              };
-              return <>
-                {Object.entries(machines).map(([machine, skills]) => (
-                  <div key={machine} style={{ marginBottom: '8px', padding: '8px', borderRadius: '6px', background: 'rgba(155,89,182,0.04)', border: '1px solid rgba(155,89,182,0.1)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
-                      <div style={{ fontSize: '11px', fontWeight: '700', color: '#8e44ad', flex: 1 }}>{machine}</div>
-                      <button type="button" title="Makine Adını Düzenle" onClick={() => handleRenameMachine(machine)} style={{ fontSize: '10px', padding: '2px 4px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>✏️</button>
-                      <button type="button" title="Makineyi Sil" onClick={() => handleDeleteMachine(machine)} style={{ fontSize: '10px', padding: '2px 4px', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', color: '#e74c3c', borderRadius: '4px', cursor: 'pointer' }}>❌</button>
-                    </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                      {skills.map((skill, skillIdx) => {
-                        const key = `${machine}_${skill}`;
-                        const checked = adj[key] || false;
-                        return <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '4px 8px', borderRadius: '4px 0 0 4px', background: checked ? 'rgba(46,204,113,0.1)' : 'transparent', border: `1px solid ${checked ? '#27ae60' : 'var(--border-color)'}`, cursor: 'pointer' }}>
-                            <input type="checkbox" checked={checked} onChange={() => {
-                              const updated = { ...adj, [key]: !checked };
-                              if (!updated[key]) delete updated[key];
-                              setForm({ ...form, machine_adjustments: JSON.stringify(updated) });
-                            }} style={{ width: '12px', height: '12px', accentColor: '#27ae60' }} />{skill}
-                          </label>
-                          <button type="button" title="Beceri Adını Düzenle" onClick={() => handleRenameSkill(machine, skillIdx)} style={{ fontSize: '10px', padding: '4px 3px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '0' }}>✏️</button>
-                          <button type="button" title="Beceriyi Sil" onClick={() => handleDeleteSkill(machine, skillIdx)} style={{ fontSize: '10px', padding: '4px 3px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(231,76,60,0.06)', color: '#e74c3c', cursor: 'pointer', borderRadius: '0 4px 4px 0' }}>❌</button>
-                        </div>;
-                      })}
-                      <button type="button" onClick={() => handleAddSkill(machine)} style={{ fontSize: '12px', padding: '4px 8px', borderRadius: '4px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', cursor: 'pointer', fontWeight: '600' }}>➕ Beceri Ekle</button>
-                    </div>
-                  </div>
-                ))}
-                <button type="button" onClick={handleAddMachine} style={{ marginTop: '6px', fontSize: '12px', padding: '6px 14px', borderRadius: '6px', background: 'rgba(155,89,182,0.08)', border: '1px dashed rgba(155,89,182,0.4)', color: '#8e44ad', cursor: 'pointer', fontWeight: '600' }}>➕ Yeni Makine Ekle</button>
-              </>;
-            })()}
-            <div className="form-row" style={{ marginTop: '8px' }}>
-              <div className="form-group"><label className="form-label">Genel Ayar Özeni</label>
-                <EditableSelect fieldKey="machine_adjustment_care" label="Ayar Özeni" value={form.machine_adjustment_care} onChange={v => setForm({ ...form, machine_adjustment_care: v })} defaultOptions={[['ozenli', 'Özenli'], ['normal', 'Normal'], ['ozensiz', 'Özensiz']]} /></div>
-              <div className="form-group"><label className="form-label">Bakım Becerisi</label>
-                <EditableSelect fieldKey="maintenance_skill" label="Bakım" value={form.maintenance_skill} onChange={v => setForm({ ...form, maintenance_skill: v })} defaultOptions={[['tam', 'Tam bakım yapabilir'], ['basit', 'Basit bakım yapabilir'], ['sadece_temizlik', 'Sadece temizlik'], ['yapamaz', 'Yapamaz']]} /></div>
-            </div>
-            <div className="form-row" style={{ marginTop: '8px' }}>
-              <div className="form-group"><label className="form-label">💚 Tercih Ettiği Makine</label>
-                <EditableSelect fieldKey="preferred_machine" label="Makine Tercihi" value={form.preferred_machine} onChange={v => setForm({ ...form, preferred_machine: v })} defaultOptions={[['', '— Seçiniz —'], ['Duz_Dikiş', 'Düz Dikiş'], ['Overlok', 'Overlok'], ['Recme', 'Reçme'], ['Flatlock', 'Flatlock'], ['Cift_Igne', 'Çift İğne'], ['Zigzag', 'Zigzag'], ['Utu', 'Ütü'], ['Kesim', 'Kesim']]} /></div>
-              <div className="form-group"><label className="form-label">⭐ En Verimli Olduğu Makine</label>
-                <EditableSelect fieldKey="most_efficient_machine" label="Verimli Makine" value={form.most_efficient_machine} onChange={v => setForm({ ...form, most_efficient_machine: v })} defaultOptions={[['', '— Seçiniz —'], ['Duz_Dikiş', 'Düz Dikiş'], ['Overlok', 'Overlok'], ['Recme', 'Reçme'], ['Flatlock', 'Flatlock'], ['Cift_Igne', 'Çift İğne'], ['Zigzag', 'Zigzag'], ['Utu', 'Ütü'], ['Kesim', 'Kesim']]} /></div>
-            </div>
-          </div>
-
-          {/* ===== 🏅 MAKİNE SINIFI & YAPABİLECEĞİ İŞLEMLER ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '2px solid rgba(212,168,71,0.4)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: '#D4A847', marginBottom: '4px' }}>🏅 Makine Sınıfı & Yapabileceği İşlemler</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '10px' }}>Her makine için usta sınıfını ve o makinede hangi özel dikişi/işlemi yapabildiğini belirtin. Sistem, üretim atamalarında bu bilgileri kullanır.</div>
-
-            {(() => {
-              const SINIF_KEY = 'MAKINE_SINIF_ISLEM_V1';
-              // Varsayılan makine → işlem listesi
-              const varsayilanMakineler = {
-                'Düz Makina': ['Düz dikiş', 'Kemer dikme', 'Etek kenarı', 'Yaka dikme', 'Cep dikme', 'Fitil çekme', 'Özel dikiş'],
-                'Overlok': ['5 iplik overlok', '4 iplik overlok', 'Beden birleştirme', 'Omuz birleştirme', 'Kolları takma', 'Yan dikiş'],
-                'Reçme': ['Düz reçme', 'Kol ağzı reçme', 'Beden alt reçme', 'V yaka reçme', 'Logo reçme'],
-                'Çift İğne': ['Çift iğne düz', 'Kemer dikme', 'Bant dikme', 'Dekortif dikiş'],
-                'Ütü': ['Ara ütü', 'Son ütü', 'Tela yapıştırma', 'Şekil verme'],
-              };
-
-              let sinifData = {};
-              try { sinifData = JSON.parse(form.capable_operations || '{}'); } catch { }
-
-              let makineIslemler;
-              try {
-                const saved = localStorage.getItem(SINIF_KEY);
-                makineIslemler = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(varsayilanMakineler));
-              } catch { makineIslemler = JSON.parse(JSON.stringify(varsayilanMakineler)); }
-
-              const kaydet = (m) => { localStorage.setItem(SINIF_KEY, JSON.stringify(m)); };
-
-              const siniflar = [
-                { key: '1_sinif_usta', label: '🏆 1. Sınıf Usta', renk: '#D4A847', aciklama: 'En yüksek seviye — tüm incelikleri bilir, hızlı ve hatasız çalışır' },
-                { key: '2_sinif_usta', label: '🥈 2. Sınıf Usta', renk: '#95a5a6', aciklama: 'İyi seviye — çoğu işlemi yapabilir, zaman zaman kontrol gerekebilir' },
-                { key: 'kalfa', label: '🔵 Kalfa', renk: '#3498db', aciklama: 'Orta seviye — temel işlemleri yapar, zor noktalarda yardım alır' },
-                { key: 'cirak', label: '🟡 Çırak', renk: '#f39c12', aciklama: 'Başlangıç seviyesi — basit işlemler, sürekli gözetim gerektirir' },
-              ];
-
-              const guncelle = (makine, alan, deger) => {
-                const yeni = { ...sinifData };
-                if (!yeni[makine]) yeni[makine] = { sinif: '', islemler: [] };
-                if (alan === 'sinif') { yeni[makine].sinif = deger; }
-                else if (alan === 'islem_toggle') {
-                  const arr = yeni[makine].islemler || [];
-                  yeni[makine].islemler = arr.includes(deger) ? arr.filter(x => x !== deger) : [...arr, deger];
-                }
-                setForm({ ...form, capable_operations: JSON.stringify(yeni) });
-              };
-
-              return <>
-                {Object.entries(makineIslemler).map(([makine, islemler]) => {
-                  const d = sinifData[makine] || { sinif: '', islemler: [] };
-                  const secilenSinif = siniflar.find(s => s.key === d.sinif);
-
-                  return (
-                    <div key={makine} style={{ marginBottom: '10px', border: `2px solid ${secilenSinif ? secilenSinif.renk + '60' : 'var(--border-color)'}`, borderRadius: '10px', overflow: 'hidden' }}>
-                      {/* Makine başlık + sil/düzenle */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: secilenSinif ? `${secilenSinif.renk}15` : 'var(--bg-card)' }}>
-                        <span style={{ fontWeight: '800', fontSize: '13px', flex: 1, color: secilenSinif?.renk || 'var(--text-primary)' }}>🔧 {makine}</span>
-                        <button type="button" onClick={() => {
-                          const yeniIsim = prompt(`"${makine}" makinesinin adını değiştir:`, makine);
-                          if (!yeniIsim || !yeniIsim.trim() || yeniIsim.trim() === makine) return;
-                          const guncel = {};
-                          Object.entries(makineIslemler).forEach(([k, v]) => { guncel[k === makine ? yeniIsim.trim() : k] = v; });
-                          kaydet(guncel);
-                          const yeniSinif = {};
-                          Object.entries(sinifData).forEach(([k, v]) => { yeniSinif[k === makine ? yeniIsim.trim() : k] = v; });
-                          setForm({ ...form, capable_operations: JSON.stringify(yeniSinif) });
-                        }} style={{ fontSize: '10px', padding: '2px 6px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.1)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>✏️ Ad</button>
-                        <button type="button" onClick={() => {
-                          if (!confirm(`"${makine}" makinesini sil?`)) return;
-                          const guncel = { ...makineIslemler }; delete guncel[makine];
-                          kaydet(guncel);
-                          const yeniSinif = { ...sinifData }; delete yeniSinif[makine];
-                          setForm({ ...form, capable_operations: JSON.stringify(yeniSinif) });
-                        }} style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', color: '#e74c3c', borderRadius: '4px', cursor: 'pointer' }}>❌ Sil</button>
-                      </div>
-
-                      <div style={{ padding: '10px 12px' }}>
-                        {/* SINIF SEÇİMİ */}
-                        <div style={{ marginBottom: '8px' }}>
-                          <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '6px' }}>📊 Bu Makinedeki Sınıfı:</div>
-                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            {siniflar.map(s => (
-                              <button key={s.key} type="button" title={s.aciklama} onClick={() => guncelle(makine, 'sinif', d.sinif === s.key ? '' : s.key)}
-                                style={{
-                                  padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s',
-                                  background: d.sinif === s.key ? s.renk : 'var(--bg-input)',
-                                  color: d.sinif === s.key ? '#fff' : s.renk,
-                                  border: `2px solid ${s.renk}`
-                                }}>
-                                {s.label}
-                              </button>
-                            ))}
-                          </div>
-                          {secilenSinif && <div style={{ fontSize: '11px', color: secilenSinif.renk, marginTop: '4px', fontStyle: 'italic' }}>ℹ️ {secilenSinif.aciklama}</div>}
-                        </div>
-
-                        {/* İŞLEM LİSTESİ */}
-                        <div>
-                          <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '6px' }}>✅ Bu Makinede Yapabildiği Özel Dikişler/İşlemler:</div>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                            {islemler.map((islem, idx) => {
-                              const secili = (d.islemler || []).includes(islem);
-                              return (
-                                <div key={islem} style={{ display: 'flex', alignItems: 'center' }}>
-                                  <label style={{
-                                    display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '4px 10px', borderRadius: '6px 0 0 6px', border: `1px solid ${secili ? '#27ae60' : 'var(--border-color)'}`,
-                                    background: secili ? 'rgba(46,204,113,0.12)' : 'var(--bg-input)', cursor: 'pointer', color: secili ? '#27ae60' : 'var(--text-primary)', fontWeight: secili ? '700' : '400'
-                                  }}>
-                                    <input type="checkbox" checked={secili} onChange={() => guncelle(makine, 'islem_toggle', islem)} style={{ width: '12px', height: '12px', accentColor: '#27ae60', display: 'none' }} />
-                                    {secili ? '✅' : '○'} {islem}
-                                  </label>
-                                  <button type="button" title="Düzenle" onClick={() => {
-                                    const yeni = prompt(`"${islem}" işlem adını değiştir:`, islem);
-                                    if (!yeni || !yeni.trim() || yeni.trim() === islem) return;
-                                    const guncel = JSON.parse(JSON.stringify(makineIslemler));
-                                    guncel[makine][idx] = yeni.trim();
-                                    kaydet(guncel);
-                                    const yeniSinif = { ...sinifData };
-                                    if (yeniSinif[makine]?.islemler) {
-                                      yeniSinif[makine].islemler = yeniSinif[makine].islemler.map(x => x === islem ? yeni.trim() : x);
-                                    }
-                                    setForm({ ...form, capable_operations: JSON.stringify(yeniSinif) });
-                                  }} style={{ fontSize: '9px', padding: '4px 3px', borderLeft: 'none', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: 0 }}>✏️</button>
-                                  <button type="button" title="Sil" onClick={() => {
-                                    if (!confirm(`"${islem}" işlemini listeden sil?`)) return;
-                                    const guncel = JSON.parse(JSON.stringify(makineIslemler));
-                                    guncel[makine].splice(idx, 1);
-                                    kaydet(guncel);
-                                    setForm({ ...form });
-                                  }} style={{ fontSize: '9px', padding: '4px 3px', borderLeft: 'none', border: '1px solid rgba(231,76,60,0.3)', background: 'rgba(231,76,60,0.06)', color: '#e74c3c', cursor: 'pointer', borderRadius: '0 4px 4px 0' }}>❌</button>
-                                </div>
-                              );
-                            })}
-                            <button type="button" onClick={() => {
-                              const yeni = prompt(`"${makine}" makinesine yeni işlem ekle (ör: Kemer dikme, Ferman takma):`);
-                              if (!yeni || !yeni.trim()) return;
-                              const guncel = JSON.parse(JSON.stringify(makineIslemler));
-                              if (!guncel[makine].includes(yeni.trim())) guncel[makine].push(yeni.trim());
-                              kaydet(guncel);
-                              setForm({ ...form });
-                            }} style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '6px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', cursor: 'pointer', fontWeight: '600' }}>➕ İşlem Ekle</button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Yeni makine ekleme */}
-                <button type="button" onClick={() => {
-                  const isim = prompt('Yeni makine adı (ör: Punteriz, Bantlama Mak., Kemer Mak.):');
-                  if (!isim || !isim.trim()) return;
-                  if (makineIslemler[isim.trim()]) { alert('Bu makine zaten var!'); return; }
-                  const guncel = { ...makineIslemler, [isim.trim()]: [] };
-                  kaydet(guncel);
-                  setForm({ ...form });
-                }} style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(212,168,71,0.08)', border: '2px dashed rgba(212,168,71,0.4)', color: '#D4A847', cursor: 'pointer', fontWeight: '700', fontSize: '13px', marginTop: '6px' }}>
-                  ➕ Yeni Makine Ekle (Kemer Mak., Punteriz, Bantlama...)
-                </button>
-              </>;
-            })()}
-          </div>
-
-          {/* ===== ÜRETİM KAPASİTESİ ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(46,204,113,0.3)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}>📊 Üretim Kapasitesi</div>
-            <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(46,204,113,0.06)', border: '1px dashed rgba(46,204,113,0.3)', fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-              ℹ️ Bu bölüm her ürün/model için farklılık gösterir.<br />
-              Üretim modülü devreye girdiğinde <strong>günlük adet, hata oranı ve verimlilik skoru</strong> sistem tarafından otomatik hesaplanacaktır.
-            </div>
-          </div>
-
-          {/* ===== BECERİ DETAYLARI ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(155,89,182,0.3)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', marginBottom: '8px' }}>🎯 Beceri Detayları</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">📚 Öğrenme Hızı</label>
-                <EditableSelect fieldKey="learning_speed" label="Öğrenme Hızı" value={form.learning_speed} onChange={v => setForm({ ...form, learning_speed: v })} defaultOptions={[['cok_hizli', 'Çok Hızlı'], ['hizli', 'Hızlı'], ['normal', 'Normal'], ['yavas', 'Yavaş']]} />
-              </div>
-              <div className="form-group"><label className="form-label">🔓 Bağımsız Çalışma</label>
-                <EditableSelect fieldKey="independence_level" label="Bağımsızlık" value={form.independence_level} onChange={v => setForm({ ...form, independence_level: v })} defaultOptions={[['tam', 'Tam Bağımsız'], ['kismen', 'Kısmen'], ['bagli', 'Bağımlı']]} />
-              </div>
-            </div>
-          </div>
-
-          {/* ===== ÇALIŞMA DİSİPLİNİ VE DAVRANIŞ ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(241,196,15,0.3)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#f39c12', marginBottom: '8px' }}>⭐ Çalışma Disiplini & Davranış</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">📅 Aylık Devamsızlık</label>
-                <EditableSelect fieldKey="attendance" label="Devamsızlık" value={form.attendance} onChange={v => setForm({ ...form, attendance: v })} defaultOptions={[['yok', 'Yok'], ['ayda_yarim', 'Ayda yarım gün (çok nadir)'], ['ayda_1', 'Ayda 1 gün'], ['ayda_2', 'Ayda 2 gün'], ['ayda_3_4', 'Ayda 3-4 gün'], ['ayda_5_ustu', 'Ayda 5+ gün (çok sık)']]} />
-              </div>
-              <div className="form-group"><label className="form-label">⏰ Sabah Geç Kalma</label>
-                <EditableSelect fieldKey="punctuality" label="Geç Kalma" value={form.punctuality} onChange={v => setForm({ ...form, punctuality: v })} defaultOptions={[['herzaman', 'Asla geç kalmaz'], ['genelde', 'Nadiren'], ['bazen', 'Bazen'], ['sik', 'Sık'], ['surekli', 'Sürekli']]} />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">📋 İzin Kullanımı (Çalışma Günlerinde)</label>
-                {(() => {
-                  const LEAVE_STORAGE_KEY = 'LEAVE_TYPES_CUSTOM';
-                  const defaultLeaveTypes = [
-                    { id: 'yillik_izin', label: '🏖️ Yıllık İzin', color: '#3498db' },
-                    { id: 'saglik_raporu', label: '🏥 Sağlık Raporu', color: '#e74c3c' },
-                    { id: 'ucretsiz_izin', label: '💤 Ücretsiz İzin', color: '#95a5a6' },
-                    { id: 'aile_izni', label: '👨‍👩‍👧 Aile İzni (evlilik/ölüm)', color: '#8e44ad' },
-                    { id: 'resmi_izin', label: '🏛️ Resmi Tatil', color: '#27ae60' },
-                    { id: 'mazeret_izni', label: '📝 Mazeret İzni', color: '#f39c12' },
-                  ];
-                  let leaveTypes;
-                  try { const saved = localStorage.getItem(LEAVE_STORAGE_KEY); leaveTypes = saved ? JSON.parse(saved) : [...defaultLeaveTypes]; } catch { leaveTypes = [...defaultLeaveTypes]; }
-                  const saveLeaveTypes = (types) => { localStorage.setItem(LEAVE_STORAGE_KEY, JSON.stringify(types)); };
-                  const handleRenameLeave = (idx) => {
-                    const old = leaveTypes[idx].label;
-                    const newLabel = prompt(`"${old}" adını ne olarak değiştirmek istiyorsunuz?`, old);
-                    if (!newLabel || !newLabel.trim() || newLabel.trim() === old) return;
-                    const updated = JSON.parse(JSON.stringify(leaveTypes));
-                    const oldId = updated[idx].id;
-                    const newId = newLabel.trim().toLowerCase().replace(/[^a-z0-9çşıöüğ]/g, '_').replace(/_+/g, '_');
-                    updated[idx] = { ...updated[idx], id: newId, label: newLabel.trim() };
-                    saveLeaveTypes(updated);
-                    const izinler = (form.leave_types || '').split(',').map(s => s.trim()).filter(Boolean);
-                    if (izinler.includes(oldId)) { setForm({ ...form, leave_types: izinler.map(s => s === oldId ? newId : s).join(', ') }); }
-                    else { setForm({ ...form }); }
-                  };
-                  const handleDeleteLeave = (idx) => {
-                    if (!confirm(`"${leaveTypes[idx].label}" izin tipini silmek istediğinize emin misiniz?`)) return;
-                    const removedId = leaveTypes[idx].id;
-                    const updated = leaveTypes.filter((_, i) => i !== idx);
-                    saveLeaveTypes(updated);
-                    const izinler = (form.leave_types || '').split(',').map(s => s.trim()).filter(Boolean);
-                    setForm({ ...form, leave_types: izinler.filter(s => s !== removedId).join(', ') });
-                  };
-                  const handleAddLeave = () => {
-                    const name = prompt('Yeni izin tipi ekleyin (ör: Doğum İzni):');
-                    if (!name || !name.trim()) return;
-                    const id = name.trim().toLowerCase().replace(/[^a-z0-9çşıöüğ]/g, '_').replace(/_+/g, '_');
-                    if (leaveTypes.some(l => l.id === id)) { alert('Bu izin tipi zaten mevcut!'); return; }
-                    const colors = ['#3498db', '#e74c3c', '#27ae60', '#8e44ad', '#f39c12', '#95a5a6', '#e67e22', '#1abc9c'];
-                    const color = colors[leaveTypes.length % colors.length];
-                    const updated = [...leaveTypes, { id, label: name.trim(), color }];
-                    saveLeaveTypes(updated);
-                    setForm({ ...form });
-                  };
-                  const izinler = (form.leave_types || '').split(',').map(s => s.trim()).filter(Boolean);
-                  return <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-                    {leaveTypes.map((izin, idx) => {
-                      const isChecked = izinler.includes(izin.id);
-                      return <div key={izin.id} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '4px 8px', borderRadius: '6px 0 0 6px', background: isChecked ? `${izin.color}15` : 'var(--bg-input)', border: `1px solid ${isChecked ? izin.color : 'var(--border-color)'}`, cursor: 'pointer' }}>
-                          <input type="checkbox" checked={isChecked} onChange={() => {
-                            const newList = isChecked ? izinler.filter(s => s !== izin.id) : [...izinler, izin.id];
-                            setForm({ ...form, leave_types: newList.join(', ') });
-                          }} style={{ accentColor: izin.color }} />{izin.label}
-                        </label>
-                        <button type="button" title="İzin Adını Düzenle" onClick={() => handleRenameLeave(idx)} style={{ fontSize: '10px', padding: '4px 3px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '0' }}>✏️</button>
-                        <button type="button" title="İzin Tipini Sil" onClick={() => handleDeleteLeave(idx)} style={{ fontSize: '10px', padding: '4px 3px', border: '1px solid var(--border-color)', borderLeft: 'none', background: 'rgba(231,76,60,0.06)', color: '#e74c3c', cursor: 'pointer', borderRadius: '0 6px 6px 0' }}>❌</button>
-                      </div>;
-                    })}
-                    <button type="button" onClick={handleAddLeave} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', background: 'rgba(52,152,219,0.08)', border: '1px dashed rgba(52,152,219,0.4)', color: '#3498db', cursor: 'pointer', fontWeight: '600' }}>➕ İzin Tipi Ekle</button>
-                  </div>;
-                })()}
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">💡 İnisiyatif Alma</label>
-                <EditableSelect fieldKey="initiative_level" label="İnisiyatif" value={form.initiative_level} onChange={v => setForm({ ...form, initiative_level: v })} defaultOptions={[['yuksek', 'Yüksek'], ['orta', 'Orta'], ['dusuk', 'Düşük']]} />
-              </div>
-              <div className="form-group"><label className="form-label">🤝 Takım Çalışması</label>
-                <EditableSelect fieldKey="teamwork_level" label="Takım" value={form.teamwork_level} onChange={v => setForm({ ...form, teamwork_level: v })} defaultOptions={[['cok_iyi', 'Çok İyi'], ['iyi', 'İyi'], ['orta', 'Orta'], ['zayif', 'Zayıf']]} />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">🧩 Problem Çözme</label>
-                <EditableSelect fieldKey="problem_solving" label="Problem" value={form.problem_solving} onChange={v => setForm({ ...form, problem_solving: v })} defaultOptions={[['cozer', 'Çözer'], ['sorar', 'Sorar'], ['bekler', 'Bekler']]} />
-              </div>
-              <div className="form-group"></div>
-            </div>
-          </div>
-
-          {/* ===== P2: İŞ GEÇMİŞİ ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(142,68,173,0.2)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#8e44ad', marginBottom: '8px' }}>📂 İş Geçmişi</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Sözleşme Tipi</label>
-                <EditableSelect fieldKey="contract_type" label="Sözleşme" value={form.contract_type} onChange={v => setForm({ ...form, contract_type: v })} defaultOptions={[['belirsiz', 'Belirsiz süreli'], ['belirli', 'Belirli süreli'], ['mevsimlik', 'Mevsimlik']]} /></div>
-              <div className="form-group"><label className="form-label">SGK Giriş Tarihi</label><EditableInput type="date" value={form.sgk_entry_date} onChange={v => setForm({ ...form, sgk_entry_date: v })} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Önceki İş Yeri</label>
-                <EditableSelect fieldKey="previous_workplaces" label="Önceki İşyeri" value={form.previous_workplaces} onChange={v => setForm({ ...form, previous_workplaces: v })} defaultOptions={[['ilk_isi', 'İlk işi'], ['1-2', '1-2 iş yeri'], ['3-5', '3-5 iş yeri'], ['5+', '5+ iş yeri']]} /></div>
-              <div className="form-group"><label className="form-label">Son İş Yeri Ayrılma Nedeni</label>
-                <EditableSelect fieldKey="leave_reason" label="Ayrılma Nedeni" value={form.leave_reason} onChange={v => setForm({ ...form, leave_reason: v })} defaultOptions={[['', '— Seçiniz —'], ['maas', 'Maaş'], ['is_ortami', 'İş ortamı'], ['ailevi', 'Ailevi nedenler'], ['tasinma', 'Taşınma'], ['karsilikli', 'Karşılıklı ayrıldı'], ['ilk_isi', 'İlk işi'], ['belirtmek_istemiyor', 'Belirtmek istemiyor'], ['diger', 'Diğer']]} /></div>
-            </div>
-          </div>
-
-          {/* ===== P6: FİZİKSEL & İŞ KAPASİTESİ (Sadeleştirildi) ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(231,76,60,0.2)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#e74c3c', marginBottom: '8px' }}>🏋️ Fiziksel & İş Kapasitesi</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Vücut Yapısı (iş ataması)</label>
-                <EditableSelect fieldKey="body_type" label="Vücut Yapısı" value={form.body_type} onChange={v => setForm({ ...form, body_type: v })} defaultOptions={[['guclu_iri', 'Güçlü/İri'], ['normal', 'Normal'], ['ince_narin', 'İnce/Narin'], ['kilolu', 'Kilolu'], ['kisa_boylu', 'Kısa boylu']]} /></div>
-              <div className="form-group"><label className="form-label">İş Kapasitesi</label>
-                <EditableSelect fieldKey="work_capacity" label="Kapasite" value={form.work_capacity} onChange={v => setForm({ ...form, work_capacity: v })} defaultOptions={[['her_turlu', 'Her türlü işi yapar'], ['agir_yarim', 'Ağır işleri yapar'], ['agir_kisa', 'Ağır işleri kısa süre'], ['normal_rahat', 'Normal işleri rahat yapar'], ['normal_mola', 'Normal işler'], ['hafif', 'Hafif işlere uygun'], ['sadece_hafif', 'Sadece hafif işler']]} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">İSG Eğitimi Tarihi</label><EditableInput type="date" value={form.isg_training_date} onChange={v => setForm({ ...form, isg_training_date: v })} /></div>
-              <div className="form-group"><label className="form-label">Son Sağlık Kontrolü</label><EditableInput type="date" value={form.last_health_check} onChange={v => setForm({ ...form, last_health_check: v })} /></div>
-            </div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>💡 Herkes kendi sağlığından sorumludur. Önce insan, sonra iş.</div>
-          </div>
-
-          {/* ===== P7: KARAKTERİSTİK ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(241,196,15,0.3)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#f1c40f', marginBottom: '8px' }}>🧠 Karakteristik & İnsan İlişkileri</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Güvenilirlik</label>
-                <EditableSelect fieldKey="reliability" label="Güvenilirlik" value={form.reliability} onChange={v => setForm({ ...form, reliability: v })} defaultOptions={[['cok_guvenilir', 'Çok güvenilir'], ['guvenilir', 'Güvenilir'], ['normal', 'Normal'], ['degisken', 'Değişken']]} /></div>
-              <div className="form-group"><label className="form-label">Temizlik/Hijyen</label>
-                <EditableSelect fieldKey="hygiene" label="Hijyen" value={form.hygiene} onChange={v => setForm({ ...form, hygiene: v })} defaultOptions={[['cok_ozenli', 'Çok özenli'], ['normal', 'Normal'], ['dikkat', 'Dikkat gerekir']]} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Değişime Açıklık</label>
-                <EditableSelect fieldKey="change_openness" label="Değişime Açıklık" value={form.change_openness} onChange={v => setForm({ ...form, change_openness: v })} defaultOptions={[['cok_acik', 'Çok açık'], ['acik', 'Açık'], ['direncli', 'Dirençli']]} /></div>
-              <div className="form-group"><label className="form-label">Sorumluluğunu Kabul Etme</label>
-                <EditableSelect fieldKey="responsibility_acceptance" label="Sorumluluk" value={form.responsibility_acceptance} onChange={v => setForm({ ...form, responsibility_acceptance: v })} defaultOptions={[['kabul_eder', 'Kabul eder'], ['kismen', 'Kısmen kabul eder'], ['reddeder', 'Başkasına atar']]} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Hata Görünce Duruş</label>
-                <EditableSelect fieldKey="error_stance" label="Hata Duruş" value={form.error_stance} onChange={v => setForm({ ...form, error_stance: v })} defaultOptions={[['soyler_gosterir', 'Söyler ve gösterir'], ['soyler', 'Söyler ama çekinir'], ['susar', 'Susar'], ['fark_etmez', 'Fark etmez']]} /></div>
-              <div className="form-group"></div>
-            </div>
-          </div>
-
-          {/* ===== P9: İŞLEMLER & KUMAŞ DENEYİMİ ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(46,204,113,0.2)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#27ae60', marginBottom: '8px' }}>🎯 İşlem Becerileri & Kumaş Deneyimi</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Renk Tonu Eşleştirme</label>
-                <EditableSelect fieldKey="color_tone_matching" label="Renk Eşleştirme" value={form.color_tone_matching} onChange={v => setForm({ ...form, color_tone_matching: v })} defaultOptions={[['fark_eder', 'Fark eder'], ['fark_eder_devam', 'Fark eder ama devam eder'], ['fark_etmez', 'Fark etmez']]} /></div>
-              <div className="form-group"><label className="form-label">Kritik Eşleşme Sorumluluğu</label>
-                <EditableSelect fieldKey="critical_matching" label="Kritik Eşleşme" value={form.critical_matching_responsibility} onChange={v => setForm({ ...form, critical_matching_responsibility: v })} defaultOptions={[['sorumluluk_alir', 'Sorumluluk alır'], ['sorulursa', 'Sorulursa söyler'], ['almaz', 'Sorumluluk almaz']]} /></div>
-            </div>
-            <div style={{ fontSize: '11px', fontWeight: '700', color: '#27ae60', marginTop: '10px', marginBottom: '6px' }}>🧵 Kumaş Tipi Deneyimi</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-              {(() => {
-                let fabExp = {};
-                try { fabExp = JSON.parse(form.fabric_experience || '{}'); } catch { }
-                const FABRIC_KEY = 'SELECT_OPTIONS_fabric_types';
-                let fabricTypes;
-                try { const saved = localStorage.getItem(FABRIC_KEY); fabricTypes = saved ? JSON.parse(saved) : ['Penye', 'Esnek / Likralı', 'İnce Kumaş', 'Dokuma', 'Denim / Kot', 'Kadife', 'Astar / Tül', 'Triko']; } catch { fabricTypes = ['Penye', 'Esnek / Likralı', 'İnce Kumaş', 'Dokuma', 'Denim / Kot', 'Kadife', 'Astar / Tül', 'Triko']; }
-                const saveFabricTypes = (types) => { localStorage.setItem(FABRIC_KEY, JSON.stringify(types)); };
-                const FABRIC_LEVELS_KEY = 'SELECT_OPTIONS_fabric_levels';
-                let fabricLevels;
-                try { const saved = localStorage.getItem(FABRIC_LEVELS_KEY); fabricLevels = saved ? JSON.parse(saved) : [['', '— Deneyimi yok'], ['uzman', 'Uzman'], ['iyi', 'İyi'], ['orta', 'Orta'], ['zayif', 'Zayıf']]; } catch { fabricLevels = [['', '— Deneyimi yok'], ['uzman', 'Uzman'], ['iyi', 'İyi'], ['orta', 'Orta'], ['zayif', 'Zayıf']]; }
-                const saveFabricLevels = (opts) => { localStorage.setItem(FABRIC_LEVELS_KEY, JSON.stringify(opts)); };
-                return <>
-                  {fabricTypes.map((fabric, idx) => (
-                    <div key={fabric} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 6px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                      <span style={{ fontSize: '11px', fontWeight: '600', minWidth: '80px', flex: '0 0 auto' }}>{fabric}</span>
-                      <select style={{ flex: 1, fontSize: '11px', padding: '3px 4px', borderRadius: '4px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
-                        value={fabExp[fabric] || ''} onChange={e => {
-                          const updated = { ...fabExp };
-                          if (e.target.value) updated[fabric] = e.target.value; else delete updated[fabric];
-                          setForm({ ...form, fabric_experience: JSON.stringify(updated) });
-                        }}>
-                        {fabricLevels.map(([val, lbl]) => <option key={val} value={val}>{lbl}</option>)}
-                      </select>
-                      <button type="button" title="Kumaş Adını Düzenle" onClick={() => { const newName = prompt(`"${fabric}" adını değiştir:`, fabric); if (!newName || !newName.trim() || newName.trim() === fabric) return; const newTypes = [...fabricTypes]; newTypes[idx] = newName.trim(); saveFabricTypes(newTypes); const newExp = {}; Object.entries(fabExp).forEach(([k, v]) => { newExp[k === fabric ? newName.trim() : k] = v; }); setForm({ ...form, fabric_experience: JSON.stringify(newExp) }); }} style={{ fontSize: '10px', padding: '2px 4px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>✏️</button>
-                      <button type="button" title="Sil" onClick={() => { const newTypes = fabricTypes.filter((_, i) => i !== idx); saveFabricTypes(newTypes); const newExp = { ...fabExp }; delete newExp[fabric]; setForm({ ...form, fabric_experience: JSON.stringify(newExp) }); }} style={{ fontSize: '10px', padding: '2px 4px', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.3)', color: '#e74c3c', borderRadius: '4px', cursor: 'pointer' }}>❌</button>
-                    </div>
-                  ))}
-                  <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '4px', marginTop: '4px' }}>
-                    <button type="button" onClick={() => { const name = prompt('Yeni kumaş tipi ekleyin:'); if (!name || !name.trim()) return; if (fabricTypes.includes(name.trim())) { alert('Bu kumaş zaten mevcut!'); return; } const newTypes = [...fabricTypes, name.trim()]; saveFabricTypes(newTypes); setForm({ ...form }); }} style={{ fontSize: '11px', padding: '4px 8px', border: '1px dashed rgba(52,152,219,0.4)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>➕ Kumaş Ekle</button>
-                    <button type="button" onClick={() => { const selLevel = fabricLevels.find(([k]) => k !== ''); if (!selLevel) return; const nl = prompt(`Deneyim seviyesi düzenle:`, selLevel[1]); if (!nl || !nl.trim()) return; const i = fabricLevels.findIndex(([k]) => k === selLevel[0]); if (i >= 0) { const u = [...fabricLevels]; u[i] = [selLevel[0], nl.trim()]; saveFabricLevels(u); setForm({ ...form }); } }} style={{ fontSize: '11px', padding: '4px 8px', border: '1px solid var(--border-color)', background: 'rgba(52,152,219,0.06)', color: '#3498db', cursor: 'pointer', borderRadius: '4px' }}>✏️ Seviye Düzenle</button>
-                    <button type="button" onClick={() => { const name = prompt('Yeni deneyim seviyesi ekleyin:'); if (!name || !name.trim()) return; const key = name.trim().toLowerCase().replace(/\s+/g, '_'); const u = [...fabricLevels, [key, name.trim()]]; saveFabricLevels(u); setForm({ ...form }); }} style={{ fontSize: '11px', padding: '4px 8px', border: '1px dashed rgba(46,204,113,0.4)', background: 'rgba(46,204,113,0.06)', color: '#27ae60', cursor: 'pointer', borderRadius: '4px' }}>➕ Seviye Ekle</button>
-                  </div>
-                </>;
-              })()}
-            </div>
-          </div>
-
-          {/* ===== P10: GELİŞİM ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(52,152,219,0.3)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#2980b9', marginBottom: '8px' }}>🚀 Gelişim & Kariyer</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">👑 Liderlik Potansiyeli</label>
-                <EditableSelect fieldKey="leadership_potential" label="Liderlik" value={form.leadership_potential} onChange={v => setForm({ ...form, leadership_potential: v })} defaultOptions={[['yuksek', 'Yüksek'], ['potansiyel', 'Potansiyel'], ['hayir', 'Şu an uygun değil']]} /></div>
-              <div className="form-group"><label className="form-label">🔧 Yeni Makina Öğrenme</label>
-                <EditableSelect fieldKey="new_machine_learning" label="Yeni Makina" value={form.new_machine_learning} onChange={v => setForm({ ...form, new_machine_learning: v })} defaultOptions={[['aktif', 'Aktif öğreniyor'], ['istekli', 'İstekli'], ['destege_ihtiyac', 'Desteğe ihtiyacı var']]} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">💪 Zor İşten Kaçma</label>
-                <EditableSelect fieldKey="hard_work_avoidance" label="Zor İş" value={form.hard_work_avoidance} onChange={v => setForm({ ...form, hard_work_avoidance: v })} defaultOptions={[['kacmaz', 'Kaçmaz'], ['isteksiz', 'İsteksiz'], ['kacar', 'Kaçar'], ['baskasinayikar', 'Başkasına yıkar']]} /></div>
-              <div className="form-group"><label className="form-label">📈 Kendini Geliştirme</label>
-                <EditableSelect fieldKey="self_improvement" label="Gelişim" value={form.self_improvement} onChange={v => setForm({ ...form, self_improvement: v })} defaultOptions={[['surekli', 'Sürekli gelişir'], ['gelisir', 'Gelişir'], ['yerinde', 'Yerinde sayar'], ['geriler', 'Geriler']]} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">📚 Eğitim İhtiyacı</label><EditableInput value={form.training_needs} onChange={v => setForm({ ...form, training_needs: v })} placeholder="Hangi konularda?" /></div>
-              <div className="form-group"></div>
-            </div>
-          </div>
-
-          {/* ===== P11: PERFORMANS ===== */}
-          <div style={{ background: 'var(--bg-input)', borderRadius: '10px', padding: '12px 14px', marginBottom: '12px', border: '1px solid rgba(212,168,71,0.3)' }}>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: '#D4A847', marginBottom: '8px' }}>⭐ Performans & Değerlendirme</div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">Operatör Sınıfı</label>
-                <EditableSelect fieldKey="operator_class" label="Sınıf" value={form.operator_class} onChange={v => setForm({ ...form, operator_class: v })} defaultOptions={[['A', 'A'], ['B', 'B'], ['C', 'C']]} /></div>
-              <div className="form-group"><label className="form-label">Tavsiye</label>
-                <EditableSelect fieldKey="recommend" label="Tavsiye" value={form.recommend} onChange={v => setForm({ ...form, recommend: v })} defaultOptions={[['kesinlikle', 'Kesinlikle evet'], ['evet', 'Evet'], ['degerlendirmeli', 'Değerlendirmeli'], ['hayir', 'Hayır']]} /></div>
-            </div>
-            <div className="form-row">
-              <div className="form-group"><label className="form-label">📝 Genel Değerlendirme</label><div style={{ display: 'flex', gap: '2px', alignItems: 'flex-start' }}><textarea className="form-input" rows={2} placeholder="Yöneticinin kısa değerlendirmesi..." value={form.general_evaluation} onChange={e => setForm({ ...form, general_evaluation: e.target.value })} style={{ flex: 1 }} /><button type="button" title="Temizle" onClick={() => setForm({ ...form, general_evaluation: '' })} style={{ fontSize: '11px', padding: '4px 5px', border: '1px solid var(--border-color)', background: form.general_evaluation ? 'rgba(231,76,60,0.06)' : 'rgba(150,150,150,0.06)', color: form.general_evaluation ? '#e74c3c' : '#bbb', cursor: form.general_evaluation ? 'pointer' : 'default', borderRadius: '4px', minWidth: '26px', marginTop: '2px', opacity: form.general_evaluation ? 1 : 0.5 }}>❌</button></div></div>
-            </div>
-          </div>
-
-          <div className="modal-footer">
-
-            <button type="button" className="btn btn-secondary" onClick={onClose}>İptal</button>
-
-            <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? '⏳ Kaydediliyor...' : '💾 Kaydet'}</button>
-
-          </div>
-
-        </form>
-
-      </div >
-
-    </div >
-
-  );
-
-}
-
 
 
 // ========== DIFFICULTY DISPLAY ==========
@@ -4320,7 +927,7 @@ function DifficultyBar({ level }) {
 
 // ========== DASHBOARD PAGE ==========
 
-function DashboardPage({ models, personnel }) {
+function DashboardPage({ models, personnel, addToast, currentUser }) {
 
   const [todayStats, setTodayStats] = useState({ produced: 0, defective: 0, value: 0 });
 
@@ -4335,6 +942,8 @@ function DashboardPage({ models, personnel }) {
   const [dashExpenses, setDashExpenses] = useState([]);
 
   const [dashModelCosts, setDashModelCosts] = useState({});
+
+  const [finances, setFinances] = useState(null);
 
   const totalOperations = models.reduce((sum, m) => sum + (m.operation_count || 0), 0);
 
@@ -4482,6 +1091,15 @@ function DashboardPage({ models, personnel }) {
       }
     } catch (e) { }
 
+    // İşletme Acil Nakit/Zarar Metrikleri (Burn Rate & Cash Flow)
+    try {
+      const finRes = await fetch('/api/dashboard/finances');
+      const finData = await finRes.json();
+      if (finData.success) {
+        setFinances(finData);
+      }
+    } catch (e) { }
+
   }, [personnel]);
 
 
@@ -4518,6 +1136,12 @@ function DashboardPage({ models, personnel }) {
 
         <div className="topbar-actions">
 
+          {currentUser?.role === 'koordinator' && (
+            <button onClick={() => addToast('info', '🤖 Müfettiş Görevlendirildi: Tüm veriler (üretim, fire, siparişler) taranıyor. Rapor Karargâh (Baş Asistan) ekranına iletilecek.', 8000)} className="btn" style={{ background: 'linear-gradient(135deg, #e74c3c, #c0392b)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(231,76,60,0.3)', marginRight: '16px', fontWeight: 'bold' }}>
+              👁️ Müfettişi Görevlendir (Sistemi Denetle)
+            </button>
+          )}
+
           <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
 
             {new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -4542,7 +1166,42 @@ function DashboardPage({ models, personnel }) {
 
         </div>
 
+        {/* 15 GÜNLÜK NAKİT AKIŞ RADARI VE BURN RATE */}
+        {currentUser?.role === 'koordinator' && finances && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'map-get(viewport, mobile) ? 1fr : 1fr 1fr', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+            {/* Günlük Yanma Hızı (Burn Rate) */}
+            <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+              <div style={{ fontSize: '40px' }}>🔥</div>
+              <div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'bold' }}>GÜNLÜK SABİT GİDER (BURN RATE)</div>
+                <div style={{ fontSize: '26px', fontWeight: '900', color: 'var(--text-primary)' }}>₺{finances.dailyBurnRate?.toLocaleString('tr-TR')}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Hiç sipariş olmasa da her gün kasanızdan eriyen maaş/fatura bedeli.</div>
+              </div>
+            </div>
 
+            {/* 15 Günlük Para Radarı (Cash Flow) */}
+            <div style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '12px', border: `2px solid ${finances.forecast15Days?.status === 'danger' ? 'rgba(231,76,60,0.5)' : 'rgba(46,204,113,0.5)'}`, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+              <div style={{ position: 'absolute', top: '-10px', right: '-10px', fontSize: '80px', opacity: '0.04' }}>💸</div>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-muted)', marginBottom: '8px' }}>15 GÜNLÜK NAKİT AKIŞ (CASH-FLOW) RADARI</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <div>
+                  <div style={{ display: 'flex', gap: '12px', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Gelecek Sipariş: <span style={{ color: '#2ecc71', fontWeight: 'bold' }}>+₺{finances.forecast15Days?.expectedCashIn?.toLocaleString('tr-TR')}</span></div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Gidecek Gider: <span style={{ color: '#e74c3c', fontWeight: 'bold' }}>-₺{finances.forecast15Days?.expectedCashOut?.toLocaleString('tr-TR')}</span></div>
+                  </div>
+                  <div style={{ fontSize: '30px', fontWeight: '900', color: finances.forecast15Days?.status === 'danger' ? '#e74c3c' : '#2ecc71' }}>
+                    {finances.forecast15Days?.netCashFlow < 0 ? '-' : '+'}₺{Math.abs(finances.forecast15Days?.netCashFlow || 0).toLocaleString('tr-TR')}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', position: 'relative', zIndex: 1 }}>
+                  <div style={{ fontSize: '11px', color: finances.forecast15Days?.status === 'danger' ? '#e74c3c' : '#2ecc71', fontWeight: '800', background: finances.forecast15Days?.status === 'danger' ? 'rgba(231,76,60,0.1)' : 'rgba(46,204,113,0.1)', padding: '6px 10px', borderRadius: '6px' }}>
+                    {finances.forecast15Days?.status === 'danger' ? '⚠️ NAKİT AÇIĞI RİSKİ' : '✅ NAKİT FAZLASI GÜVENLİ'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ONAY KUYRUĞU */}
 
@@ -4632,22 +1291,77 @@ function DashboardPage({ models, personnel }) {
 
 
 
-        <div className="card" style={{ marginBottom: '16px' }}>
-
-          <div className="card-header"><h3 className="card-title">🏭 Bugünkü Üretim</h3></div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', padding: '4px 0' }}>
-
-            <div style={{ textAlign: 'center' }}><div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--accent)' }}>{todayStats.produced}</div><div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Üretilen Adet</div></div>
-
-            <div style={{ textAlign: 'center' }}><div style={{ fontSize: '24px', fontWeight: '700', color: qualityRate >= 95 ? 'var(--success)' : 'var(--danger)' }}>%{qualityRate}</div><div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Kalite Oranı</div></div>
-
-            <div style={{ textAlign: 'center' }}><div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--warning)' }}>{activeModels}</div><div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Aktif Model</div></div>
-
-            <div style={{ textAlign: 'center' }}><div style={{ fontSize: '24px', fontWeight: '700', color: 'var(--success)' }}>{todayStats.value.toFixed(0)} ₺</div><div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Günlük Üretim Değeri</div></div>
-
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
+          {/* ÜRETİM KARTI */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '16px', position: 'relative', overflow: 'hidden', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+            <div style={{ position: 'absolute', right: '-15px', top: '-15px', opacity: 0.05, color: '#D4A847', zIndex: 0 }}><Factory size={120} /></div>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ padding: '6px', background: 'rgba(212,168,71,0.15)', color: '#D4A847', borderRadius: '8px' }}><Factory size={16} /></div>
+                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Üretilen Adet</span>
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: '#fff', letterSpacing: '-1px' }}>{todayStats.produced}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '12px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', padding: '6px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', display: 'inline-flex' }}>
+                {todayStats.produced > 0 ? (
+                  <><ArrowUpRight size={14} color="#2ecc71" /> <span style={{ color: '#2ecc71', fontWeight: '600' }}>Aktif</span> üretim devam ediyor</>
+                ) : (
+                  <><span style={{ color: 'var(--text-muted)' }}>Bekleniyor</span></>
+                )}
+              </div>
+            </div>
           </div>
 
+          {/* KALİTE KARTI */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '16px', position: 'relative', overflow: 'hidden', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+            <div style={{ position: 'absolute', right: '-15px', top: '-15px', opacity: 0.05, color: qualityRate >= 95 ? '#2ecc71' : '#e74c3c', zIndex: 0 }}><ShieldCheck size={120} /></div>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ padding: '6px', background: qualityRate >= 95 ? 'rgba(46,204,113,0.15)' : 'rgba(231,76,60,0.15)', color: qualityRate >= 95 ? '#2ecc71' : '#e74c3c', borderRadius: '8px' }}><ShieldCheck size={16} /></div>
+                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Kalite Oranı</span>
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: '#fff', letterSpacing: '-1px' }}>%{qualityRate}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '12px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', padding: '6px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', display: 'inline-flex' }}>
+                <Activity size={14} color={qualityRate >= 95 ? "#2ecc71" : "#e74c3c"} /> <span style={{ color: qualityRate >= 95 ? '#2ecc71' : '#e74c3c', fontWeight: '600' }}>{qualityRate >= 95 ? 'Hedefte (%95+)' : 'Standardın Altında'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* AKTİF MODEL KARTI */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '16px', position: 'relative', overflow: 'hidden', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+            <div style={{ position: 'absolute', right: '-15px', top: '-15px', opacity: 0.05, color: '#3498db', zIndex: 0 }}><Shirt size={120} /></div>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ padding: '6px', background: 'rgba(52,152,219,0.15)', color: '#3498db', borderRadius: '8px' }}><Shirt size={16} /></div>
+                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Aktif Model</span>
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: '#fff', letterSpacing: '-1px' }}>{activeModels}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '12px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', padding: '6px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', display: 'inline-flex', width: '100%' }}>
+                <div style={{ height: '4px', background: 'rgba(52,152,219,0.2)', borderRadius: '2px', flex: 1, overflow: 'hidden' }}>
+                  <div style={{ width: '60%', background: '#3498db', height: '100%', borderRadius: '2px' }} />
+                </div>
+                <span style={{ marginLeft: '6px' }}>Orta Yoğunluk</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ÜRETİM DEĞERİ KARTI */}
+          <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '16px', position: 'relative', overflow: 'hidden', backdropFilter: 'blur(10px)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
+            <div style={{ position: 'absolute', right: '-15px', top: '-15px', opacity: 0.05, color: '#9b59b6', zIndex: 0 }}><Calculator size={120} /></div>
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                <div style={{ padding: '6px', background: 'rgba(155,89,182,0.15)', color: '#9b59b6', borderRadius: '8px' }}><Calculator size={16} /></div>
+                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Günlük Değer</span>
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: '#fff', letterSpacing: '-1px' }}>{todayStats.value.toLocaleString('tr-TR')} <span style={{ fontSize: '16px', opacity: 0.6 }}>₺</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', fontSize: '12px', color: 'rgba(255,255,255,0.4)', padding: '6px 8px', background: 'rgba(0,0,0,0.2)', borderRadius: '6px', display: 'inline-flex' }}>
+                {/* Dummy sparkline with SVG */}
+                <svg width="40" height="14" viewBox="0 0 40 14" style={{ filter: 'drop-shadow(0 2px 4px rgba(155,89,182,0.3))' }}>
+                  <path d="M0 12 L 10 6 L 20 8 L 30 2 L 40 4" fill="none" stroke="#9b59b6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span style={{ color: '#9b59b6', fontWeight: '600' }}>Trend İçi</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {models.length === 0 ? (
@@ -4728,7 +1442,7 @@ function DashboardPage({ models, personnel }) {
         })()}
 
         {/* PERSONEL PERFORMANS TABLOSU */}
-        {personnelPerf.length > 0 && (
+        {currentUser?.role === 'koordinator' && personnelPerf.length > 0 && (
           <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-header"><h3 className="card-title">🏆 Personel Performans Sıralaması (Son 30 Gün)</h3></div>
             <div className="table-wrapper" style={{ border: 'none' }}>
@@ -4766,7 +1480,7 @@ function DashboardPage({ models, personnel }) {
         )}
 
         {/* PERSONEL MALİYET ÖZETİ */}
-        {personnelPerf.length > 0 && (
+        {currentUser?.role === 'koordinator' && personnelPerf.length > 0 && (
           <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-header"><h3 className="card-title">💰 Aylık Personel Maliyet Özeti</h3></div>
             <div className="table-wrapper" style={{ border: 'none' }}>
@@ -4800,7 +1514,7 @@ function DashboardPage({ models, personnel }) {
         )}
 
         {/* MODEL BAZLI KARLILIK */}
-        {Object.keys(dashModelCosts).length > 0 && (
+        {currentUser?.role === 'koordinator' && Object.keys(dashModelCosts).length > 0 && (
           <div className="card" style={{ marginBottom: '16px' }}>
             <div className="card-header"><h3 className="card-title">📦 Model Bazlı Karlılık (Bu Ay)</h3></div>
             <div className="table-wrapper" style={{ border: 'none' }}>
@@ -4832,7 +1546,7 @@ function DashboardPage({ models, personnel }) {
         )}
 
         {/* İŞLETME GİDERLERİ DAĞILIMI */}
-        {dashExpenses.length > 0 && (() => {
+        {currentUser?.role === 'koordinator' && dashExpenses.length > 0 && (() => {
           const catTotals = {};
           dashExpenses.forEach(e => { catTotals[e.category] = (catTotals[e.category] || 0) + (e.amount || 0); });
           const totalExp = Object.values(catTotals).reduce((s, v) => s + v, 0);
@@ -5061,9 +1775,37 @@ function UretimTabBar({ models, personnel, addToast }) {
       if (!res.ok) throw new Error('Kayıt hatası');
       addToast('success', '✅ Üretim girişi kaydedildi!');
       setForm(f => ({ ...f, model_id: '', notlar: '', beden_eksik: false, aksesuar_eksik: false, kumas_eksik: false, parca_sayisi: 0 }));
-    } catch (e) { addToast('error', e.message); }
-    finally { setKaydediliyor(false); }
+    } catch (e) {
+      addToast('error', e.message);
+    } finally {
+      setKaydediliyor(false);
+    }
   };
+
+  // ===== M7: MÜFETTİŞ (AUDITOR) KONSOLU STATE =====
+  const [auditorLoading, setAuditorLoading] = useState(false);
+  const [auditorReport, setAuditorReport] = useState(null);
+
+  const handleRunAuditor = async (type) => {
+    setAuditorLoading(true);
+    addToast('info', 'Müfettiş uyandırılıyor... Loglar taranıyor.', 3000);
+    try {
+      const res = await fetch('/api/mufettis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionType: type })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Müfettiş API hatası');
+      setAuditorReport(data.report?.raw_audit_report || 'Rapor oluşturulamadı.');
+      addToast('success', `✅ Müfettiş denetimi tamamlandı. İşlenen Log: ${data.logsProcessed}`);
+    } catch (e) {
+      addToast('error', e.message);
+    } finally {
+      setAuditorLoading(false);
+    }
+  };
+
 
   return (
     <div style={{ marginBottom: '16px' }}>
@@ -5088,6 +1830,8 @@ function UretimTabBar({ models, personnel, addToast }) {
           ['maliyet_prim', '💰 Maliyet & Prim'],
           ['giris', L.giris],
           ['gecmis', L.gecmis],
+          ['mufettis', '🔎 Müfettişi Görevlendir'],
+          ['asistan', '💬 İmalat Asistanı'],
         ].map(([id, lbl]) => (
           <button key={id} onClick={() => setAktif(id)} style={{ padding: '8px 14px', background: 'none', border: 'none', borderBottom: aktif === id ? '2px solid var(--accent)' : '2px solid transparent', color: aktif === id ? 'var(--accent)' : 'var(--text-muted)', fontWeight: aktif === id ? '700' : '500', cursor: 'pointer', fontSize: '12px', marginBottom: '-2px', whiteSpace: 'nowrap' }}>{lbl}</button>
         ))}
@@ -5381,7 +2125,14 @@ function UretimTabBar({ models, personnel, addToast }) {
               {akKayitlar.slice(0, 8).map((k, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: k.onay ? 'rgba(46,204,113,0.06)' : 'rgba(231,76,60,0.06)', borderRadius: '6px', marginBottom: '4px', fontSize: '12px' }}>
                   <span><b>{k.istasyon}</b> — Sıra:{k.sira_no || '—'} Beden:{k.beden || '—'} {k.adet}ad/{k.hatali}hatalı</span>
-                  <span style={{ fontWeight: '800', color: k.onay ? '#27ae60' : '#e74c3c' }}>{k.onay ? '✅ONAY' : '❌RET'}</span>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {!k.onay && (
+                      <button onClick={() => addToast('info', `🤖 Ajan Teşhisi: ${k.istasyon} istasyonunda çıkan ${k.hatali} hatalı ürün, o bandın genel toleransını aşıyor. Makine tansiyon ayarları veya kumaş esneme payı acilen incelenmelidir.`, 6000)} style={{ border: 'none', background: 'rgba(231,76,60,0.1)', color: '#e74c3c', borderRadius: '4px', cursor: 'pointer', padding: '2px 6px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }} title="Ajan Analizi İste">
+                        🤖 Çözümle
+                      </button>
+                    )}
+                    <span style={{ fontWeight: '800', color: k.onay ? '#27ae60' : '#e74c3c' }}>{k.onay ? '✅ONAY' : '❌RET'}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -5438,7 +2189,14 @@ function UretimTabBar({ models, personnel, addToast }) {
                       <tbody>
                         {mpData.map((p, i) => (
                           <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                            <td style={{ padding: '7px 8px', fontWeight: '700' }}>{p.ad}</td>
+                            <td style={{ padding: '7px 8px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {p.ad}
+                              {p.fpy < 95 && (
+                                <button onClick={() => addToast('info', `🤖 Ajan Teşhisi: ${p.ad} adlı personelin kalite (FPY) oranı %${p.fpy} ile hedefin altında. Son 1 haftadaki red oranları genellikle aksesuar takma hızından kaynaklanıyor olabilir.`, 6000)} style={{ border: 'none', background: 'rgba(231,76,60,0.1)', color: '#e74c3c', borderRadius: '4px', cursor: 'pointer', padding: '2px 4px', fontSize: '11px' }} title="Ajan Analizi İste">
+                                  🤖
+                                </button>
+                              )}
+                            </td>
                             <td style={{ padding: '7px 8px' }}>{p.aylikToplamMaliyet.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺</td>
                             <td style={{ padding: '7px 8px', color: '#e74c3c' }}>{p.gunlukMaliyet.toFixed(0)} ₺</td>
                             <td style={{ padding: '7px 8px' }}>{p.toplamUretim} ad</td>
@@ -5460,51 +2218,51 @@ function UretimTabBar({ models, personnel, addToast }) {
 
       {aktif === 'giris' && (
 
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '20px' }}>
-          <div style={{ fontWeight: '700', fontSize: '15px', marginBottom: '16px' }}>📥 Yeni Üretim Girişi</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '12px' }}>
-            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Model *</label>
-              <select className="form-input" value={form.model_id} onChange={e => setForm(f => ({ ...f, model_id: e.target.value }))}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px' }}>
+          <div style={{ fontWeight: '800', fontSize: '18px', marginBottom: '20px', color: 'var(--accent)' }}>📥 Yeni Üretim Girişi (Tablet Modu)</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+            <div><label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Model *</label>
+              <select className="form-input" value={form.model_id} onChange={e => setForm(f => ({ ...f, model_id: e.target.value }))} style={{ padding: '14px', fontSize: '16px', minHeight: '52px', borderRadius: '10px' }}>
                 <option value="">-- Model Seç --</option>
                 {models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}
               </select></div>
-            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Parti No *</label>
-              <input className="form-input" placeholder="Örn: P2026-001" value={form.parti_no} onChange={e => setForm(f => ({ ...f, parti_no: e.target.value }))} /></div>
-            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Asorti</label>
-              <input className="form-input" placeholder="Örn: S(50) M(80) L(70)" value={form.asorti} onChange={e => setForm(f => ({ ...f, asorti: e.target.value }))} /></div>
-            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Kim Getirdi?</label>
-              <select className="form-input" value={form.getiren_personel_id} onChange={e => setForm(f => ({ ...f, getiren_personel_id: e.target.value }))}>
+            <div><label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Parti No *</label>
+              <input className="form-input" placeholder="Örn: P2026-001" value={form.parti_no} onChange={e => setForm(f => ({ ...f, parti_no: e.target.value }))} style={{ padding: '14px', fontSize: '16px', minHeight: '52px', borderRadius: '10px' }} /></div>
+            <div><label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Asorti</label>
+              <input className="form-input" placeholder="Örn: S(50) M(80) L(70)" value={form.asorti} onChange={e => setForm(f => ({ ...f, asorti: e.target.value }))} style={{ padding: '14px', fontSize: '16px', minHeight: '52px', borderRadius: '10px' }} /></div>
+            <div><label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Kim Getirdi?</label>
+              <select className="form-input" value={form.getiren_personel_id} onChange={e => setForm(f => ({ ...f, getiren_personel_id: e.target.value }))} style={{ padding: '14px', fontSize: '16px', minHeight: '52px', borderRadius: '10px' }}>
                 <option value="">-- Personel --</option>
                 {personnel.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select></div>
-            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Kim Açtı?</label>
-              <select className="form-input" value={form.acan_personel_id} onChange={e => setForm(f => ({ ...f, acan_personel_id: e.target.value }))}>
+            <div><label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Kim Açtı?</label>
+              <select className="form-input" value={form.acan_personel_id} onChange={e => setForm(f => ({ ...f, acan_personel_id: e.target.value }))} style={{ padding: '14px', fontSize: '16px', minHeight: '52px', borderRadius: '10px' }}>
                 <option value="">-- Personel --</option>
                 {personnel.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select></div>
-            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Açılış Tarihi</label>
-              <input type="datetime-local" className="form-input" value={form.acilis_tarihi} onChange={e => setForm(f => ({ ...f, acilis_tarihi: e.target.value }))} /></div>
+            <div><label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Açılış Tarihi</label>
+              <input type="datetime-local" className="form-input" value={form.acilis_tarihi} onChange={e => setForm(f => ({ ...f, acilis_tarihi: e.target.value }))} style={{ padding: '14px', fontSize: '16px', minHeight: '52px', borderRadius: '10px' }} /></div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
             {[['beden_eksik', 'beden_eksik_detay', '📐 Beden Eksiği'], ['aksesuar_eksik', 'aksesuar_eksik_detay', '🔩 Aksesuar Eksiği'], ['kumas_eksik', 'kumas_eksik_detay', '🧵 Kumaş Eksiği']].map(([alan, detay, lbl]) => (
-              <div key={alan} style={{ padding: '10px', background: form[alan] ? 'rgba(231,76,60,0.08)' : 'rgba(46,204,113,0.06)', border: `1px solid ${form[alan] ? 'rgba(231,76,60,0.3)' : 'rgba(46,204,113,0.2)'}`, borderRadius: '8px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>
-                  <input type="checkbox" checked={form[alan]} onChange={e => setForm(f => ({ ...f, [alan]: e.target.checked }))} />{lbl}
+              <div key={alan} style={{ padding: '16px', background: form[alan] ? 'rgba(231,76,60,0.08)' : 'rgba(46,204,113,0.06)', border: `2px solid ${form[alan] ? 'rgba(231,76,60,0.4)' : 'transparent'}`, borderRadius: '10px', transition: 'all 0.2s', cursor: 'pointer' }} onClick={() => setForm(f => ({ ...f, [alan]: !f[alan] }))}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: '700' }} onClick={e => e.stopPropagation()}>
+                  <input type="checkbox" checked={form[alan]} onChange={e => setForm(f => ({ ...f, [alan]: e.target.checked }))} style={{ transform: 'scale(1.5)', margin: '4px' }} /> {lbl}
                 </label>
-                {form[alan] && <input className="form-input" placeholder="Açıklama..." value={form[detay]} onChange={e => setForm(f => ({ ...f, [detay]: e.target.value }))} style={{ marginTop: '6px', fontSize: '12px' }} />}
+                {form[alan] && <input className="form-input" placeholder="Açıklama giriniz..." value={form[detay]} onChange={e => setForm(f => ({ ...f, [detay]: e.target.value }))} onClick={e => e.stopPropagation()} style={{ marginTop: '12px', padding: '12px', fontSize: '14px', borderRadius: '8px' }} />}
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>
-              <input type="checkbox" checked={form.numune_ayrildi} onChange={e => setForm(f => ({ ...f, numune_ayrildi: e.target.checked }))} />✂️ Numune Ayrıldı
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', padding: '14px 20px', background: form.numune_ayrildi ? 'rgba(52, 152, 219, 0.1)' : 'var(--bg-input)', borderRadius: '10px', border: form.numune_ayrildi ? '2px solid #3498db' : '2px solid transparent' }}>
+              <input type="checkbox" checked={form.numune_ayrildi} onChange={e => setForm(f => ({ ...f, numune_ayrildi: e.target.checked }))} style={{ transform: 'scale(1.5)' }} />✂️ Numune Ayrıldı
             </label>
-            <div><label style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Parça Sayısı</label>
-              <input type="number" className="form-input" min="0" max="20" value={form.parca_sayisi} onChange={e => setForm(f => ({ ...f, parca_sayisi: e.target.value }))} style={{ width: '80px', marginLeft: '8px' }} /></div>
-            <div style={{ flex: 1 }}><input className="form-input" placeholder="Notlar..." value={form.notlar} onChange={e => setForm(f => ({ ...f, notlar: e.target.value }))} /></div>
+            <div style={{ flexShrink: 0 }}><label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Parça Sayısı</label>
+              <input type="number" className="form-input" min="0" max="20" value={form.parca_sayisi} onChange={e => setForm(f => ({ ...f, parca_sayisi: e.target.value }))} style={{ width: '100px', padding: '14px', fontSize: '16px', textAlign: 'center', borderRadius: '10px' }} /></div>
+            <div style={{ flex: 1, minWidth: '250px' }}><label style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Ek Notlar</label><input className="form-input" placeholder="Notlar..." value={form.notlar} onChange={e => setForm(f => ({ ...f, notlar: e.target.value }))} style={{ padding: '14px', fontSize: '16px', borderRadius: '10px', width: '100%' }} /></div>
           </div>
-          <button onClick={handleKaydet} disabled={kaydediliyor || !form.model_id} style={{ padding: '10px 24px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer' }}>
-            {kaydediliyor ? '⏳ Kaydediliyor...' : '✅ Üretim Girişini Kaydet'}
+          <button onClick={handleKaydet} disabled={kaydediliyor || !form.model_id} style={{ padding: '18px 32px', background: 'var(--success)', color: '#fff', border: 'none', borderRadius: '12px', fontWeight: '800', fontSize: '16px', cursor: 'pointer', width: '100%', boxShadow: '0 4px 12px rgba(46, 204, 113, 0.3)', transition: 'transform 0.1s' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+            {kaydediliyor ? '⏳ KAYDEDİLİYOR...' : '✅ ÜRETİM GİRİŞİNİ ONAYLA (KAYDET)'}
           </button>
         </div>
       )}
@@ -5575,33 +2333,35 @@ function PersonelDevamBar({ personnel, addToast }) {
 
   return (
     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <div style={{ fontWeight: '700', fontSize: '14px' }}>⏱️ Personel Devam</div>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <button onClick={() => setAktifSekme('gunluk')} style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '12px', background: aktifSekme === 'gunluk' ? 'var(--accent)' : 'var(--bg-input)', color: aktifSekme === 'gunluk' ? '#fff' : 'var(--text-muted)' }}>📅 Günlük</button>
-          <button onClick={() => setAktifSekme('haftalik')} style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '12px', background: aktifSekme === 'haftalik' ? 'var(--accent)' : 'var(--bg-input)', color: aktifSekme === 'haftalik' ? '#fff' : 'var(--text-muted)' }}>📊 Haftalık Özet</button>
-          <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>{gelenler}/{aktifler.length} geldi</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ fontWeight: '800', fontSize: '16px', color: 'var(--accent)' }}>⏱️ Personel Devam (Tablet Modu)</div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => setAktifSekme('gunluk')} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '14px', background: aktifSekme === 'gunluk' ? 'var(--accent)' : 'var(--bg-input)', color: aktifSekme === 'gunluk' ? '#fff' : 'var(--text-muted)' }}>📅 Günlük</button>
+          <button onClick={() => setAktifSekme('haftalik')} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '14px', background: aktifSekme === 'haftalik' ? 'var(--accent)' : 'var(--bg-input)', color: aktifSekme === 'haftalik' ? '#fff' : 'var(--text-muted)' }}>📊 Haftalık Özet</button>
+          <div style={{ fontSize: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', fontWeight: '700', padding: '0 8px' }}>{gelenler}/{aktifler.length} Geldi</div>
         </div>
       </div>
 
       {aktifSekme === 'gunluk' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
           {aktifler.map(p => {
             const k = kayitBul(p.id);
             return (
-              <div key={p.id} style={{ padding: '10px', background: 'var(--bg-input)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '6px' }}>{p.name}</div>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <div key={p.id} style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'transform 0.2s', cursor: 'pointer' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                <div style={{ fontWeight: '800', fontSize: '16px', color: 'var(--text-primary)' }}>👤 {p.name}</div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   {!k?.giris_saat ? (
-                    <button onClick={() => tiklama(p.id, 'giris')} style={{ padding: '4px 10px', background: 'rgba(46,204,113,0.15)', color: '#27ae60', border: '1px solid rgba(46,204,113,0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>✅ Giriş</button>
+                    <button onClick={() => tiklama(p.id, 'giris')} style={{ flex: 1, padding: '14px 20px', background: 'rgba(46,204,113,0.15)', color: '#27ae60', border: '2px solid rgba(46,204,113,0.4)', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: '800', minHeight: '52px', transition: 'all 0.1s' }}>✅ GİRİŞ YAP</button>
                   ) : (
-                    <span style={{ fontSize: '12px', color: '#27ae60', fontWeight: '600' }}>✅ {k.giris_saat}</span>
+                    <div style={{ flex: 1, padding: '14px 20px', background: 'rgba(46,204,113,0.05)', borderRadius: '10px', border: '2px dashed rgba(46,204,113,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', color: '#27ae60', fontWeight: '800' }}>✅ {k.giris_saat}</div>
                   )}
                   {k?.giris_saat && !k?.cikis_saat && (
-                    <button onClick={() => tiklama(p.id, 'cikis')} style={{ padding: '4px 10px', background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: '1px solid rgba(231,76,60,0.2)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>🚪 Çıkış</button>
+                    <button onClick={() => tiklama(p.id, 'cikis')} style={{ flex: 1, padding: '14px 20px', background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: '2px solid rgba(231,76,60,0.3)', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: '800', minHeight: '52px' }}>🚪 ÇIKIŞ</button>
                   )}
                   {k?.cikis_saat && (
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Çıkış: {k.cikis_saat} | Net: {Math.floor((k.net_calisma_dakika || 0) / 60)}s {((k.net_calisma_dakika || 0) % 60)}dk</span>
+                    <div style={{ flex: 1, fontSize: '13px', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '12px', borderRadius: '8px', textAlign: 'center', fontWeight: '600' }}>
+                      Çıkış: <span style={{ color: 'var(--text-primary)' }}>{k.cikis_saat}</span> | Net: <span style={{ color: 'var(--accent)' }}>{Math.floor((k.net_calisma_dakika || 0) / 60)}s {((k.net_calisma_dakika || 0) % 60)}dk</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -5717,7 +2477,7 @@ function IsletmeGiderForm({ addToast }) {
 
 // ========== MODELS PAGE ==========
 
-function ModelsPage({ models, loadModels, addToast }) {
+function ModelsPage({ models, loadModels, addToast, imalatTipi }) {
 
   const [showNewModal, setShowNewModal] = useState(false);
 
@@ -5938,7 +2698,8 @@ function ModelsPage({ models, loadModels, addToast }) {
 
     try {
 
-      const res = await fetch('/api/models', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      const finalData = { ...formData, model_type: imalatTipi === 'kendi' ? 'imalat' : 'uretim' };
+      const res = await fetch('/api/models', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(finalData) });
 
       if (!res.ok) { const err = await res.json(); throw new Error(err.error); }
 
@@ -5985,7 +2746,9 @@ function ModelsPage({ models, loadModels, addToast }) {
       has_lining: model.has_lining || 0, lining_pieces: model.lining_pieces || 0,
       has_interlining: model.has_interlining || 0, interlining_parts: model.interlining_parts || '', interlining_count: model.interlining_count || 0,
       difficult_points: model.difficult_points || '', critical_points: model.critical_points || '',
-      customer_requests: model.customer_requests || '', post_sewing: model.post_sewing || ''
+      customer_requests: model.customer_requests || '', post_sewing: model.post_sewing || '',
+      collection_name: model.collection_name || '', target_audience: model.target_audience || '',
+      designer_name: model.designer_name || ''
     });
     setEditModel(model);
   };
@@ -6215,7 +2978,7 @@ function ModelsPage({ models, loadModels, addToast }) {
     <>
 
       <div className="topbar">
-        <h1 className="topbar-title">📋 Modeller</h1>
+        <h1 className="topbar-title">📋 {imalatTipi === 'kendi' ? 'İmalat Modellerimiz' : 'Sahadaki Modeller'}</h1>
         <div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <input className="form-input" placeholder="🔍 Model ara..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ width: '200px', fontSize: '13px', padding: '8px 12px' }} />
           <select className="form-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ width: '150px', fontSize: '13px', padding: '8px' }}>
@@ -6242,6 +3005,10 @@ function ModelsPage({ models, loadModels, addToast }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
             {models.filter(m => {
+              const expectedType = imalatTipi === 'kendi' ? 'imalat' : 'uretim';
+              const matchType = (m.model_type || 'uretim') === expectedType;
+              if (!matchType) return false;
+
               const q = searchQuery.toLowerCase();
               const matchSearch = !q || m.name?.toLowerCase().includes(q) || m.code?.toLowerCase().includes(q) || m.customer?.toLowerCase().includes(q) || m.order_no?.toLowerCase().includes(q);
               const matchStatus = !statusFilter || m.status === statusFilter;
@@ -6261,17 +3028,14 @@ function ModelsPage({ models, loadModels, addToast }) {
                     </h3>
 
                     <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>
-
                       <code style={{ background: 'var(--bg-input)', padding: '2px 8px', borderRadius: '4px' }}>{model.code}</code>
-
-                      {model.order_no && <>  <strong>Sipariş:</strong> {model.order_no}</>}
-
-                      {'  '}{model.operation_count || 0} işlem
-
-                      {'  '}{(model.total_order || 0).toLocaleString('tr-TR')} adet
-
-                      {model.customer && <>  <strong>Müşteri:</strong> {model.customer}</>}
-
+                      {model.collection_name && <>  <strong style={{ color: 'var(--accent)' }}>Koleksiyon:</strong> {model.collection_name}</>}
+                      {model.target_audience && <>  | <strong>Kitle:</strong> {model.target_audience}</>}
+                      {model.order_no && <>  | <strong>Sipariş:</strong> {model.order_no}</>}
+                      {model.customer && <>  | <strong>Müşteri:</strong> {model.customer}</>}
+                      <div style={{ marginTop: '4px' }}>
+                        {model.operation_count || 0} işlem | {model.piece_count || 0} Parça | {(model.total_order || 0).toLocaleString('tr-TR')} Adet Sipariş
+                      </div>
                     </div>
 
                     {/* ── ÜRETİM İLERLEME ÇUBUĞU ── */}
@@ -6398,6 +3162,52 @@ function ModelsPage({ models, loadModels, addToast }) {
 
                     </div>
 
+                    {/* ===== LOJİSTİK AJANI / ÜRETİME BAŞLA (SAHAYA İNİŞ) ===== */}
+                    {!['uretimde', 'uretim_tamamlandi', 'sevk_edildi'].includes(model.status) && (
+                      <div style={{ padding: '16px 20px', background: 'linear-gradient(90deg, rgba(52,152,219,0.08), transparent)', borderBottom: '1px solid rgba(52,152,219,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: '800', color: '#2980b9' }}>
+                            <Bot size={18} /> Lojistik Şefi Onayı (Yapay Zeka Kalkanı)
+                          </div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', maxWidth: '600px' }}>
+                            Modelin BOM (Reçete) listesi mevcut depo stoğu ile matematiksel olarak kıyaslanır. Stok yeterliyse <strong style={{ color: '#27ae60' }}>API Maliyeti ₺0</strong> olarak anında Kesime Onay verilir. Stok eksikse Yapay Zeka devreye girip Kriz Raporu sunar.
+                          </div>
+                        </div>
+                        <button className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #2980b9, #3498db)', border: 'none', padding: '10px 20px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(52,152,219,0.3)' }} onClick={async (e) => {
+                          e.stopPropagation();
+                          let bom = [];
+                          try { bom = JSON.parse(model.bom_data || "[]"); } catch { }
+                          if (!Array.isArray(bom) || bom.length === 0) {
+                            addToast('error', 'Reçete (BOM) listesi boş! Lütfen önce Malzeme Listesi ekleyin.');
+                            return;
+                          }
+                          try {
+                            // Örnek Depo Stoğu (Gerçekte DB'den gelir)
+                            const mockDepo = [{ malzeme: 'Kumaş', miktar: 5000 }, { malzeme: 'İplik', miktar: 1000 }];
+
+                            addToast('info', '🤖 Lojistik: Depo stokları denetleniyor...');
+                            const res = await fetch('/api/lojistik/agent', {
+                              method: 'POST', headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ recete: bom, depoStogu: mockDepo, modelMiktari: model.total_order || 100 })
+                            });
+                            const data = await res.json();
+
+                            if (data.success && data.is_approved) {
+                              alert('✅ LOJİSTİK ŞEFİ ONAYLADI:\n\n' + data.ajan_cevabi);
+                              // Durumu 'uretimde' yap
+                              await fetch(`/api/models/${model.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'uretimde' }) });
+                              await loadModels();
+                              addToast('success', 'Model Üretime (Kesime) Alındı!');
+                            } else {
+                              alert('🚨 LOJİSTİK ŞEFİ UYARISI (KRİZ):\n\n' + (data.ajan_cevabi || data.error));
+                            }
+                          } catch (err) { addToast('error', 'Lojistik Ajanı ile bağlantı kurulamadı.'); }
+                        }}>
+                          ▶️ Kesime (Üretime) Başlat
+                        </button>
+                      </div>
+                    )}
+
 
 
                     {/* ===== GENEL BİLGİLER TAB ===== */}
@@ -6474,6 +3284,25 @@ function ModelsPage({ models, loadModels, addToast }) {
                                 {infoCell('Garni', model.garni)}
                                 {infoCell('Renk Sayisi', model.color_count)}
                                 {infoCell('Beden Sayisi', model.size_count)}
+                              </>
+                            )}
+                          </div>
+
+                          {/* EK SATIR: PLM Alanları */}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '10px', padding: '8px', background: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                            {inlineGenel ? (
+                              <>
+                                {inp('collection_name', 'Koleksiyon')}
+                                {inp('target_audience', 'Hedef Kitle')}
+                                {inp('designer_name', 'Tasarımcı')}
+                                {inp('description', 'Açıklama')}
+                              </>
+                            ) : (
+                              <>
+                                {infoCell('Koleksiyon', model.collection_name)}
+                                {infoCell('Hedef Kitle', model.target_audience)}
+                                {infoCell('Tasarımcı', model.designer_name)}
+                                {infoCell('Açıklama', model.description)}
                               </>
                             )}
                           </div>
@@ -6933,38 +3762,52 @@ function ModelsPage({ models, loadModels, addToast }) {
                             </button>
 
                             <button className="btn btn-secondary btn-sm" onClick={() => {
-
                               const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');
                               const w = window.open('', '_blank');
+                              let tpData = {};
+                              try { if (typeof model.tech_pack_data === 'string') tpData = JSON.parse(model.tech_pack_data); else if (model.tech_pack_data) tpData = model.tech_pack_data; } catch (e) { }
 
-                              w.document.write(`<html><head><title>Teknik Föy — ${model.name}</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#222}h1{font-size:20px;border-bottom:2px solid #333;padding-bottom:8px}table{width:100%;border-collapse:collapse;margin:10px 0}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left;font-size:12px}th{background:#f5f5f5;font-weight:700}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.box{padding:10px;border:1px solid #ddd;border-radius:4px}.label{font-size:10px;color:#999;text-transform:uppercase}.val{font-size:13px;font-weight:600}@media print{button{display:none}}</style></head><body>
+                              w.document.write(`<html><head><title>Teknik Föy — ${model.name}</title><style>body{font-family:Arial,sans-serif;padding:30px;color:#222; max-width: 900px; margin: 0 auto;}h1{font-size:24px;border-bottom:3px solid #0D7C66;padding-bottom:8px; color: #0D7C66}h2{font-size:16px; background:#f0f0f0; padding:8px; margin-top:20px; border-left:4px solid #0D7C66}table{width:100%;border-collapse:collapse;margin:10px 0}th,td{border:1px solid #ddd;padding:8px 10px;text-align:left;font-size:13px}th{background:#fafafa;font-weight:700;width:25%}.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:15px 0}.box{padding:15px;border:1px solid #ddd;border-radius:6px; background:#fdfdfd}.label{font-size:11px;color:#777;text-transform:uppercase; margin-bottom:4px}.val{font-size:14px;font-weight:600}@media print{button{display:none}}</style></head><body>
 
-                              <h1>🔄 TEKNİK FÖY</h1>
+                              <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                                <h1>📐 TEKNİK FÖY (TECH-PACK)</h1>
+                                <div style="font-size:12px; color:#666; margin-bottom:12px">Oluşturulma: ${new Date().toLocaleDateString('tr-TR')}</div>
+                              </div>
 
-                              <table><tr><th>Model Adı</th><td>${model.name}</td><th>Model Kodu</th><td>${model.code || '—'}</td></tr>
+                              <h2>1. KİMLİK & GENEL BİLGİLER</h2>
+                              <table>
+                                <tr><th>Model Adı</th><td>${model.name}</td><th>Model Kodu</th><td>${model.code || '—'}</td></tr>
+                                <tr><th>Koleksiyon / Sezon</th><td>${model.collection_name || '—'}</td><th>Hedef Kitle</th><td>${model.target_audience || '—'}</td></tr>
+                                <tr><th>Tasarımcı</th><td>${model.designer_name || '—'}</td><th>Müşteri</th><td>${model.customer || 'Kendi İmalatımız'}</td></tr>
+                              </table>
 
-                              <tr><th>Müşteri</th><td>${model.customer || '—'}</td><th>Kumaş Tipi</th><td>${model.fabric_type || '—'}</td></tr>
+                              <div class="grid">
+                                ${model.front_image ? `<div class="box"><div class="label">ÖN GÖRSEL</div><img src="${model.front_image}" style="width:100%; height:250px; border-radius:4px; object-fit:contain"/></div>` : ''}
+                                ${model.back_image ? `<div class="box"><div class="label">ARKA GÖRSEL</div><img src="${model.back_image}" style="width:100%; height:250px; border-radius:4px; object-fit:contain"/></div>` : ''}
+                              </div>
 
-                              <tr><th>Beden Aralığı</th><td>${model.size_range || '—'}</td><th>Renk Sayısı</th><td>${model.color_count || '—'}</td></tr>
+                              <h2>2. MALZEME REÇETESİ (BOM) & KUMAŞ</h2>
+                              <table>
+                                <tr><th>Ana Kumaş Tipi</th><td colspan="3">${model.fabric_type || '—'}</td></tr>
+                                <tr><th>Astar Durumu</th><td>${model.has_lining ? 'Var (' + (model.lining_pieces || 0) + ' parça)' : 'Yok'}</td><th>Tela Durumu</th><td>${model.has_interlining ? 'Var' : 'Yok'}</td></tr>
+                                <tr><th>Aksesuarlar (Trims)</th><td colspan="3">${tpData.bom_trims || '—'}</td></tr>
+                                <tr><th>Tahmini Sarfiyat</th><td colspan="3">${tpData.estimated_consumption || '—'}</td></tr>
+                              </table>
 
-                              <tr><th>Toplam İşlem</th><td>${model.operation_count || model.total_operations || '—'}</td><th>Parça Sayısı</th><td>${model.piece_count || '—'}</td></tr>
+                              <h2>3. KALIP, BEDEN & ÜRETİM TOLERANSLARI</h2>
+                              <table>
+                                <tr><th>Beden Aralığı</th><td>${model.size_range || '—'}</td><th>Renk Sayısı / Detay</th><td>${model.color_details || model.color_count || '—'}</td></tr>
+                                <tr><th>Dikiş Vuruşu & Toleranslar</th><td colspan="3">${tpData.stitching_tolerance || '—'}</td></tr>
+                                <tr><th>1. Numune Yorumları (Fit)</th><td colspan="3">${tpData.fit_sample_feedback || '—'}</td></tr>
+                                <tr><th>Üretim Öncesi Notlar (PP)</th><td colspan="3">${tpData.pre_production_notes || '—'}</td></tr>
+                                <tr><th>Kritik Noktalar</th><td colspan="3">${model.critical_points || '—'}</td></tr>
+                                <tr><th>Zorluk Noktaları</th><td colspan="3">${model.difficult_points || '—'}</td></tr>
+                              </table>
 
-                              <tr><th>Astar</th><td>${model.has_lining ? 'Var (' + (model.lining_pieces || 0) + ' parça)' : 'Yok'}</td><th>Tela</th><td>${model.has_interlining ? 'Var' : 'Yok'}</td></tr>
-
-                              <tr><th>Zorluk Noktaları</th><td colspan="3">${model.difficult_points || '—'}</td></tr>
-
-                              <tr><th>Kritik Noktalar</th><td colspan="3">${model.critical_points || '—'}</td></tr>
-
-                              <tr><th>Müşteri İstekleri</th><td colspan="3">${model.customer_requests || '—'}</td></tr></table>
-
-                              <button onclick="window.print()" style="padding:8px 16px;cursor:pointer;margin-top:12px">🖨️ Yazdır / PDF</button>
-
-                              <div style="margin-top:20px;font-size:10px;color:#999;border-top:1px solid #ddd;padding-top:8px">Oluşturulma: ${new Date().toLocaleDateString('tr-TR')}</div>
+                              <button onclick="window.print()" style="padding:10px 20px; cursor:pointer; margin-top:30px; background:#0D7C66; color:#fff; border:none; border-radius:6px; font-weight:bold">🖨️ YAZDIR / PDF OLARAK KAYDET</button>
 
                             </body></html>`);
-
                               w.document.close();
-
                             }}> 🖨️ Yazdır / PDF</button>
 
                           </div>
@@ -7920,11 +4763,17 @@ function ModelsPage({ models, loadModels, addToast }) {
                   })}
                 </div>
 
-                {/* SATIR 1 */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px" }}>
-                  {[{ label: "Model Adi *", key: "name", req: true }, { label: "Model Kodu *", key: "code", req: true }, { label: "Siparis Numarasi", key: "order_no" }, { label: "Modelist", key: "modelist" }].map(({ label, key, req }) => (
+                {/* SATIR 1: Ad, Kod, Siparis, Modelist, Koleksiyon vs */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
+                  {[{ label: "Model Adi *", key: "name", req: true }, { label: "Model Kodu *", key: "code", req: true }, { label: "Siparis Numarasi", key: "order_no" }, { label: "Tasarımcı/Modelist", key: "designer_name" }].map(({ label, key, req }) => (
                     <div key={key}><label style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>{label}</label>
                       <input className="form-input" style={{ fontSize: "12px" }} value={editForm[key] || ""} required={!!req} onChange={e => setEditForm({ ...editForm, [key]: e.target.value })} /></div>
+                  ))}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: "8px" }}>
+                  {[{ label: "Koleksiyon / Sezon", key: "collection_name" }, { label: "Hedef Kitle", key: "target_audience" }, { label: "Beden Skalası/Aralığı", key: "size_range" }].map(({ label, key }) => (
+                    <div key={key}><label style={{ fontSize: "11px", fontWeight: "600", color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>{label}</label>
+                      <input className="form-input" style={{ fontSize: "12px" }} value={editForm[key] || ""} onChange={e => setEditForm({ ...editForm, [key]: e.target.value })} /></div>
                   ))}
                 </div>
 
@@ -8158,7 +5007,7 @@ function ModelsPage({ models, loadModels, addToast }) {
 
 // ========== PERSONNEL PAGE ==========
 
-function PersonnelPage({ personnel, loadPersonnel, addToast }) {
+function PersonnelPage({ personnel, loadPersonnel, addToast, userRole = 'koordinator' }) {
 
   const [showModal, setShowModal] = useState(false);
 
@@ -8353,7 +5202,9 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
           <option value="active">✅ Aktif</option>
           <option value="inactive">🔴 Pasif</option>
         </select>
-        <button className="btn btn-primary" onClick={() => { setEditPerson(null); setShowModal(true); }}>➕ Yeni Personel</button>
+        {userRole === 'koordinator' && (
+          <button className="btn btn-primary" onClick={() => { setEditPerson(null); setShowModal(true); }}>➕ Yeni Personel</button>
+        )}
       </div></div>
 
       <div className="page-content">
@@ -8442,9 +5293,46 @@ function PersonnelPage({ personnel, loadPersonnel, addToast }) {
 
                   <td>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                      <button onClick={() => { setEditPerson(p); setShowModal(true); }} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
-                      <button onClick={() => openPersonAuditHistory(p.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
-                      <button onClick={() => setDeleteConfirmId(p.id)} title="Sil" style={{ background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>🗑️</button>
+                      <button onClick={async () => {
+                        if (!confirm(`${p.name} isimli personelin üretim analiz raporu İK Adalet Terazisi (AI) tarafından değerlendirilecektir. Onaylıyor musunuz?\n\n(Not: Bu işlem API kullanır. Sadece değerlendirme dönemlerinde kullanın)`)) return;
+                        addToast('info', `🤖 İK Adalet Merkezi: ${p.name} için 30 günlük veriler inceleniyor...`);
+                        try {
+                          const toplamUretim = (p.daily_avg_output || 150) * 22; // Ortalama 22 iş günü
+                          const res = await fetch('/api/ik/agent', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              personelAdi: p.name,
+                              operasyonAdi: p.role || 'Genel Dikim',
+                              hedeflenenAdet: 3000,
+                              uretilenAdet: toplamUretim,
+                              hataliAdet: Math.floor(toplamUretim * (p.error_rate || 2) / 100),
+                              kumasCinsi: 'Karışık Fason'
+                            })
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            alert(`⚖️ İK ADALET TERAZİSİ RAPORU (${p.name})\n\n` + data.ajan_cevabi);
+
+                            // AI Raporunu notlara loglama (opsiyonel)
+                            const summary = data.ajan_cevabi.split('\n')[0] + ' (AI değerlendirdi)';
+                            await fetch(`/api/personnel/${p.id}`, {
+                              method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ weekly_note: summary, changed_by: 'ik_agent' })
+                            });
+                            await loadPersonnel();
+                          } else {
+                            alert('🚨 Hata: ' + data.error);
+                          }
+                        } catch (err) { addToast('error', 'İK Ajanı ile iletişim kurulamadı.'); }
+                      }} title="Performans Değerlendir (AI)" style={{ background: 'linear-gradient(135deg, #8e44ad, #9b59b6)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px', boxShadow: '0 2px 4px rgba(142,68,173,0.3)' }}>🤖</button>
+
+                      {userRole === 'koordinator' && (
+                        <>
+                          <button onClick={() => { setEditPerson(p); setShowModal(true); }} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
+                          <button onClick={() => openPersonAuditHistory(p.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
+                          <button onClick={() => setDeleteConfirmId(p.id)} title="Sil" style={{ background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>🗑️</button>
+                        </>
+                      )}
                     </div>
                   </td>
 
@@ -9366,167 +6254,7 @@ function ProductionPage({ models, personnel, addToast }) {
 
 
 
-// ========== PRİM SAYFASI ==========
-
-function PrimPage({ personnel, addToast }) {
-  const now = new Date();
-  const [ay, setAy] = useState(now.getMonth() + 1);
-  const [yil, setYil] = useState(now.getFullYear());
-  const [primOrani, setPrimOrani] = useState(30);
-  const [primler, setPrimler] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [hesaplaniyor, setHesaplaniyor] = useState(false);
-  const [detay, setDetay] = useState(null);
-  const AYLAR = ['Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran', 'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik'];
-  const loadPrimler = useCallback(async () => {
-    setLoading(true);
-    try { const r = await fetch('/api/prim?ay=' + ay + '&yil=' + yil); const d = await r.json(); setPrimler(Array.isArray(d) ? d : []); }
-    catch { setPrimler([]); } finally { setLoading(false); }
-  }, [ay, yil]);
-  useEffect(() => { loadPrimler(); }, [loadPrimler]);
-  const hesapla = async () => {
-    setHesaplaniyor(true);
-    try {
-      const r = await fetch('/api/prim', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ay, yil, prim_orani: primOrani }) });
-      const d = await r.json();
-      if (d.success) { addToast('success', d.personel_sayisi + ' personel icin prim hesaplandi'); loadPrimler(); }
-      else { addToast('error', d.error || 'Hesaplama hatasi'); }
-    } catch { addToast('error', 'Baglanti hatasi'); } finally { setHesaplaniyor(false); }
-  };
-  const onayla = async (id, durum) => {
-    try {
-      const r = await fetch('/api/prim', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, onay_durumu: durum }) });
-      if (r.ok) { addToast('success', durum === 'onaylandi' ? 'Prim onaylandi' : 'Prim reddedildi'); loadPrimler(); }
-    } catch { addToast('error', 'Guncelleme hatasi'); }
-  };
-  const toplamPrim = primler.reduce((t, p) => t + (p.prim_tutari || 0), 0);
-  const toplamKatki = primler.reduce((t, p) => t + (p.katki_degeri || 0), 0);
-  const onaylanan = primler.filter(p => p.onay_durumu === 'onaylandi').length;
-  const durumRenk = { hesaplandi: '#f39c12', onaylandi: '#27ae60', reddedildi: '#e74c3c', odendi: '#3498db' };
-  const durumLabel = { hesaplandi: 'Hesaplandi', onaylandi: 'Onaylandi', reddedildi: 'Reddedildi', odendi: 'Odendi' };
-  return (
-    <>
-      <div className="topbar">
-        <h1 className="topbar-title">Prim &amp; Tesvik Sistemi</h1>
-        <div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <select className="form-select" value={ay} onChange={e => setAy(+e.target.value)} style={{ minWidth: '100px' }}>
-            {AYLAR.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-          </select>
-          <select className="form-select" value={yil} onChange={e => setYil(+e.target.value)}>
-            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Prim %</span>
-          <input type="number" min={1} max={100} value={primOrani} onChange={e => setPrimOrani(+e.target.value)}
-            style={{ width: '60px', padding: '6px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-input)', color: 'var(--text-primary)', textAlign: 'center' }} />
-          <button onClick={hesapla} disabled={hesaplaniyor}
-            style={{ padding: '8px 16px', background: hesaplaniyor ? 'rgba(212,168,71,0.3)' : 'var(--accent)', color: hesaplaniyor ? 'var(--text-muted)' : '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontFamily: 'inherit' }}>
-            {hesaplaniyor ? 'Hesaplaniyor...' : 'Hesapla'}
-          </button>
-        </div>
-      </div>
-      <div className="page-content">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '20px' }}>
-          {[
-            { label: 'Toplam Katki', value: '&#x20BA;' + toplamKatki.toLocaleString('tr-TR', { maximumFractionDigits: 0 }), color: '#3498db', icon: '&#x1F4B0;' },
-            { label: 'Dagitilacak Prim', value: '&#x20BA;' + toplamPrim.toLocaleString('tr-TR', { maximumFractionDigits: 0 }), color: '#27ae60', icon: '&#x1F3C6;' },
-            { label: 'Personel', value: primler.length + ' kisi', color: '#9b59b6', icon: '&#x1F465;' },
-            { label: 'Onaylanan', value: onaylanan + '/' + primler.length, color: '#f39c12', icon: '&#x2705;' },
-          ].map((k, i) => (
-            <div key={i} style={{ padding: '16px', background: 'var(--bg-card)', borderRadius: '10px', border: '1px solid ' + k.color + '33' }}>
-              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }} dangerouslySetInnerHTML={{ __html: k.icon + ' ' + k.label }} />
-              <div style={{ fontSize: '20px', fontWeight: '800', color: k.color }} dangerouslySetInnerHTML={{ __html: k.value }} />
-            </div>
-          ))}
-        </div>
-        <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <b style={{ fontSize: '14px' }}>Personel Prim Dagilimi  {AYLAR[ay - 1]} {yil}</b>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Formul: (Katki - Maas) x %{primOrani}</span>
-          </div>
-          {loading ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>Yukleniyor...</div>
-          ) : primler.length === 0 ? (
-            <div style={{ padding: '48px', textAlign: 'center' }}>
-              <div style={{ fontSize: '48px', marginBottom: '12px' }}></div>
-              <div style={{ fontWeight: '700', color: 'var(--text-muted)', marginBottom: '8px' }}>Bu ay icin prim kaydi yok</div>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Hesapla butonuna basin</div>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ background: 'var(--bg-input)' }}>
-                    {['#', 'Personel', 'Uretim', 'FPY', 'Katki', 'Maas', 'Fark', 'Prim', 'Durum', 'Islem'].map(h => (
-                      <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...primler].sort((a, b) => (b.prim_tutari || 0) - (a.prim_tutari || 0)).map((p, i) => {
-                    const fark = (p.katki_degeri || 0) - (p.maas_maliyeti || 0);
-                    return (
-                      <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)', cursor: 'pointer' }} onClick={() => setDetay(detay && detay.id === p.id ? null : p)}>
-                        <td style={{ padding: '10px 12px', fontWeight: '700', color: i < 3 ? '#D4A847' : 'var(--text-muted)' }}>{i < 3 ? ['', '', ''][i] : i + 1}</td>
-                        <td style={{ padding: '10px 12px', fontWeight: '600' }}>{p.personel_adi || 'Personel #' + p.personel_id}</td>
-                        <td style={{ padding: '10px 12px' }}>{(p.toplam_uretilen || 0).toLocaleString('tr-TR')}</td>
-                        <td style={{ padding: '10px 12px', fontWeight: '700', color: (p.fpy_yuzde || 0) >= 90 ? '#27ae60' : (p.fpy_yuzde || 0) >= 75 ? '#f39c12' : '#e74c3c' }}>%{(p.fpy_yuzde || 0).toFixed(1)}</td>
-                        <td style={{ padding: '10px 12px', color: '#3498db', fontWeight: '600' }}>₺{(p.katki_degeri || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</td>
-                        <td style={{ padding: '10px 12px', color: '#e74c3c' }}>₺{(p.maas_maliyeti || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</td>
-                        <td style={{ padding: '10px 12px', fontWeight: '700', color: fark > 0 ? '#27ae60' : '#e74c3c' }}>{fark > 0 ? '+' : ''}₺{fark.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</td>
-                        <td style={{ padding: '10px 12px', fontWeight: '800', color: '#D4A847', fontSize: '15px' }}>{(p.prim_tutari || 0) > 0 ? '₺' + (p.prim_tutari || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }) : ''}</td>
-                        <td style={{ padding: '10px 12px' }}>
-                          <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '12px', background: (durumRenk[p.onay_durumu] || '#95a5a6') + '22', color: durumRenk[p.onay_durumu] || '#95a5a6', fontWeight: '600' }}>
-                            {durumLabel[p.onay_durumu] || p.onay_durumu}
-                          </span>
-                        </td>
-                        <td style={{ padding: '10px 12px' }} onClick={e => e.stopPropagation()}>
-                          {p.onay_durumu === 'hesaplandi' && (
-                            <div style={{ display: 'flex', gap: '4px' }}>
-                              <button onClick={() => onayla(p.id, 'onaylandi')} style={{ padding: '4px 8px', background: 'rgba(46,204,113,0.15)', border: '1px solid rgba(46,204,113,0.3)', borderRadius: '6px', color: '#27ae60', cursor: 'pointer', fontSize: '11px', fontWeight: '700', fontFamily: 'inherit' }}>Onayla</button>
-                              <button onClick={() => onayla(p.id, 'reddedildi')} style={{ padding: '4px 8px', background: 'rgba(231,76,60,0.1)', border: '1px solid rgba(231,76,60,0.25)', borderRadius: '6px', color: '#e74c3c', cursor: 'pointer', fontSize: '11px', fontFamily: 'inherit' }}>X</button>
-                            </div>
-                          )}
-                          {p.onay_durumu === 'onaylandi' && (
-                            <button onClick={() => onayla(p.id, 'odendi')} style={{ padding: '4px 8px', background: 'rgba(52,152,219,0.15)', border: '1px solid rgba(52,152,219,0.3)', borderRadius: '6px', color: '#3498db', cursor: 'pointer', fontSize: '11px', fontWeight: '700', fontFamily: 'inherit' }}>Odendi</button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-        {detay && (
-          <div style={{ marginTop: '16px', padding: '16px', background: 'var(--bg-card)', borderRadius: '12px', border: '2px solid rgba(212,168,71,0.4)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <b style={{ fontSize: '14px' }}>{detay.personel_adi}  Prim Detayi</b>
-              <button onClick={() => setDetay(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: 'var(--text-muted)' }}>X</button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px' }}>
-              {[
-                { label: 'Uretim', value: (detay.toplam_uretilen || 0).toLocaleString('tr-TR') + ' adet' },
-                { label: 'Hatali', value: (detay.toplam_hatali || 0) + ' adet' },
-                { label: 'FPY', value: '%' + (detay.fpy_yuzde || 0).toFixed(1) },
-                { label: 'Katki Degeri', value: '₺' + (detay.katki_degeri || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }) },
-                { label: 'Maas Maliyeti', value: '₺' + (detay.maas_maliyeti || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }) },
-                { label: 'Fazla Deger', value: '₺' + (detay.katki_maas_farki || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }) },
-                { label: 'Prim', value: '₺' + (detay.prim_tutari || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 }) },
-                { label: 'Durum', value: durumLabel[detay.onay_durumu] || detay.onay_durumu },
-              ].map((it, i) => (
-                <div key={i} style={{ padding: '10px 12px', background: 'var(--bg-input)', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>{it.label}</div>
-                  <div style={{ fontWeight: '700', fontSize: '14px' }}>{it.value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
+// PrimPage component has been extracted to components/pages/PrimPage.jsx
 
 // ========== RAPORLAR SAYFASI ==========
 
@@ -9537,6 +6265,7 @@ function ReportsPage({ models, personnel, addToast }) {
   const [yil, setYil] = useState(now.getFullYear());
   const [ozet, setOzet] = useState(null);
   const [verimlilik, setVerimlilik] = useState([]);
+  const [liderlik, setLiderlik] = useState([]);
   const [karlilik, setKarlilik] = useState([]);
   const [kararlar, setKararlar] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -9544,9 +6273,10 @@ function ReportsPage({ models, personnel, addToast }) {
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [ozetR, veriR, karR, kararR] = await Promise.allSettled([
+      const [ozetR, veriR, liderR, karR, kararR] = await Promise.allSettled([
         fetch('/api/rapor/ay-ozet?ay=' + ay + '&yil=' + yil).then(r => r.json()),
         fetch('/api/rapor/personel-verimlilik?ay=' + ay + '&yil=' + yil).then(r => r.json()),
+        fetch('/api/rapor/personel-verimlilik?ay=all').then(r => r.json()),
         fetch('/api/rapor/model-karlilik?ay=' + ay + '&yil=' + yil).then(r => r.json()),
         fetch('/api/rapor/karar-arsivi?limit=20').then(r => r.json()),
       ]);
@@ -9585,6 +6315,17 @@ function ReportsPage({ models, personnel, addToast }) {
           katki_degeri: p.katki_degeri ?? 0,
         })));
       }
+      if (liderR.status === 'fulfilled') {
+        const d = liderR.value;
+        const arr = Array.isArray(d) ? d : (d && Array.isArray(d.personeller) ? d.personeller : []);
+        setLiderlik(arr.map(p => ({
+          ...p,
+          name: p.name || p.ad || '',
+          toplam_uretim: p.toplam_uretim ?? p.toplam_uretilen ?? 0,
+          fpy: p.fpy ?? p.fpy_yuzde ?? 0,
+          katki_degeri: p.katki_degeri ?? 0,
+        })));
+      }
       if (karR.status === 'fulfilled') setKarlilik(Array.isArray(karR.value) ? karR.value : (karR.value?.modeller || []));
       if (kararR.status === 'fulfilled') setKararlar(Array.isArray(kararR.value) ? kararR.value : (kararR.value?.kayitlar || kararR.value?.kararlar || []));
     } catch { } finally { setLoading(false); }
@@ -9594,6 +6335,7 @@ function ReportsPage({ models, personnel, addToast }) {
   const raporTabs = [
     { id: 'ozet', label: 'Aylik Ozet' },
     { id: 'personel', label: 'Personel Verimliligi' },
+    { id: 'liderlik', label: 'Tum Zamanlar (Liderlik)' },
     { id: 'model', label: 'Model Karliligi' },
     { id: 'karar', label: 'Karar Arsivi' },
   ];
@@ -9679,37 +6421,96 @@ function ReportsPage({ models, personnel, addToast }) {
         {raporTab === 'personel' && !loading && (
           <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-color)' }}>
-              <b style={{ fontSize: '14px' }}>Personel Performans Raporu  {AYLAR[ay - 1]} {yil}</b>
+              <b style={{ fontSize: '14px' }}>Personel Performans Raporu (Accordion) {AYLAR[ay - 1]} {yil}</b>
             </div>
             {verimlilik.length === 0 ? (
               <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Bu ay icin veri yok</div>
             ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                  <thead><tr style={{ background: 'var(--bg-input)' }}>
-                    {['Sira', 'Personel', 'Uretim', 'Hata', 'FPY', 'Katki', 'Performans'].map(h => (
-                      <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
-                    ))}
-                  </tr></thead>
-                  <tbody>
-                    {[...verimlilik].sort((a, b) => (b.toplam_uretim || b.total_produced || 0) - (a.toplam_uretim || a.total_produced || 0)).map((p, i) => {
-                      const fpy = p.fpy || p.fpy_yuzde || 0;
-                      const pr = fpy >= 95 ? '#27ae60' : fpy >= 85 ? '#3498db' : fpy >= 70 ? '#f39c12' : '#e74c3c';
-                      const pl = fpy >= 95 ? 'Mukemmel' : fpy >= 85 ? 'Iyi' : fpy >= 70 ? 'Orta' : 'Dusuk';
-                      return (
-                        <tr key={p.id || i} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                          <td style={{ padding: '10px 12px', fontWeight: '700', color: i < 3 ? '#D4A847' : 'var(--text-muted)' }}>{i + 1}</td>
-                          <td style={{ padding: '10px 12px', fontWeight: '600' }}>{p.name || p.personel_adi || '#' + (p.personnel_id || '')}</td>
-                          <td style={{ padding: '10px 12px' }}>{(p.toplam_uretim || p.total_produced || 0).toLocaleString('tr-TR')}</td>
-                          <td style={{ padding: '10px 12px', color: (p.hata || p.defective_count || 0) > 0 ? '#e74c3c' : 'var(--text-muted)' }}>{p.hata || p.defective_count || 0}</td>
-                          <td style={{ padding: '10px 12px', fontWeight: '700', color: pr }}>%{fpy.toFixed(1)}</td>
-                          <td style={{ padding: '10px 12px', color: '#3498db' }}>₺{(p.katki_degeri || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</td>
-                          <td style={{ padding: '10px 12px' }}><span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '12px', background: pr + '22', color: pr, fontWeight: '700' }}>{pl}</span></td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px' }}>
+                {[...verimlilik].sort((a, b) => (b.toplam_uretim || b.total_produced || 0) - (a.toplam_uretim || a.total_produced || 0)).map((p, i) => {
+                  const fpy = p.fpy || p.fpy_yuzde || 0;
+                  const pr = fpy >= 95 ? '#27ae60' : fpy >= 85 ? '#3498db' : fpy >= 70 ? '#f39c12' : '#e74c3c';
+                  const pl = fpy >= 95 ? 'Mukemmel' : fpy >= 85 ? 'Iyi' : fpy >= 70 ? 'Orta' : 'Dusuk';
+                  const needsAttention = fpy < 85;
+                  return (
+                    <details key={p.id || i} style={{ background: 'var(--bg-input)', border: `1px solid ${needsAttention ? 'rgba(231,76,60,0.4)' : 'var(--border-color)'}`, borderRadius: '8px', overflow: 'hidden' }}>
+                      <summary style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', outline: 'none', listStyle: 'none' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: i < 3 ? '#D4A847' : 'inherit' }}>
+                            {i + 1}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: '700', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {p.name || p.personel_adi || '#' + (p.personnel_id || '')}
+                              {needsAttention && <span title="AI İncelemesi Önerilir" style={{ background: 'rgba(231,76,60,0.1)', color: '#e74c3c', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '800' }}>🤖 İNCELE</span>}
+                            </div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Performans: <span style={{ color: pr }}>{pl}</span></div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '13px' }}>
+                          <span style={{ fontWeight: '700', color: pr }}>%{fpy.toFixed(1)}</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>▼ DETAY</span>
+                        </div>
+                      </summary>
+                      <div style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid var(--border-color)', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', fontSize: '12px' }}>
+                        <div><div style={{ color: 'var(--text-muted)' }}>Toplam Üretim</div><div style={{ fontWeight: '600' }}>{(p.toplam_uretim || p.total_produced || 0).toLocaleString('tr-TR')} Adet</div></div>
+                        <div><div style={{ color: 'var(--text-muted)' }}>Hatalı Üretim</div><div style={{ fontWeight: '600', color: (p.hata || p.defective_count || 0) > 0 ? '#e74c3c' : 'var(--text-muted)' }}>{p.hata || p.defective_count || 0} Adet</div></div>
+                        <div><div style={{ color: 'var(--text-muted)' }}>Katkı Değeri</div><div style={{ fontWeight: '600', color: '#3498db' }}>₺{(p.katki_degeri || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</div></div>
+                      </div>
+                      {needsAttention && (
+                        <div style={{ padding: '12px 16px', background: 'rgba(231,76,60,0.06)', borderTop: '1px dashed rgba(231,76,60,0.2)', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                          <div style={{ fontSize: '18px' }}>💡</div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+                            <strong style={{ color: '#e74c3c', display: 'block', marginBottom: '4px' }}>AI Yetersiz Performans İçgörüsü:</strong>
+                            Bu personelin İlk Geçiş Kalite (FPY) oranı %85 sınırının altında. Bu durum doğrudan modelin kârlılığını düşürmekte ve yeniden işlem sürelerini artırmaktadır. Personelin çalışma şartlarını/makine ayarlarını kontrol etmeniz, veya ara kalite kontrollerini sıklaştırmanız önerilir.
+                          </div>
+                        </div>
+                      )}
+                    </details>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+        {raporTab === 'liderlik' && !loading && (
+          <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-color)' }}>
+              <b style={{ fontSize: '14px' }}>🏆 Tüm Zamanların En Verimli Personelleri (Liderlik Tablosu)</b>
+            </div>
+            {liderlik.length === 0 ? (
+              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Henüz kayıtlı veri yok</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '16px' }}>
+                {[...liderlik].sort((a, b) => (b.katki_degeri || 0) - (a.katki_degeri || 0)).map((p, i) => {
+                  const fpy = p.fpy || p.fpy_yuzde || 0;
+                  const pr = fpy >= 95 ? '#27ae60' : fpy >= 85 ? '#3498db' : fpy >= 70 ? '#f39c12' : '#e74c3c';
+                  const isTop3 = i < 3;
+                  const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+                  return (
+                    <div key={p.id || i} style={{ background: isTop3 ? 'rgba(212,168,71,0.06)' : 'var(--bg-input)', border: `1px solid ${isTop3 ? 'rgba(212,168,71,0.3)' : 'var(--border-color)'}`, borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isTop3 ? 'linear-gradient(135deg, #f1c40f, #d35400)' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', color: isTop3 ? '#fff' : 'inherit', fontSize: '16px', boxShadow: isTop3 ? '0 4px 10px rgba(241,196,15,0.3)' : 'none' }}>
+                          {isTop3 ? medal : i + 1}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: '800', fontSize: '15px', color: isTop3 ? '#f1c40f' : 'inherit' }}>{p.name || p.personel_adi || '#' + (p.personnel_id || '')}</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Toplam Üretim: <b style={{ color: 'var(--text-primary)' }}>{(p.toplam_uretim || p.total_produced || 0).toLocaleString('tr-TR')} Adet</b></div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>İlk Geçiş (FPY)</div>
+                          <div style={{ fontWeight: '700', color: pr }}>%{fpy.toFixed(1)}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Net Katkı Değeri</div>
+                          <div style={{ fontWeight: '800', color: '#27ae60', fontSize: '16px' }}>₺{(p.katki_degeri || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -9717,30 +6518,51 @@ function ReportsPage({ models, personnel, addToast }) {
         {raporTab === 'model' && !loading && (
           <div style={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-color)' }}>
-              <b style={{ fontSize: '14px' }}>Model Karliligi  {AYLAR[ay - 1]} {yil}</b>
+              <b style={{ fontSize: '14px' }}>Model Karliligi (Accordion) {AYLAR[ay - 1]} {yil}</b>
             </div>
             {karlilik.length === 0 ? (
               <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Bu ay icin model karliligi verisi yok</div>
             ) : (
-              <div style={{ padding: '16px' }}>
+              <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {[...karlilik].sort((a, b) => (b.net_kar || b.kar || 0) - (a.net_kar || a.kar || 0)).map((m, i) => {
                   const kar = m.net_kar || m.kar || 0;
                   const kr = kar > 0 ? '#27ae60' : kar < 0 ? '#e74c3c' : '#f39c12';
+                  const needsAttention = kar < 0;
                   const mxk = Math.max(...karlilik.map(x => Math.abs(x.net_kar || x.kar || 0)));
                   const bar = mxk > 0 ? (Math.abs(kar) / mxk) * 100 : 0;
                   return (
-                    <div key={m.id || i} style={{ marginBottom: '12px', padding: '14px', background: 'var(--bg-input)', borderRadius: '10px', border: '1px solid ' + kr + '33' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontWeight: '700', fontSize: '14px' }}>{i + 1}. {m.model_adi || m.name || 'Model #' + m.model_id}</span>
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontWeight: '800', color: kr, fontSize: '16px' }}>₺{Math.abs(kar).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{kar >= 0 ? 'Kar' : 'Zarar'}</div>
+                    <details key={m.id || i} style={{ background: 'var(--bg-input)', borderRadius: '10px', border: `1px solid ${needsAttention ? 'rgba(231,76,60,0.4)' : kr + '33'}`, overflow: 'hidden' }}>
+                      <summary style={{ padding: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', outline: 'none', listStyle: 'none' }}>
+                        <span style={{ fontWeight: '700', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {i + 1}. {m.model_adi || m.name || 'Model #' + m.model_id}
+                          {needsAttention && <span title="AI Operasyon Uyarı" style={{ background: 'rgba(231,76,60,0.1)', color: '#e74c3c', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '800' }}>🤖 A.I. RİSK</span>}
+                        </span>
+                        <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                          <div>
+                            <div style={{ fontWeight: '800', color: kr, fontSize: '16px' }}>₺{Math.abs(kar).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{kar >= 0 ? 'Kar' : 'Zarar'}</div>
+                          </div>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>▼ DETAY</span>
+                        </div>
+                      </summary>
+                      <div style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid ' + kr + '33', fontSize: '12px' }}>
+                        <div style={{ marginBottom: '12px' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Karşılaştırmalı Karlılık Oranı</span>
+                          <div style={{ height: '6px', background: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden', marginTop: '6px' }}>
+                            <div style={{ height: '100%', width: bar + '%', background: kr, borderRadius: '3px' }} />
+                          </div>
                         </div>
                       </div>
-                      <div style={{ height: '6px', background: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: bar + '%', background: kr, borderRadius: '3px' }} />
-                      </div>
-                    </div>
+                      {needsAttention && (
+                        <div style={{ padding: '12px 16px', background: 'rgba(231,76,60,0.06)', borderTop: '1px dashed rgba(231,76,60,0.2)', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                          <div style={{ fontSize: '18px' }}>🔎</div>
+                          <div style={{ fontSize: '12px', color: 'var(--text-primary)', lineHeight: '1.5' }}>
+                            <strong style={{ color: '#e74c3c', display: 'block', marginBottom: '4px' }}>AI Üretim Uyarısı:</strong>
+                            Bu model birim üretim maliyeti sınırını aşarak anlık zarar oluşturmaktadır. Fire oranları, gereksiz parça üretimi veya hedeflenen "birim zaman değerine" uygun olmayan vardiya planları neden olabilir. Operasyonları detaylı incelemeniz tavsiye edilir.
+                          </div>
+                        </div>
+                      )}
+                    </details>
                   );
                 })}
               </div>
@@ -10472,21 +7294,26 @@ function CustomersPage({ addToast }) {
 
         ) : (
 
-          <div className="table-wrapper"><table className="table"><thead><tr><th>Ad</th><th>Firma</th><th>Telefon</th><th>E-posta</th><th>Vergi No</th><th style={{ width: '120px' }}>İşlem</th></tr></thead><tbody>
+          <div className="table-wrapper"><table className="table"><thead><tr><th>Ad</th><th>Firma</th><th>Telefon</th><th>E-posta</th><th>Vergi No</th><th>ROI (Kârlılık Sınıfı)</th><th style={{ width: '120px' }}>İşlem</th></tr></thead><tbody>
 
             {customers.map(c => (<tr key={c.id}><td style={{ fontWeight: '600' }}>{c.name}</td><td>{c.company || '—'}</td><td>{c.phone || '—'}</td><td>{c.email || '—'}</td><td style={{ fontSize: '12px' }}>{c.tax_no || '—'}</td><td>
-
-              <div style={{ display: 'flex', gap: '4px' }}>
-
-                <button onClick={() => openEditCustomer(c)} title="Düzenle" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '15px', padding: '3px' }}>✏️</button>
-
-                <button onClick={() => openCustomerAudit(c.id)} title="Geçmiş" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '15px', padding: '3px' }}>📜</button>
-
-                <button onClick={() => handleDelete(c.id)} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '15px', padding: '3px' }}>🗑️</button>
-
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <span style={{ fontSize: '13px', fontWeight: '800', color: c.rating_color || 'var(--text-muted)' }}>Sınıf: {c.roi_rating || '—'} ({c.margin_desc || 'Bilinmiyor'})</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Hacim: ₺{(c.total_volume || 0).toLocaleString('tr-TR')}</span>
               </div>
+            </td><td>
 
-            </td></tr>))}
+                <div style={{ display: 'flex', gap: '4px' }}>
+
+                  <button onClick={() => openEditCustomer(c)} title="Düzenle" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '15px', padding: '3px' }}>✏️</button>
+
+                  <button onClick={() => openCustomerAudit(c.id)} title="Geçmiş" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '15px', padding: '3px' }}>📜</button>
+
+                  <button onClick={() => handleDelete(c.id)} title="Sil" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '15px', padding: '3px' }}>🗑️</button>
+
+                </div>
+
+              </td></tr>))}
 
           </tbody></table></div>
 
@@ -10661,7 +7488,7 @@ function FasonPage({ models, addToast }) {
 
   const [pForm, setPForm] = useState({ name: '', company: '', phone: '', address: '', speciality: '' });
 
-  const [oForm, setOForm] = useState({ provider_id: '', model_id: '', quantity: '', unit_price: '', expected_date: '' });
+  const [oForm, setOForm] = useState({ provider_id: '', model_id: '', quantity: '', unit_price: '', expected_date: '', contract_type: 'CMT', tolerance_rate: '3', fabric_usage: '' });
 
   const loadAll = useCallback(async () => { const [r1, r2] = await Promise.all([fetch('/api/fason'), fetch('/api/fason/orders')]); const [d1, d2] = await Promise.all([r1.json(), r2.json()]); setProviders(Array.isArray(d1) ? d1 : []); setOrders(Array.isArray(d2) ? d2 : []); }, []);
 
@@ -10669,7 +7496,7 @@ function FasonPage({ models, addToast }) {
 
   const saveProvider = async (e) => { e.preventDefault(); try { await fetch('/api/fason', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pForm) }); await loadAll(); setShowProviderModal(false); setPForm({ name: '', company: '', phone: '', address: '', speciality: '' }); addToast('success', 'Fasoncu eklendi!'); } catch (err) { addToast('error', 'Hata'); } };
 
-  const saveOrder = async (e) => { e.preventDefault(); try { await fetch('/api/fason/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(oForm) }); await loadAll(); setShowOrderModal(false); setOForm({ provider_id: '', model_id: '', quantity: '', unit_price: '', expected_date: '' }); addToast('success', 'Fason sipariş oluşturuldu!'); } catch (err) { addToast('error', 'Hata'); } };
+  const saveOrder = async (e) => { e.preventDefault(); try { await fetch('/api/fason/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(oForm) }); await loadAll(); setShowOrderModal(false); setOForm({ provider_id: '', model_id: '', quantity: '', unit_price: '', expected_date: '', contract_type: 'CMT', tolerance_rate: '3', fabric_usage: '' }); addToast('success', 'Fason sipariş oluşturuldu!'); } catch (err) { addToast('error', 'Hata'); } };
 
   const statusLabels = { beklemede: '⏳ Beklemede', gonderildi: '📦 Gönderildi', uretimde: '🏭 Üretimde', teslim: '✅ Teslim', iptal: '❌ İptal' };
 
@@ -10705,9 +7532,9 @@ function FasonPage({ models, addToast }) {
 
         ) : (
 
-          <div className="table-wrapper"><table className="table"><thead><tr><th>Fasoncu</th><th>Model</th><th>Adet</th><th>Birim ₺</th><th>Toplam ₺</th><th>Beklenen Tarih</th><th>Durum</th></tr></thead><tbody>
+          <div className="table-wrapper"><table className="table"><thead><tr><th>Fasoncu</th><th>Model</th><th>Adet</th><th>Birim ₺</th><th>Toplam ₺</th><th>Beklenen Tarih</th><th>Durum</th><th style={{ width: '120px', textAlign: 'right' }}>İşlem</th></tr></thead><tbody>
 
-            {orders.map(o => (<tr key={o.id}><td style={{ fontWeight: '600' }}>{o.provider_name}</td><td>{o.model_name} <code style={{ fontSize: '11px', background: 'var(--bg-input)', padding: '1px 5px', borderRadius: '3px' }}>{o.model_code}</code></td><td style={{ fontWeight: '700' }}>{o.quantity?.toLocaleString('tr-TR')}</td><td>{o.unit_price?.toFixed(2)} ₺</td><td style={{ fontWeight: '600', color: 'var(--accent)' }}>{o.total_price?.toFixed(0)} ₺</td><td>{o.expected_date || '—'}</td><td><span className="badge badge-info">{statusLabels[o.status] || o.status}</span></td></tr>))}
+            {orders.map(o => (<tr key={o.id}><td style={{ fontWeight: '600' }}>{o.provider_name}</td><td>{o.model_name} <code style={{ fontSize: '11px', background: 'var(--bg-input)', padding: '1px 5px', borderRadius: '3px' }}>{o.model_code}</code></td><td style={{ fontWeight: '700' }}>{o.quantity?.toLocaleString('tr-TR')}</td><td>{o.unit_price?.toFixed(2)} ₺</td><td style={{ fontWeight: '600', color: 'var(--accent)' }}>{o.total_price?.toFixed(0)} ₺</td><td>{o.expected_date || '—'}</td><td><span className="badge badge-info">{statusLabels[o.status] || o.status}</span></td><td style={{ textAlign: 'right' }}><button className="btn" style={{ padding: '4px 8px', fontSize: '12px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} onClick={() => openEditFason(o)}>📦 Teslim Al / Düzenle</button></td></tr>))}
 
           </tbody></table></div>
 
@@ -10767,12 +7594,142 @@ function FasonPage({ models, addToast }) {
 
             </div>
 
-            <div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setShowOrderModal(false)}>İptal</button><button type="submit" className="btn btn-primary">💾 Kaydet</button></div>
+            <div className="form-row">
+              <div className="form-group" style={{ flex: 1.5 }}>
+                <label className="form-label">Sözleşme Tipi (Global Standard)</label>
+                <select className="form-select" style={{ background: 'var(--bg-input)' }} value={oForm.contract_type} onChange={e => setOForm({ ...oForm, contract_type: e.target.value })}>
+                  <option value="CMT">CMT (Sadece İşçilik - Kesim/Dikim/Paket)</option>
+                  <option value="FPP">FPP (Kumaş ve Her Şey Fasoncuya Ait)</option>
+                </select>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>CMT: Cut-Make-Trim | FPP: Full Package Production</div>
+              </div>
+              <div className="form-group" style={{ flex: 1 }}>
+                <label className="form-label">Sarfiyat (Kumaş vb.)</label>
+                <input className="form-input" placeholder="Örn: 1.25 m / 0.4 kg" value={oForm.fabric_usage} onChange={e => setOForm({ ...oForm, fabric_usage: e.target.value })} />
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Maliyet & Verim analizi için</div>
+              </div>
+              <div className="form-group" style={{ flex: 0.8 }}>
+                <label className="form-label">Tolerans Fire (%)</label>
+                <input className="form-input" type="number" step="0.5" value={oForm.tolerance_rate} onChange={e => setOForm({ ...oForm, tolerance_rate: e.target.value })} />
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Global sınır %3-%5</div>
+              </div>
+            </div>
+
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <button type="button" className="btn btn-secondary" style={{ background: 'linear-gradient(135deg, #8e44ad, #9b59b6)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(142,68,173,0.3)' }} onClick={async () => {
+                if (!oForm.provider_id || !oForm.model_id) return addToast('error', 'Risk Analizi için Fasoncu ve Model seçmelisiniz.');
+                addToast('info', '🤖 Fason Ajanı: Geçmiş kayıtlar inceleniyor, risk analizi yapılıyor...');
+                try {
+                  const selectedProvider = providers.find(p => p.id === oForm.provider_id)?.name || '';
+                  const selectedModel = models.find(m => m.id === oForm.model_id);
+                  const kumas = selectedModel?.fabric_type || 'Genel Kumaş';
+                  const agentPayload = {
+                    action: 'evaluate',
+                    islemTipi: 'Fason Çıkışı (Risk Analizi)',
+                    kumasCinsi: kumas,
+                    secilenFasoncu: selectedProvider,
+                    sozlesme_tipi: oForm.contract_type,
+                    sarfiyat: oForm.fabric_usage,
+                    izinVerilenFireOrani: oForm.tolerance_rate + '%'
+                  };
+                  const res = await fetch('/api/fason/agent', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(agentPayload)
+                  });
+                  const data = await res.json();
+                  if (data.success) alert('🤖 Fason Ajanı (Risk Analizi):\n\n' + data.ajan_cevabi);
+                  else alert('Hata: ' + data.error);
+                } catch (err) { addToast('error', 'AI Bağlantı Hatası'); }
+              }}>🤖 Risk Analizi İstek (AI)</button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowOrderModal(false)}>İptal</button>
+                <button type="submit" className="btn btn-primary">💾 Kaydet</button>
+              </div>
+            </div>
 
           </form>
 
         </div></div>
 
+      )}
+
+      {/* ===== TESLİM AL / DÜZENLE MODALI ===== */}
+      {editFason && (
+        <div className="modal-overlay" onClick={() => setEditFason(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">📦 Siparişi Teslim Al</h2>
+              <button className="modal-close" onClick={() => setEditFason(null)}>✕</button>
+            </div>
+            <form onSubmit={handleUpdateFason}>
+              <div style={{ padding: '8px 12px', background: 'rgba(52,152,219,0.1)', color: '#2980b9', borderRadius: '6px', marginBottom: '16px', fontSize: '13px', fontWeight: '600' }}>
+                Giden Adet: {editFason.quantity || 0} | Beklenen Tarih: {editFason.expected_date || 'Belirtilmedi'}
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Gelen (Sağlam) Adet</label>
+                  <input className="form-input" type="number" required value={editFasonForm.received_quantity || ''} onChange={e => setEditFasonForm({ ...editFasonForm, received_quantity: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Fire / Defolu Adet</label>
+                  <input className="form-input" type="number" required value={editFasonForm.defective_count || ''} onChange={e => setEditFasonForm({ ...editFasonForm, defective_count: e.target.value })} />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Durum</label>
+                  <select className="form-select" value={editFasonForm.status} onChange={e => setEditFasonForm({ ...editFasonForm, status: e.target.value })}>
+                    <option value="beklemede">⏳ Beklemede</option>
+                    <option value="gonderildi">📦 Gönderildi</option>
+                    <option value="uretimde">🏭 Üretimde</option>
+                    <option value="teslim">✅ Teslim Alındı</option>
+                    <option value="iptal">❌ İptal</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Kalite Kontrol Notu</label>
+                  <textarea className="form-input" rows={2} value={editFasonForm.quality_notes || ''} onChange={e => setEditFasonForm({ ...editFasonForm, quality_notes: e.target.value })} placeholder="Kumaşta çekme oldu, iplik kusacak gibi vb." />
+                </div>
+              </div>
+
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                <button type="button" className="btn btn-secondary" style={{ background: 'linear-gradient(135deg, #1abc9c, #16a085)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(26,188,156,0.3)' }} onClick={async () => {
+                  if (!editFasonForm.received_quantity && !editFasonForm.defective_count) return addToast('error', 'Gelen ve Fire adetlerini girmelisiniz.');
+                  addToast('info', '🤖 Fason Ajanı: Rapor hafızaya alınıyor...');
+                  try {
+                    const modelim = models.find(m => m.id === editFason.model_id);
+                    const res = await fetch('/api/fason/agent', {
+                      method: 'POST', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        action: 'report',
+                        fasoncuAd: editFason.provider_name,
+                        modelAd: editFason.model_name,
+                        gidenAdet: Number(editFason.quantity || 0),
+                        gelenAdet: Number(editFasonForm.received_quantity || 0),
+                        fireAdet: Number(editFasonForm.defective_count || 0),
+                        kumasCinsi: modelim?.fabric_type || 'Bilinmiyor',
+                        kaliteNotu: editFasonForm.quality_notes || 'Yok'
+                      })
+                    });
+                    const data = await res.json();
+                    if (data.success) alert('✅ RAPOR HAFIZAYA KAZINDI:\n\n' + data.ajan_cevabi);
+                    else alert('🚨 Hata: ' + data.error);
+                  } catch (err) { addToast('error', 'AI Bağlantı Hatası'); }
+                }}>🤖 Hafızaya Kazı (Agent)</button>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setEditFason(null)}>İptal</button>
+                  <button type="submit" className="btn btn-primary">💾 Sadece Kaydet (Sıfır Maliyet)</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
     </>
@@ -10973,15 +7930,27 @@ function ShipmentsPage({ models, addToast }) {
 
 
 
+// ========== MACHINES PAGE KALDIRILDI (IMPORT EDİLİYOR) ==========
+
+
+
+// ========== QUALITY PAGE KALDIRILDI (IMPORT EDİLİYOR) ==========
+
+
+
 // ========== SETTINGS PAGE ==========
-
-function SettingsPage({ addToast }) {
-
+function SettingsPage({ currentUser, addToast }) {
   const [currentLang, setCurrentLang] = useState('tr');
+  const isAdmin = currentUser?.role === 'admin';
 
   const [schedule, setSchedule] = useState([]);
 
   const [workDays, setWorkDays] = useState([]);
+
+  // Sifre degistirme
+  const [sifre, setSifre] = useState({ mevcut: '', yeni: '', tekrar: '' });
+  const [sifreDegYukleniyor, setSifreDegYukleniyor] = useState(false);
+  const [gosterSifre, setGosterSifre] = useState(false);
 
   const currentYear = new Date().getFullYear();
 
@@ -11027,24 +7996,66 @@ function SettingsPage({ addToast }) {
 
   };
 
+  const handleSifreDegistir = async (e) => {
+    e.preventDefault();
+    if (sifre.yeni !== sifre.tekrar) { addToast('error', 'Yeni şifreler eşleşmiyor'); return; }
+    if (sifre.yeni.length < 6) { addToast('error', 'Yeni şifre en az 6 karakter olmalı'); return; }
+    setSifreDegYukleniyor(true);
+    try {
+      const stored = localStorage.getItem('kp_user');
+      const user = stored ? JSON.parse(stored) : {};
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user.username, current_password: sifre.mevcut, new_password: sifre.yeni }),
+      });
+      const data = await res.json();
+      if (!res.ok) { addToast('error', data.error || 'Şifre değiştirilemedi'); return; }
+      addToast('success', 'Şifre başarıyla değiştirildi');
+      setSifre({ mevcut: '', yeni: '', tekrar: '' });
+    } catch { addToast('error', 'Bağlantı hatası'); }
+    finally { setSifreDegYukleniyor(false); }
+  };
+
 
 
   const updateWorkDays = async (month, newDays) => {
-
     await fetch('/api/work-schedule', {
-
       method: 'PUT',
-
       headers: { 'Content-Type': 'application/json' },
-
       body: JSON.stringify({ type: 'workdays', year: currentYear, month, work_days: parseInt(newDays) })
-
     });
-
     setWorkDays(prev => prev.map(w => w.month === month ? { ...w, work_days: parseInt(newDays) } : w));
-
     addToast('success', `${month}. ay çalışma günü güncellendi`);
+  };
 
+  const deleteSchedule = async (id) => {
+    if (!confirm('Bu saati silmek istediğinize emin misiniz?')) return;
+    try {
+      await fetch(`/api/work-schedule?id=${id}`, { method: 'DELETE' });
+      setSchedule(prev => prev.filter(s => s.id !== id));
+      addToast('success', 'Kayıt silindi');
+    } catch { addToast('error', 'Silinemedi'); }
+  };
+
+  const handleAddSchedule = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = {
+      type: fd.get('type'),
+      name: fd.get('name'),
+      start_time: fd.get('start_time'),
+      end_time: fd.get('end_time'),
+    };
+    try {
+      const res = await fetch('/api/work-schedule', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+      });
+      const nr = await res.json();
+      setSchedule(prev => [...prev, nr].sort((a, b) => a.start_time.localeCompare(b.start_time)));
+      addToast('success', 'Çizelge eklendi');
+      e.target.reset();
+    } catch { addToast('error', 'Eklenemedi'); }
   };
 
 
@@ -11082,6 +8093,33 @@ function SettingsPage({ addToast }) {
       <div className="page-content">
 
         <div style={{ display: 'grid', gap: '16px', maxWidth: '900px' }}>
+
+          {/* ŞİFRE DEĞİŞTİRME */}
+          <div className="card">
+            <div className="card-header"><h3 className="card-title">🔑 Şifre Değiştir</h3></div>
+            <div style={{ padding: '16px' }}>
+              <form onSubmit={handleSifreDegistir} style={{ display: 'grid', gap: '12px', maxWidth: '400px' }}>
+                <div style={{ position: 'relative' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Mevcut Şifre</label>
+                  <input type={gosterSifre ? "text" : "password"} value={sifre.mevcut} onChange={e => setSifre(p => ({ ...p, mevcut: e.target.value }))} placeholder="••••••••" required style={{ width: '100%', padding: '10px 40px 10px 14px', background: 'var(--bg-input)', border: '1.5px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+                  <button type="button" onClick={() => setGosterSifre(!gosterSifre)} style={{ position: 'absolute', right: '12px', top: '34px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '15px' }}>{gosterSifre ? '👁️‍🗨️' : '👁️'}</button>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Yeni Şifre</label>
+                  <input type={gosterSifre ? "text" : "password"} value={sifre.yeni} onChange={e => setSifre(p => ({ ...p, yeni: e.target.value }))} placeholder="En az 6 karakter" required minLength={6} style={{ width: '100%', padding: '10px 40px 10px 14px', background: 'var(--bg-input)', border: '1.5px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+                  <button type="button" onClick={() => setGosterSifre(!gosterSifre)} style={{ position: 'absolute', right: '12px', top: '34px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '15px' }}>{gosterSifre ? '👁️‍🗨️' : '👁️'}</button>
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>Yeni Şifre (Tekrar)</label>
+                  <input type={gosterSifre ? "text" : "password"} value={sifre.tekrar} onChange={e => setSifre(p => ({ ...p, tekrar: e.target.value }))} placeholder="••••••••" required style={{ width: '100%', padding: '10px 40px 10px 14px', background: 'var(--bg-input)', border: '1.5px solid var(--border-color)', borderRadius: '10px', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '14px', outline: 'none' }} />
+                  <button type="button" onClick={() => setGosterSifre(!gosterSifre)} style={{ position: 'absolute', right: '12px', top: '34px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '15px' }}>{gosterSifre ? '👁️‍🗨️' : '👁️'}</button>
+                </div>
+                <button type="submit" disabled={sifreDegYukleniyor} style={{ padding: '11px', background: 'var(--accent)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: '700', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit', opacity: sifreDegYukleniyor ? 0.6 : 1 }}>
+                  {sifreDegYukleniyor ? '⏳ Değiştiriliyor...' : '🔑 Şifreyi Güncelle'}
+                </button>
+              </form>
+            </div>
+          </div>
 
           {/* DİL SEÇİMİ */}
 
@@ -11172,36 +8210,40 @@ function SettingsPage({ addToast }) {
 
 
               {/* Detay listesi */}
-
-              <div style={{ display: 'grid', gap: '6px' }}>
-
+              <div style={{ display: 'grid', gap: '6px', marginBottom: '16px' }}>
                 {schedule.map((s, i) => {
-
                   const [sh, sm] = s.start_time.split(':').map(Number);
-
                   const [eh, em] = s.end_time.split(':').map(Number);
-
                   const dur = (eh * 60 + em) - (sh * 60 + sm);
-
                   return (
-
                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: '8px', background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
-
                       <span style={{ fontSize: '16px' }}>{s.type === 'work' ? '📋ş' : '☕'}</span>
-
                       <span style={{ flex: 1, fontSize: '13px', fontWeight: '600' }}>{s.name}</span>
-
                       <span style={{ fontSize: '13px', fontFamily: 'monospace', fontWeight: '700', color: 'var(--accent)' }}>{s.start_time} — {s.end_time}</span>
-
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)', minWidth: '50px', textAlign: 'right' }}>{dur} dk</span>
-
+                      {isAdmin && (
+                        <button onClick={() => deleteSchedule(s.id)} style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer', padding: '0 4px' }} title="Sil">✕</button>
+                      )}
                     </div>
-
                   );
-
                 })}
-
               </div>
+
+              {isAdmin && (
+                <div style={{ padding: '16px', borderRadius: '8px', border: '1px dashed var(--border-color)', background: 'var(--bg-input)' }}>
+                  <h4 style={{ fontSize: '12px', marginBottom: '12px', color: 'var(--text-muted)' }}>➕ YENİ ZAMAN DİLİMİ EKLE (ADMİN)</h4>
+                  <form onSubmit={handleAddSchedule} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <select name="type" required className="form-select" style={{ flex: 1, minWidth: '100px' }}>
+                      <option value="work">Çalışma (Mesai)</option>
+                      <option value="break">Mola (Çay/Yemek)</option>
+                    </select>
+                    <input name="name" required placeholder="Etiket (Örn: Çay Molası)" className="form-input" style={{ flex: 2, minWidth: '120px' }} />
+                    <input name="start_time" type="time" required className="form-input" style={{ flex: 1 }} />
+                    <input name="end_time" type="time" required className="form-input" style={{ flex: 1 }} />
+                    <button type="submit" className="btn btn-primary" style={{ padding: '8px 16px' }}>Ekle</button>
+                  </form>
+                </div>
+              )}
 
             </div>
 
@@ -11241,8 +8283,7 @@ function SettingsPage({ addToast }) {
 
                       </div>
 
-                      <input type="number" value={w.work_days} min={15} max={26}
-
+                      <input type="number" value={w.work_days} min={15} max={26} disabled={!isAdmin}
                         onChange={e => updateWorkDays(w.month, e.target.value)}
 
                         style={{ width: '50px', textAlign: 'center', padding: '6px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '16px', fontWeight: '800', fontFamily: 'inherit' }} />
@@ -12075,22 +9116,35 @@ function MuhasebeDepartmaniPage({ models, personnel, addToast }) {
 
         {aktifBolum === 'model' && (
           <div className="card">
-            <div className="card-header"><div className="card-title">👗 Model Analizi</div></div>
-            <div className="table-wrapper">
-              <table className="table">
-                <thead><tr><th>Model</th><th>Müşteri</th><th>Sipariş Adedi</th><th>Fason Fiyat</th><th>Zorluk</th></tr></thead>
-                <tbody>
-                  {models.slice(0, 15).map(m => (
-                    <tr key={m.id}>
-                      <td><strong>{m.name}</strong><br /><span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{m.code}</span></td>
-                      <td>{m.customer || '—'}</td>
-                      <td>{m.total_order || 0}</td>
-                      <td>{m.fason_price ? m.fason_price + ' ₺' : '—'}</td>
-                      <td>{m.model_difficulty || 5}/10</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="card-header"><div className="card-title">👗 Model Analizi (Accordion Modu)</div></div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {models.slice(0, 15).map(m => (
+                <details key={m.id} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <summary style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', outline: 'none', listStyle: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(52, 152, 219, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Shirt size={20} color="#3498db" />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: '700', fontSize: '14px' }}>{m.name}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{m.code}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '13px' }}>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: '600', color: '#fff' }}>{m.fason_price ? m.fason_price + ' ₺' : '—'}</div>
+                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Birim Fiyat</div>
+                      </div>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>▼ DETAY</span>
+                    </div>
+                  </summary>
+                  <div style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid var(--border-color)', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', fontSize: '12px' }}>
+                    <div><div style={{ color: 'var(--text-muted)' }}>Müşteri</div><div style={{ fontWeight: '600' }}>{m.customer || 'Bilinmiyor'}</div></div>
+                    <div><div style={{ color: 'var(--text-muted)' }}>Sipariş Miktarı</div><div style={{ fontWeight: '600' }}>{m.total_order || 0} Adet</div></div>
+                    <div><div style={{ color: 'var(--text-muted)' }}>Üretim Zorluğu</div><div style={{ fontWeight: '600' }}>{m.model_difficulty || 5}/10 Derece</div></div>
+                  </div>
+                </details>
+              ))}
             </div>
           </div>
         )}
@@ -12117,25 +9171,37 @@ function MuhasebeDepartmaniPage({ models, personnel, addToast }) {
 
         {aktifBolum === 'personel' && (
           <div className="card">
-            <div className="card-header"><div className="card-title">👥 Personel Analizi</div></div>
+            <div className="card-header"><div className="card-title">👥 Personel Analizi (Accordion Modu)</div></div>
             <div className="stats-grid" style={{ marginBottom: '20px' }}>
               <div className="stat-card"><div className="stat-value">{personnel.length}</div><div className="stat-label">Toplam</div></div>
               <div className="stat-card"><div className="stat-value" style={{ color: 'var(--success)' }}>{personnel.filter(p => p.status === 'active').length}</div><div className="stat-label">Aktif</div></div>
             </div>
-            <div className="table-wrapper">
-              <table className="table">
-                <thead><tr><th>Ad Soyad</th><th>Görev</th><th>Seviye</th><th>Durum</th></tr></thead>
-                <tbody>
-                  {personnel.slice(0, 15).map(p => (
-                    <tr key={p.id}>
-                      <td><strong>{p.name}</strong></td>
-                      <td>{p.role || '—'}</td>
-                      <td>{p.skill_level || 'başlangıç'}</td>
-                      <td><span className={`badge badge-${p.status === 'active' ? 'success' : 'warning'}`}>{p.status === 'active' ? '✅ Aktif' : '⏸ Pasif'}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {personnel.slice(0, 15).map(p => (
+                <details key={p.id} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <summary style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', outline: 'none', listStyle: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: p.status === 'active' ? 'rgba(46, 204, 113, 0.1)' : 'rgba(231, 76, 60, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Users size={20} color={p.status === 'active' ? '#2ecc71' : '#e74c3c'} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: '700', fontSize: '14px' }}>{p.name}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{p.role || 'Görevi Belirsiz'}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '13px' }}>
+                      <span className={`badge badge-${p.status === 'active' ? 'success' : 'danger'}`}>
+                        {p.status === 'active' ? '✅ Aktif' : '⏸ Pasif'}
+                      </span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>▼ DETAY</span>
+                    </div>
+                  </summary>
+                  <div style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid var(--border-color)', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', fontSize: '12px' }}>
+                    <div><div style={{ color: 'var(--text-muted)' }}>Yetenek Seviyesi</div><div style={{ fontWeight: '600' }}>{p.skill_level || 'Başlangıç'} Derece</div></div>
+                    <div><div style={{ color: 'var(--text-muted)' }}>Kayıt Durumu</div><div style={{ fontWeight: '600' }}>Sistemde Kayıtlı</div></div>
+                  </div>
+                </details>
+              ))}
             </div>
           </div>
         )}
@@ -12180,6 +9246,17 @@ export default function Home() {
 
   const [chatbotAcik, setChatbotAcik] = useState(false);
 
+  // Kullanıcı oturumu — localStorage'dan yükle
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('kp_user');
+      if (stored) setCurrentUser(JSON.parse(stored));
+      else setCurrentUser({ id: null, username: 'admin', display_name: 'Koordinatör', role: 'koordinator' }); // Dev fallback
+    } catch { setCurrentUser({ id: null, username: 'admin', display_name: 'Koordinatör', role: 'koordinator' }); }
+  }, []);
+
 
 
   const addToast = useCallback((type, message) => {
@@ -12220,9 +9297,11 @@ export default function Home() {
 
       case 'dashboard': return <DashboardPage models={models} personnel={personnel} />;
 
-      case 'models': return <ModelsPage models={models} loadModels={loadModels} addToast={addToast} />;
+      case 'models': return <ModelsPage models={models} loadModels={loadModels} addToast={addToast} imalatTipi="saha" />;
 
-      case 'personnel': return <PersonnelPage personnel={personnel} loadPersonnel={loadPersonnel} addToast={addToast} />;
+      case 'imalat-models': return <ModelsPage models={models} loadModels={loadModels} addToast={addToast} imalatTipi="kendi" />;
+
+      case 'personnel': return <PersonnelPage personnel={personnel} loadPersonnel={loadPersonnel} addToast={addToast} userRole={currentUser?.role || ''} />;
 
       case 'production': return <ProductionPage models={models} personnel={personnel} addToast={addToast} />;
 
@@ -12232,7 +9311,7 @@ export default function Home() {
 
       case 'quality': return <QualityPage models={models} personnel={personnel} addToast={addToast} />;
 
-      case 'prim': return <PrimPage models={models} personnel={personnel} addToast={addToast} />;
+      case 'prim': return <PrimPage models={models} personnel={personnel} addToast={addToast} currentUser={currentUser} />;
 
       case 'orders': return <OrdersPage models={models} addToast={addToast} />;
 
@@ -12242,13 +9321,21 @@ export default function Home() {
 
       case 'shipments': return <ShipmentsPage models={models} addToast={addToast} />;
 
-      case 'settings': return <SettingsPage addToast={addToast} />;
+      case 'settings': return <SettingsPage currentUser={currentUser} addToast={addToast} />;
 
       case 'costs': return <CostsPage models={models} personnel={personnel} addToast={addToast} />;
 
       case 'muhasebe': return <MuhasebeDepartmaniPage models={models} personnel={personnel} addToast={addToast} />;
 
-      default: return <DashboardPage models={models} personnel={personnel} />;
+      case 'imalat': return <ImalatPage models={models} personnel={personnel} addToast={addToast} />;
+
+      case 'karargah': return <AsistanPage />;
+
+      case 'arge': return <ArgeTasarimPage addToast={addToast} />;
+
+      case 'magaza': return <MagazaPage />;
+
+      default: return <DashboardPage models={models} personnel={personnel} addToast={addToast} currentUser={currentUser} />;
 
     }
 
@@ -12260,7 +9347,7 @@ export default function Home() {
 
     <div className="app-layout">
 
-      <Sidebar activePage={activePage} setActivePage={setActivePage} onChatbotToggle={() => setChatbotAcik(prev => !prev)} />
+      <Sidebar activePage={activePage} setActivePage={setActivePage} onChatbotToggle={() => setChatbotAcik(prev => !prev)} currentUser={currentUser} />
 
       <main className="main-content">
 

@@ -1,0 +1,40 @@
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of c:\Users\Admin\Desktop\Kamera-Panel\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * c:\Users\Admin\Desktop\Kamera-Panel\app\package-lock.json
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  · serverActions
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./app/app/page.js:6259:10
+Ecmascript file had an error
+[0m [90m 6257 |[39m [90m// ========== PRİM SAYFASI ==========[39m
+ [90m 6258 |[39m
+[31m[1m>[22m[39m[90m 6259 |[39m [36mfunction[39m [33mPrimPage[39m({ personnel[33m,[39m addToast[33m,[39m currentUser }) {
+ [90m      |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6260 |[39m   [36mconst[39m userRole [33m=[39m currentUser[33m?[39m[33m.[39mrole [33m||[39m [32m'operator'[39m[33m;[39m
+ [90m 6261 |[39m   [36mconst[39m yetkiliMi [33m=[39m userRole [33m===[39m [32m'koordinator'[39m[33m;[39m
+ [90m 6262 |[39m   [36mconst[39m now [33m=[39m [36mnew[39m [33mDate[39m()[33m;[39m[0m
+
+the name `PrimPage` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./app/app/page.js [Client Component Browser]
+    ./app/app/page.js [Server Component]
+
+  Client Component SSR:
+    ./app/app/page.js [Client Component SSR]
+    ./app/app/page.js [Server Component]
+
+
+    at <unknown> (./app/app/page.js:6259:10)

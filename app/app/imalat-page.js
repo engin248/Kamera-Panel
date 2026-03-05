@@ -3,7 +3,9 @@
 // Bu dosya page.js'e append edilmek üzere oluşturulmuştur
 // ============================================================
 
-function ImalatPage({ models, personnel, addToast }) {
+import React, { useState, useEffect, useCallback } from 'react';
+
+export default function ImalatPage({ models, personnel, addToast, currentUser }) {
     const [sekme, setSekme] = useState('ozet');
     const [ozet, setOzet] = useState(null);
     const [kesimler, setKesimler] = useState([]);
@@ -136,6 +138,7 @@ function ImalatPage({ models, personnel, addToast }) {
                                         { label: 'Devam Eden Faz', val: ozet.devam_eden_faz ?? 0, icon: '📋', color: '#9b59b6' },
                                         { label: 'Yarı Mamul Stok', val: ozet.toplam_yari_mamul ?? 0, icon: '📦', color: '#27ae60' },
                                         { label: 'Bu Ay Fire (m)', val: Number(ozet.bu_ay_fire ?? 0).toFixed(1), icon: '🔥', color: '#e74c3c' },
+                                        { label: 'T. Üretim Maliyet Yükü', val: ozet.tahmini_maliyet ? (ozet.tahmini_maliyet + '₺') : 'Yükleniyor..', icon: '💰', color: '#f39c12' },
                                     ].map((k, i) => (
                                         <div key={i} style={{ background: 'var(--bg-card)', borderRadius: '14px', padding: '18px', border: '1px solid ' + k.color + '33', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
                                             <div style={{ fontSize: '30px', marginBottom: '6px' }}>{k.icon}</div>
@@ -193,6 +196,14 @@ function ImalatPage({ models, personnel, addToast }) {
                                         <input type="number" className="form-input" placeholder="1" value={form.kat_sayisi || ''} onChange={e => setForm({ ...form, kat_sayisi: e.target.value })} />
                                     </div>
                                     <div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>HARCANAN KUMAŞ (KG/METRE)</div>
+                                        <input type="number" step="0.01" className="form-input" placeholder="0.00" value={form.harcanan_kumas || ''} onChange={e => setForm({ ...form, harcanan_kumas: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>PASTAL FİRE %</div>
+                                        <input type="number" step="0.1" className="form-input" placeholder="0.0" value={form.pastal_fire_yuzde || ''} onChange={e => setForm({ ...form, pastal_fire_yuzde: e.target.value })} />
+                                    </div>
+                                    <div>
                                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>KUMAŞ TİPİ</div>
                                         <input type="text" className="form-input" placeholder="Pamuk, Polyester..." value={form.kumas_tipi || ''} onChange={e => setForm({ ...form, kumas_tipi: e.target.value })} />
                                     </div>
@@ -201,11 +212,32 @@ function ImalatPage({ models, personnel, addToast }) {
                                         <input type="number" className="form-input" step="0.01" placeholder="0.00" value={form.tahmini_sarj_metre || ''} onChange={e => setForm({ ...form, tahmini_sarj_metre: e.target.value })} />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>KESİMCİ</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>Kesimcİ/USTA</div>
                                         <select className="form-select" value={form.kesimci_id || ''} onChange={e => setForm({ ...form, kesimci_id: e.target.value })}>
                                             <option value="">Seçin</option>
                                             {(personnel || []).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                         </select>
+                                    </div>
+                                    <div style={{ background: 'rgba(142,68,173,0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(142,68,173,0.3)' }}>
+                                        <div style={{ fontSize: '11px', color: '#8e44ad', marginBottom: '4px', fontWeight: 'bold' }}>PARTİ / LOT NO *</div>
+                                        <input type="text" className="form-input" placeholder="Kumaş Parti Numarası" value={form.parti_lot_no || ''} onChange={e => setForm({ ...form, parti_lot_no: e.target.value })} />
+                                    </div>
+                                    <div style={{ gridColumn: '1 / -1', padding: '12px', background: 'rgba(230,126,34,0.08)', borderRadius: '8px', border: '1px dashed rgba(230,126,34,0.3)', marginTop: '8px' }}>
+                                        <div style={{ fontWeight: '700', fontSize: '12px', color: '#d35400', marginBottom: '8px' }}>⚖️ Kumaş Kullanım & Fire Kontrolü (Maliyet)</div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                                            <div>
+                                                <div style={{ fontSize: '11px', color: '#d35400', marginBottom: '4px' }}>TEORİK KULLANIM (Metre/Kg)</div>
+                                                <input type="number" step="0.01" className="form-input" placeholder="TechPack Beklentisi" value={form.used_fabric_qty || ''} onChange={e => setForm({ ...form, used_fabric_qty: e.target.value })} />
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '11px', color: '#d35400', marginBottom: '4px', fontWeight: 'bold' }}>USTANIN KESTİĞİ NET (KG/Metre) *</div>
+                                                <input type="number" step="0.01" className="form-input" placeholder="Zorunlu Tartım!" value={form.actual_fabric_qty || ''} onChange={e => setForm({ ...form, actual_fabric_qty: e.target.value })} />
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '11px', color: '#d35400', marginBottom: '4px' }}>KIRPINTI/FİRE MİKTARI (Metre/Kg)</div>
+                                                <input type="number" step="0.01" className="form-input" placeholder="Geriye Kalan Zayiat" value={form.fabric_waste_qty || ''} onChange={e => setForm({ ...form, fabric_waste_qty: e.target.value })} />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px', marginTop: '18px' }}>
@@ -216,7 +248,13 @@ function ImalatPage({ models, personnel, addToast }) {
                                         kat_sayisi: parseInt(form.kat_sayisi || 1),
                                         kumas_tipi: form.kumas_tipi || '',
                                         tahmini_sarj_metre: parseFloat(form.tahmini_sarj_metre || 0),
+                                        harcanan_kumas: parseFloat(form.harcanan_kumas || 0),
+                                        pastal_fire_yuzde: parseFloat(form.pastal_fire_yuzde || 0),
                                         kesimci_id: form.kesimci_id ? parseInt(form.kesimci_id) : null,
+                                        used_fabric_qty: parseFloat(form.used_fabric_qty || 0),
+                                        actual_fabric_qty: parseFloat(form.actual_fabric_qty || 0),
+                                        fabric_waste_qty: parseFloat(form.fabric_waste_qty || 0),
+                                        parti_lot_no: form.parti_lot_no || ''
                                     })}>💾 Kaydet</button>
                                     <button style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'inherit' }} onClick={() => { setShowForm(false); setForm({}); }}>İptal</button>
                                 </div>
@@ -232,7 +270,7 @@ function ImalatPage({ models, personnel, addToast }) {
                                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                                         <thead>
                                             <tr style={{ background: 'var(--bg-input)' }}>
-                                                {['Model', 'Plan Tarihi', 'Adet', 'Kat', 'Kumaş Tipi', 'Sarj (m)', 'Durum'].map(h => (
+                                                {['Model', 'Plan Tarihi', 'Parti/Lot', 'Adet', 'Harcanan Kumaş', 'Pastal Fire', 'Durum'].map(h => (
                                                     <th key={h} style={headerStyle}>{h}</th>
                                                 ))}
                                             </tr>
@@ -247,10 +285,10 @@ function ImalatPage({ models, personnel, addToast }) {
                                                         onMouseLeave={e => e.currentTarget.style.background = ''}>
                                                         <td style={{ ...cellStyle, fontWeight: '600' }}>{k.models?.name || ('Model #' + k.model_id)}</td>
                                                         <td style={cellStyle}>{k.plan_tarihi}</td>
+                                                        <td style={{ ...cellStyle, color: '#8e44ad', fontWeight: '700' }}>{k.parti_lot_no || '—'}</td>
                                                         <td style={{ ...cellStyle, fontWeight: '700', color: '#3498db' }}>{k.toplam_adet?.toLocaleString('tr-TR')}</td>
-                                                        <td style={cellStyle}>{k.kat_sayisi || 1}</td>
-                                                        <td style={{ ...cellStyle, color: 'var(--text-muted)' }}>{k.kumas_tipi || '—'}</td>
-                                                        <td style={cellStyle}>{k.tahmini_sarj_metre ? Number(k.tahmini_sarj_metre).toFixed(1) + ' m' : '—'}</td>
+                                                        <td style={{ ...cellStyle, color: 'var(--text-muted)' }}>{k.actual_fabric_qty ? k.actual_fabric_qty + ' Kg/m' : (k.harcanan_kumas ? k.harcanan_kumas + ' Kg/m' : '—')}</td>
+                                                        <td style={{ ...cellStyle, color: (k.fabric_waste_qty > 0 || k.pastal_fire_yuzde > 5) ? '#e74c3c' : 'var(--text-muted)' }}>{k.fabric_waste_qty ? k.fabric_waste_qty + ' Kg' : (k.pastal_fire_yuzde ? '%' + k.pastal_fire_yuzde : '—')}</td>
                                                         <td style={cellStyle}>
                                                             <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '700', background: dr + '22', color: dr, border: '1px solid ' + dr + '44' }}>
                                                                 {k.durum || 'planlandı'}
@@ -289,12 +327,41 @@ function ImalatPage({ models, personnel, addToast }) {
                                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>GÜNLÜK HEDEF</div>
                                         <input type="number" className="form-input" placeholder="0" value={form.gun_hedefi || ''} onChange={e => setForm({ ...form, gun_hedefi: e.target.value })} />
                                     </div>
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>FASON / İÇ ÜRETİM ZAMANI</div>
+                                        <select className="form-select" value={form.fason_mu || 'ic'} onChange={e => setForm({ ...form, fason_mu: e.target.value })}>
+                                            <option value="ic">İç Üretim (Bant)</option>
+                                            <option value="fason">Dış Üretim (Fason)</option>
+                                        </select>
+                                    </div>
+                                    {form.fason_mu === 'fason' && (
+                                        <div>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>FASON ANLAŞMA BİRİM FİYATI (₺)</div>
+                                            <input type="number" step="0.01" className="form-input" placeholder="₺ 0.00" value={form.fason_birim_fiyat || ''} onChange={e => setForm({ ...form, fason_birim_fiyat: e.target.value })} />
+                                        </div>
+                                    )}
+                                    {form.fason_mu !== 'fason' && (
+                                        <>
+                                            <div>
+                                                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>TAHMİNİ BANT ZORLUK (1-5)</div>
+                                                <input type="number" min="1" max="5" className="form-input" placeholder="1 = Kolay, 5 = Zor" value={form.bant_zorluk_derecesi || ''} onChange={e => setForm({ ...form, bant_zorluk_derecesi: e.target.value })} />
+                                            </div>
+                                            <div style={{ background: 'rgba(52,152,219,0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(52,152,219,0.3)' }}>
+                                                <div style={{ fontSize: '11px', color: '#2980b9', marginBottom: '4px', fontWeight: 'bold' }}>GÜNLÜK SABİT HAT MALİYETİ (₺) *</div>
+                                                <input type="number" step="0.01" className="form-input" placeholder="Elektrik, Maaş, Amortisman" value={form.gunluk_hat_maliyeti || ''} onChange={e => setForm({ ...form, gunluk_hat_maliyeti: e.target.value })} />
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px', marginTop: '18px' }}>
                                     <button className="btn btn-primary" onClick={() => kaydet('/api/imalat/hat-planlama', {
                                         hat_adi: form.hat_adi,
                                         model_id: form.model_id ? parseInt(form.model_id) : null,
                                         gun_hedefi: parseInt(form.gun_hedefi || 0),
+                                        fason_mu: form.fason_mu === 'fason',
+                                        fason_birim_fiyat: parseFloat(form.fason_birim_fiyat || 0),
+                                        bant_zorluk_derecesi: parseInt(form.bant_zorluk_derecesi || 1),
+                                        gunluk_hat_maliyeti: parseFloat(form.gunluk_hat_maliyeti || 0),
                                         aktif: true,
                                     })}>💾 Kaydet</button>
                                     <button style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'inherit' }} onClick={() => { setShowForm(false); setForm({}); }}>İptal</button>
@@ -315,11 +382,17 @@ function ImalatPage({ models, personnel, addToast }) {
                                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>
                                             Model: <b style={{ color: 'var(--text-primary)' }}>{h.models?.name || h.model_id || '—'}</b>
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
                                             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Günlük Hedef</span>
                                             <span style={{ fontSize: '22px', fontWeight: '800', color: '#3498db' }}>{h.gun_hedefi || 0}</span>
                                             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>adet</span>
                                         </div>
+                                        {h.fason_mu && (
+                                            <div style={{ fontSize: '11px', color: '#e67e22', fontWeight: 'bold' }}>Fason İşlem: {h.fason_birim_fiyat} ₺ / Adet</div>
+                                        )}
+                                        {!h.fason_mu && h.bant_zorluk_derecesi && (
+                                            <div style={{ fontSize: '11px', color: '#2980b9', fontWeight: 'bold', marginTop: '4px' }}>Zorluk: {h.bant_zorluk_derecesi}/5 | Sabit Maliyet: {h.gunluk_hat_maliyeti ? '₺' + h.gunluk_hat_maliyeti : 'Bilinmiyor'}</div>
+                                        )}
                                         {h.personel_listesi && Array.isArray(h.personel_listesi) && h.personel_listesi.length > 0 && (
                                             <div style={{ marginTop: '10px', padding: '6px 10px', background: 'var(--bg-input)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
                                                 👥 {h.personel_listesi.length} personel atanmış
@@ -435,13 +508,19 @@ function ImalatPage({ models, personnel, addToast }) {
                                     <div>
                                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>HEDEF FAZ *</div>
                                         <select className="form-select" value={form.faz_hedef || ''} onChange={e => setForm({ ...form, faz_hedef: e.target.value })}>
-                                            <option value="">Hedef</option>
+                                            <option value="">Hedef (veya Dış Fason)</option>
+                                            <option value="fason_baski">Fason Baskı</option>
+                                            <option value="fason_nakis">Fason Nakış</option>
                                             {Object.entries(FAZ_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>ADET *</div>
                                         <input type="number" className="form-input" placeholder="0" value={form.adet || ''} onChange={e => setForm({ ...form, adet: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>BOZULAN / FİRE ADET (Fasondan Gelen)</div>
+                                        <input type="number" className="form-input" placeholder="0" value={form.bozulan_adet || ''} onChange={e => setForm({ ...form, bozulan_adet: e.target.value })} />
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px', marginTop: '18px' }}>
@@ -463,7 +542,7 @@ function ImalatPage({ models, personnel, addToast }) {
                                 <div style={{ overflowX: 'auto' }}>
                                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                                         <thead><tr style={{ background: 'var(--bg-input)' }}>
-                                            {['Model', 'Kaynak', 'Hedef', 'Adet', 'Tarih'].map(h => <th key={h} style={headerStyle}>{h}</th>)}
+                                            {['Model', 'Kaynak', 'Hedef', 'Sağlam Gelen', 'Bozulan Fire', 'Tarih'].map(h => <th key={h} style={headerStyle}>{h}</th>)}
                                         </tr></thead>
                                         <tbody>
                                             {yarimamul.map((y, i) => (
@@ -480,6 +559,7 @@ function ImalatPage({ models, personnel, addToast }) {
                                                         </span>
                                                     </td>
                                                     <td style={{ ...cellStyle, fontWeight: '700', color: '#27ae60', fontSize: '15px' }}>{y.adet}</td>
+                                                    <td style={{ ...cellStyle, fontWeight: '700', color: '#e74c3c', fontSize: '15px' }}>{y.bozulan_adet || 0}</td>
                                                     <td style={{ ...cellStyle, color: 'var(--text-muted)' }}>{y.tarih || (y.created_at || '').split('T')[0]}</td>
                                                 </tr>
                                             ))}
@@ -522,6 +602,27 @@ function ImalatPage({ models, personnel, addToast }) {
                                         <input type="text" className="form-input" placeholder="Kesim hatası, desen uyumsuz..." value={form.fire_nedeni || ''} onChange={e => setForm({ ...form, fire_nedeni: e.target.value })} />
                                     </div>
                                     <div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>HANGİ SAFHADA FİRE VERDİ? (Maliyet Çarpanı)</div>
+                                        <select className="form-select" value={form.fire_safhasi || 'kesim'} onChange={e => setForm({ ...form, fire_safhasi: e.target.value })}>
+                                            <option value="kesim">✂️ Kesim Aşamasında (Düşük Zarar)</option>
+                                            <option value="dikim">🧵 Dikimde (İşçilik zararı var)</option>
+                                            <option value="fason_sonrasi">🔁 Nakış / Fason Dönüşü (Ağır Maliyet)</option>
+                                            <option value="utu_paket">📦 Ütü veya Pakette Çöpe Gitti (En Ağır Zarar)</option>
+                                        </select>
+                                    </div>
+                                    <div style={{ background: 'rgba(231,76,60,0.08)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(231,76,60,0.3)' }}>
+                                        <div style={{ fontSize: '11px', color: '#e74c3c', marginBottom: '4px', fontWeight: 'bold' }}>BİLİNEN/HESAPLANAN ZARAR (₺) *</div>
+                                        <input type="number" step="0.01" className="form-input" placeholder="Manuel bedel giriniz" value={form.estimated_loss_amount || ''} onChange={e => setForm({ ...form, estimated_loss_amount: e.target.value })} />
+                                        <div style={{ fontSize: '10px', color: '#c0392b', marginTop: '4px' }}>Fireyi yapan operatöre bu TL bedeli sistemden zimmetlenecektir (Prim Eksi Puan).</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>ZİMMETLENECEK PERSONEL *</div>
+                                        <select className="form-select" value={form.operator_id || ''} onChange={e => setForm({ ...form, operator_id: e.target.value })}>
+                                            <option value="">Personel Seçin</option>
+                                            {(personnel || []).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
                                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>TARİH</div>
                                         <input type="date" className="form-input" value={form.tarih || new Date().toISOString().split('T')[0]} onChange={e => setForm({ ...form, tarih: e.target.value })} />
                                     </div>
@@ -534,6 +635,9 @@ function ImalatPage({ models, personnel, addToast }) {
                                         kullanilan_metre: parseFloat(form.kullanilan_metre || 0),
                                         fire_yuzde: form.kullanilan_metre > 0 ? parseFloat(((form.fire_metre / form.kullanilan_metre) * 100).toFixed(2)) : 0,
                                         fire_nedeni: form.fire_nedeni || '',
+                                        fire_safhasi: form.fire_safhasi || 'kesim',
+                                        estimated_loss_amount: form.estimated_loss_amount ? parseFloat(form.estimated_loss_amount) : 0,
+                                        operator_id: form.operator_id ? parseInt(form.operator_id) : null,
                                         tarih: form.tarih || new Date().toISOString().split('T')[0],
                                     })}>💾 Kaydet</button>
                                     <button style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-muted)', cursor: 'pointer', fontFamily: 'inherit' }} onClick={() => { setShowForm(false); setForm({}); }}>İptal</button>
@@ -571,7 +675,7 @@ function ImalatPage({ models, personnel, addToast }) {
                                 <div style={{ overflowX: 'auto' }}>
                                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                                         <thead><tr style={{ background: 'var(--bg-input)' }}>
-                                            {['Model', 'Kumaş Tipi', 'Fire (m)', 'Kullanılan (m)', 'Fire %', 'Neden', 'Tarih'].map(h => <th key={h} style={headerStyle}>{h}</th>)}
+                                            {['Model', 'Zarar Safhası', 'Kayıp Bedel (₺)', 'Fire (m)', 'Kullanılan (m)', 'Fire %', 'Neden', 'Tarih'].map(h => <th key={h} style={headerStyle}>{h}</th>)}
                                         </tr></thead>
                                         <tbody>
                                             {fireler.map((f, i) => {
@@ -583,7 +687,8 @@ function ImalatPage({ models, personnel, addToast }) {
                                                         onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
                                                         onMouseLeave={e => e.currentTarget.style.background = ''}>
                                                         <td style={{ ...cellStyle, fontWeight: '600' }}>{f.models?.name || ('Model #' + f.model_id) || '—'}</td>
-                                                        <td style={cellStyle}>{f.kumas_tipi || '—'}</td>
+                                                        <td style={{ ...cellStyle, color: f.wasted_at_phase === 'utu_paket' ? '#e74c3c' : 'var(--text-muted)', fontWeight: 'bold' }}>{f.wasted_at_phase ? f.wasted_at_phase.replace('_', ' ').toUpperCase() : '—'}</td>
+                                                        <td style={{ ...cellStyle, color: '#e74c3c', fontWeight: '800' }}>{f.estimated_loss_amount ? '₺' + Number(f.estimated_loss_amount).toFixed(0) : '—'}</td>
                                                         <td style={{ ...cellStyle, color: '#e74c3c', fontWeight: '700' }}>{Number(f.fire_metre || 0).toFixed(2)}</td>
                                                         <td style={cellStyle}>{Number(f.kullanilan_metre || 0).toFixed(2)}</td>
                                                         <td style={cellStyle}>

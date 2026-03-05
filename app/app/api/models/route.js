@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { checkAuth } from '@/lib/auth';
 
 const VALID_COLUMNS = new Set([
     'name', 'code', 'order_no', 'modelist', 'customer', 'customer_id', 'description',
     'fabric_type', 'sizes', 'size_range', 'total_order', 'total_order_text', 'completed_count',
     'fason_price', 'fason_price_text', 'model_difficulty',
-    'front_image', 'back_image', 'measurement_table',
+    'front_image', 'back_image', 'measurement_table', 'model_type',
     'delivery_date', 'work_start_date', 'post_sewing', 'status',
     'garni', 'color_count', 'color_details', 'size_count', 'size_distribution', 'asorti',
     'total_operations', 'piece_count', 'piece_count_details',
@@ -15,10 +16,11 @@ const VALID_COLUMNS = new Set([
     'has_lining', 'lining_pieces', 'has_interlining', 'interlining_parts', 'interlining_count',
     'difficult_points', 'critical_points', 'customer_requests',
     'cutting_info', 'accessory_info', 'label_info',
+    'collection_name', 'target_audience', 'designer_name', 'tech_pack_data'
 ]);
 
 const DATE_FIELDS = ['delivery_date', 'work_start_date'];
-const JSON_FIELDS = ['measurement_table'];
+const JSON_FIELDS = ['measurement_table', 'tech_pack_data'];
 
 function sanitizeData(data) {
     const out = {};
@@ -60,6 +62,9 @@ export async function GET() {
 
 // POST — Yeni model ekle
 export async function POST(request) {
+    const user = await checkAuth(request, 'POST');
+    if (!user) return NextResponse.json({ error: 'Yetkiniz yok' }, { status: 403 });
+    if (user._forbidden) return NextResponse.json({ error: 'Post yetkisi gerekli' }, { status: 403 });
     try {
         const body = await request.json();
         if (!body.name || !body.code) {

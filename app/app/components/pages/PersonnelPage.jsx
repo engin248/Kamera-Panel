@@ -1,9 +1,10 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import BirimAsistanPanel from '../BirimAsistanPanel';
 
 // ========== PERSONNEL PAGE ==========
 
-function PersonnelPage({ personnel: personnelProp, loadPersonnel, addToast }) {
+function PersonnelPage({ personnel: personnelProp, loadPersonnel, addToast, userRole }) {
   // Güvenli başlangıç — API veri yüklenene kadar undefined crash önlenir
   const personnel = personnelProp || [];
 
@@ -23,7 +24,7 @@ function PersonnelPage({ personnel: personnelProp, loadPersonnel, addToast }) {
   const [persSearch, setPersSearch] = useState('');
   const [persRoleFilter, setPersRoleFilter] = useState('');
   const [persStatusFilter, setPersStatusFilter] = useState('');
-
+  const [persPageTab, setPersPageTab] = useState('liste');
 
 
   const roleLabels = {
@@ -187,137 +188,163 @@ function PersonnelPage({ personnel: personnelProp, loadPersonnel, addToast }) {
 
 
   return (
-
     <>
 
-      <div className="topbar"><h1 className="topbar-title">📋 Personel</h1><div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-        <input className="form-input" placeholder="🔍 Ada göre ara..." value={persSearch} onChange={e => setPersSearch(e.target.value)} style={{ minWidth: '160px', fontSize: '13px' }} />
-        <select className="form-select" value={persRoleFilter} onChange={e => setPersRoleFilter(e.target.value)} style={{ minWidth: '120px', fontSize: '13px' }}>
-          <option value="">Tüm Roller</option>
-          {[...new Set((personnel || []).flatMap(p => (p.role || '').split(',').map(r => r.trim()).filter(Boolean)))].sort().map(r => <option key={r} value={r}>{roleLabels[r] || r}</option>)}
-        </select>
-        <select className="form-select" value={persStatusFilter} onChange={e => setPersStatusFilter(e.target.value)} style={{ minWidth: '100px', fontSize: '13px' }}>
-          <option value="">Tüm Durum</option>
-          <option value="active">✅ Aktif</option>
-          <option value="inactive">🔴 Pasif</option>
-        </select>
-        <button className="btn btn-primary" onClick={() => { setEditPerson(null); setShowModal(true); }}>➕ Yeni Personel</button>
-      </div></div>
+      <div className="topbar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <h1 className="topbar-title" style={{ margin: 0 }}>📋 Personel</h1>
+          <div style={{ display: 'flex', background: 'var(--bg-card)', borderRadius: '8px', padding: '4px', border: '1px solid var(--border-color)' }}>
+            <button onClick={() => setPersPageTab('liste')} style={{ padding: '6px 16px', background: persPageTab === 'liste' ? 'var(--accent)' : 'transparent', color: persPageTab === 'liste' ? '#fff' : 'var(--text-muted)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', transition: 'all 0.2s' }}>
+              👥 Yönetim
+            </button>
+            <button onClick={() => setPersPageTab('asistan')} style={{ padding: '6px 16px', background: persPageTab === 'asistan' ? 'rgba(155,89,182,0.15)' : 'transparent', color: persPageTab === 'asistan' ? '#9b59b6' : 'var(--text-muted)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              💬 İK Asistanı
+            </button>
+          </div>
+        </div>
+        <div className="topbar-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input className="form-input" placeholder="🔍 Ada göre ara..." value={persSearch} onChange={e => setPersSearch(e.target.value)} style={{ minWidth: '160px', fontSize: '13px' }} />
+          <select className="form-select" value={persRoleFilter} onChange={e => setPersRoleFilter(e.target.value)} style={{ minWidth: '120px', fontSize: '13px' }}>
+            <option value="">Tüm Roller</option>
+            {[...new Set((personnel || []).flatMap(p => (p.role || '').split(',').map(r => r.trim()).filter(Boolean)))].sort().map(r => <option key={r} value={r}>{roleLabels[r] || r}</option>)}
+          </select>
+          <select className="form-select" value={persStatusFilter} onChange={e => setPersStatusFilter(e.target.value)} style={{ minWidth: '100px', fontSize: '13px' }}>
+            <option value="">Tüm Durum</option>
+            <option value="active">✅ Aktif</option>
+            <option value="inactive">🔴 Pasif</option>
+          </select>
+          {userRole === 'koordinator' && (
+            <button className="btn btn-primary" onClick={() => { setEditPerson(null); setShowModal(true); }}>➕ Yeni Personel</button>
+          )}
+        </div></div>
 
-      <div className="page-content">
+      {persPageTab === 'liste' && (
+        <div className="page-content">
 
-        {/* ⏱️ AMELE 1 — GÜNLÜK DEVAM (PersonelDevamBar) */}
-        <PersonelDevamBar personnel={personnel} addToast={addToast} />
+          {/* ⏱️ AMELE 1 — GÜNLÜK DEVAM (PersonelDevamBar) */}
+          <PersonelDevamBar personnel={personnel} addToast={addToast} />
 
-        {(() => {
-          const filtered = (personnel || []).filter(p => {
-            if (persSearch && !p.name?.toLowerCase().includes(persSearch.toLowerCase())) return false;
-            if (persRoleFilter && !(p.role || '').split(',').map(r => r.trim()).includes(persRoleFilter)) return false;
-            if (persStatusFilter && p.status !== persStatusFilter) return false;
-            return true;
-          });
-          return (filtered || []).length === 0 ? (
+          {(() => {
+            const filtered = (personnel || []).filter(p => {
+              if (persSearch && !p.name?.toLowerCase().includes(persSearch.toLowerCase())) return false;
+              if (persRoleFilter && !(p.role || '').split(',').map(r => r.trim()).includes(persRoleFilter)) return false;
+              if (persStatusFilter && p.status !== persStatusFilter) return false;
+              return true;
+            });
+            return (filtered || []).length === 0 ? (
 
-            <div className="card"><div className="empty-state"><div className="empty-state-icon">📋</div><div className="empty-state-title">{(personnel || []).length === 0 ? 'Henüz Personel Yok' : 'Sonuç Bulunamadı'}</div><div className="empty-state-text">{(personnel || []).length === 0 ? 'Personel ekleyerek başlayın.' : 'Arama veya filtre kriterlerini değiştirin.'}</div>{(personnel || []).length === 0 && <button className="btn btn-primary" onClick={() => setShowModal(true)}>➕ İlk Personeli Ekle</button>}</div></div>
+              <div className="card"><div className="empty-state"><div className="empty-state-icon">📋</div><div className="empty-state-title">{(personnel || []).length === 0 ? 'Henüz Personel Yok' : 'Sonuç Bulunamadı'}</div><div className="empty-state-text">{(personnel || []).length === 0 ? 'Personel ekleyerek başlayın.' : 'Arama veya filtre kriterlerini değiştirin.'}</div>{(personnel || []).length === 0 && <button className="btn btn-primary" onClick={() => setShowModal(true)}>➕ İlk Personeli Ekle</button>}</div></div>
 
-          ) : (
+            ) : (
 
-            <div className="table-wrapper"><table className="table"><thead><tr><th>#</th><th>Foto</th><th>Ad Soyad</th><th>Pozisyon</th><th>Ustalık</th><th>Hız</th><th>Kalite</th><th>Sınıf</th><th>Devamsızlık</th><th>Günlük Ücret</th><th>Mesai</th><th title="Son 30 gün ortalaması">Ort.Üretim</th><th title="Son 30 gün hata oranı">Hata%</th><th title="Son 30 gün OEE/Verimlilik">OEE%</th><th>Haftalık Not</th><th>Durum</th><th style={{ width: '110px' }}>İşlem</th></tr></thead><tbody>
+              <div className="table-wrapper"><table className="table"><thead><tr><th>#</th><th>Foto</th><th>Ad Soyad</th><th>Pozisyon</th><th>Ustalık</th><th>Hız</th><th>Kalite</th><th>Sınıf</th><th>Devamsızlık</th><th>Günlük Ücret</th><th>Mesai</th><th title="Son 30 gün ortalaması">Ort.Üretim</th><th title="Son 30 gün hata oranı">Hata%</th><th title="Son 30 gün OEE/Verimlilik">OEE%</th><th>Haftalık Not</th><th>Durum</th><th style={{ width: '110px' }}>İşlem</th></tr></thead><tbody>
 
-              {filtered.map((p, idx) => {
-                const trRow = (
-                  <tr key={`tr-${p.id}`} style={{ borderBottom: sgkAcikId === p.id ? 'none' : '1px solid var(--border-color)' }}>
+                {filtered.map((p, idx) => {
+                  const trRow = (
+                    <tr key={`tr-${p.id}`} style={{ borderBottom: sgkAcikId === p.id ? 'none' : '1px solid var(--border-color)' }}>
 
-                    <td style={{ fontWeight: '600', color: 'var(--text-muted)', textAlign: 'center', minWidth: '30px' }}>{idx + 1}</td>
+                      <td style={{ fontWeight: '600', color: 'var(--text-muted)', textAlign: 'center', minWidth: '30px' }}>{idx + 1}</td>
 
-                    {/* FOTOĞRAF */}
-                    <td style={{ textAlign: 'center', padding: '4px' }}>
-                      {p.photo_url ? (
-                        <img src={p.photo_url} alt={p.name} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent)' }} />
-                      ) : (
-                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent), #27ae60)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '14px', margin: '0 auto' }}>
-                          {(p.name || '?')[0].toUpperCase()}
+                      {/* FOTOĞRAF */}
+                      <td style={{ textAlign: 'center', padding: '4px' }}>
+                        {p.photo_url ? (
+                          <img src={p.photo_url} alt={p.name} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--accent)' }} />
+                        ) : (
+                          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent), #27ae60)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: '800', fontSize: '14px', margin: '0 auto' }}>
+                            {(p.name || '?')[0].toUpperCase()}
+                          </div>
+                        )}
+                      </td>
+
+                      <td style={{ fontWeight: '700', fontSize: '14px' }}>
+                        <div>{p.name}</div>
+                        {p.phone && <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>📞 {p.phone}</div>}
+                      </td>
+
+                      <td><span className="badge badge-info" style={{ fontSize: '11px' }}>{formatRoles(p.role)}</span></td>
+
+                      <td style={{ fontSize: '13px' }}>{masteryLabels[p.technical_mastery] || masteryLabels.operator}</td>
+
+                      <td style={{ textAlign: 'center', fontSize: '16px' }}>{speedLabels[p.speed_level] || speedLabels.normal}</td>
+
+                      <td style={{ textAlign: 'center', fontSize: '16px' }}>{qualityLabels[p.quality_level] || qualityLabels.standart}</td>
+
+                      <td style={{ textAlign: 'center', fontWeight: '700', fontSize: '15px' }}>{p.operator_class === 'A' ? '🏆 A' : p.operator_class === 'B' ? '🔵 B' : p.operator_class === 'C' ? '🟡 C' : p.operator_class === 'D' ? '⚪ D' : '🔵 B'}</td>
+                      <td style={{ textAlign: 'center' }}>{p.attendance === 'yok' ? '❌' : p.attendance === 'ayda_5_ustu' ? '🔴 5+' : p.attendance === 'ayda_3_4' ? '🟠 3-4' : p.attendance === 'ayda_2' ? '🟡 2' : '✅'}</td>
+                      <td style={{ fontWeight: '700', color: 'var(--accent)' }}>{(p.daily_wage || 0).toFixed(0)} ₺</td>
+
+                      <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{p.work_start || '08:00'} – {p.work_end || '18:00'}</td>
+
+                      <td style={{ textAlign: 'center', fontWeight: '700', color: (p.daily_avg_output || 0) > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>{(p.daily_avg_output || 0) > 0 ? p.daily_avg_output : '—'}</td>
+                      <td style={{ textAlign: 'center' }}>{(p.error_rate || 0) > 0 ? <span className={`badge ${p.error_rate <= 2 ? 'badge-success' : p.error_rate <= 5 ? 'badge-warning' : 'badge-danger'}`}>%{p.error_rate}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                      <td style={{ textAlign: 'center' }}>{(p.efficiency_score || 0) > 0 ? <span className={`badge ${p.efficiency_score >= 70 ? 'badge-success' : p.efficiency_score >= 50 ? 'badge-warning' : 'badge-danger'}`}>%{p.efficiency_score}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+
+                      {/* HAFTALIK NOT INLINE */}
+                      <td style={{ maxWidth: '160px' }}>
+                        <textarea
+                          defaultValue={p.weekly_note || ''}
+                          placeholder="Not ekle..."
+                          rows={2}
+                          onBlur={async (e) => {
+                            const yeniNot = e.target.value;
+                            if (yeniNot === (p.weekly_note || '')) return;
+                            try {
+                              await fetch(`/api/personnel/${p.id}`, {
+                                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ weekly_note: yeniNot, changed_by: 'admin' })
+                              });
+                              await loadPersonnel();
+                              addToast('success', `${p.name} — haftalık not güncellendi`);
+                            } catch { addToast('error', 'Not güncellenemedi'); }
+                          }}
+                          style={{ width: '100%', fontSize: '11px', padding: '4px 6px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', resize: 'none', fontFamily: 'inherit' }}
+                        />
+                      </td>
+
+                      <td><span onClick={() => userRole === 'koordinator' && handleToggleStatus(p.id, p.status)} style={{ cursor: userRole === 'koordinator' ? 'pointer' : 'default' }} className={`badge ${p.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{p.status === 'active' ? '✅ Aktif' : '🔴 Pasif'}</span></td>
+
+                      <td>
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                          {userRole === 'koordinator' && <button onClick={() => { setEditPerson(p); setShowModal(true); }} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>}
+                          <button onClick={() => openPersonAuditHistory(p.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
+                          <button
+                            onClick={() => setSgkAcikId(sgkAcikId === p.id ? null : p.id)}
+                            title="SGK Ödemeleri"
+                            style={{ background: sgkAcikId === p.id ? 'rgba(39,174,96,0.2)' : 'rgba(39,174,96,0.08)', color: '#27ae60', border: '1px solid rgba(39,174,96,0.3)', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px', fontWeight: '700' }}
+                          >💰 SGK</button>
+                          {userRole === 'koordinator' && <button onClick={() => setDeleteConfirmId(p.id)} title="Sil" style={{ background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>🗑️</button>}
                         </div>
-                      )}
-                    </td>
+                      </td>
 
-                    <td style={{ fontWeight: '700', fontSize: '14px' }}>
-                      <div>{p.name}</div>
-                      {p.phone && <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>📞 {p.phone}</div>}
-                    </td>
-
-                    <td><span className="badge badge-info" style={{ fontSize: '11px' }}>{formatRoles(p.role)}</span></td>
-
-                    <td style={{ fontSize: '13px' }}>{masteryLabels[p.technical_mastery] || masteryLabels.operator}</td>
-
-                    <td style={{ textAlign: 'center', fontSize: '16px' }}>{speedLabels[p.speed_level] || speedLabels.normal}</td>
-
-                    <td style={{ textAlign: 'center', fontSize: '16px' }}>{qualityLabels[p.quality_level] || qualityLabels.standart}</td>
-
-                    <td style={{ textAlign: 'center', fontWeight: '700', fontSize: '15px' }}>{p.operator_class === 'A' ? '🏆 A' : p.operator_class === 'B' ? '🔵 B' : p.operator_class === 'C' ? '🟡 C' : p.operator_class === 'D' ? '⚪ D' : '🔵 B'}</td>
-                    <td style={{ textAlign: 'center' }}>{p.attendance === 'yok' ? '❌' : p.attendance === 'ayda_5_ustu' ? '🔴 5+' : p.attendance === 'ayda_3_4' ? '🟠 3-4' : p.attendance === 'ayda_2' ? '🟡 2' : '✅'}</td>
-                    <td style={{ fontWeight: '700', color: 'var(--accent)' }}>{(p.daily_wage || 0).toFixed(0)} ₺</td>
-
-                    <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{p.work_start || '08:00'} – {p.work_end || '18:00'}</td>
-
-                    <td style={{ textAlign: 'center', fontWeight: '700', color: (p.daily_avg_output || 0) > 0 ? 'var(--accent)' : 'var(--text-muted)' }}>{(p.daily_avg_output || 0) > 0 ? p.daily_avg_output : '—'}</td>
-                    <td style={{ textAlign: 'center' }}>{(p.error_rate || 0) > 0 ? <span className={`badge ${p.error_rate <= 2 ? 'badge-success' : p.error_rate <= 5 ? 'badge-warning' : 'badge-danger'}`}>%{p.error_rate}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-                    <td style={{ textAlign: 'center' }}>{(p.efficiency_score || 0) > 0 ? <span className={`badge ${p.efficiency_score >= 70 ? 'badge-success' : p.efficiency_score >= 50 ? 'badge-warning' : 'badge-danger'}`}>%{p.efficiency_score}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-
-                    {/* HAFTALIK NOT INLINE */}
-                    <td style={{ maxWidth: '160px' }}>
-                      <textarea
-                        defaultValue={p.weekly_note || ''}
-                        placeholder="Not ekle..."
-                        rows={2}
-                        onBlur={async (e) => {
-                          const yeniNot = e.target.value;
-                          if (yeniNot === (p.weekly_note || '')) return;
-                          try {
-                            await fetch(`/api/personnel/${p.id}`, {
-                              method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ weekly_note: yeniNot, changed_by: 'admin' })
-                            });
-                            await loadPersonnel();
-                            addToast('success', `${p.name} — haftalık not güncellendi`);
-                          } catch { addToast('error', 'Not güncellenemedi'); }
-                        }}
-                        style={{ width: '100%', fontSize: '11px', padding: '4px 6px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', color: 'var(--text-primary)', resize: 'none', fontFamily: 'inherit' }}
-                      />
-                    </td>
-
-                    <td><span onClick={() => handleToggleStatus(p.id, p.status)} style={{ cursor: 'pointer' }} className={`badge ${p.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{p.status === 'active' ? '✅ Aktif' : '🔴 Pasif'}</span></td>
-
-                    <td>
-                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                        <button onClick={() => { setEditPerson(p); setShowModal(true); }} title="Düzenle" style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>✏️</button>
-                        <button onClick={() => openPersonAuditHistory(p.id)} title="Değişiklik Geçmişi" style={{ background: 'rgba(155,89,182,0.15)', color: '#9b59b6', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>📜</button>
-                        <button
-                          onClick={() => setSgkAcikId(sgkAcikId === p.id ? null : p.id)}
-                          title="SGK Ödemeleri"
-                          style={{ background: sgkAcikId === p.id ? 'rgba(39,174,96,0.2)' : 'rgba(39,174,96,0.08)', color: '#27ae60', border: '1px solid rgba(39,174,96,0.3)', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px', fontWeight: '700' }}
-                        >💰 SGK</button>
-                        <button onClick={() => setDeleteConfirmId(p.id)} title="Sil" style={{ background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: 'none', borderRadius: '5px', padding: '3px 8px', cursor: 'pointer', fontSize: '13px' }}>🗑️</button>
-                      </div>
-                    </td>
-
-                  </tr>
-                );
-                return (
-                  <React.Fragment key={p.id}>
-                    {trRow}
-                    {sgkAcikId === p.id && <PersonelSGKSekme personel={p} addToast={addToast} />}
-                  </React.Fragment>
-                );
-              })}
+                    </tr>
+                  );
+                  return (
+                    <React.Fragment key={p.id}>
+                      {trRow}
+                      {sgkAcikId === p.id && <PersonelSGKSekme personel={p} addToast={addToast} />}
+                    </React.Fragment>
+                  );
+                })}
 
 
-            </tbody></table></div >
+              </tbody></table></div >
 
-          );
-        })()}
+            );
+          })()}
 
-      </div >
+        </div >
+      )}
+
+      {persPageTab === 'asistan' && (
+        <div className="page-content" style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+          <BirimAsistanPanel
+            birimAdi="İnsan Kaynakları (İK)"
+            aciklama="Personel verimliliği, mola/devam analizleri ve maaş/prim yönetimi uzmanıyım."
+            renkHex="#9b59b6"
+            apiEndpoint="/api/agent/ik-asistan"
+          />
+        </div>
+      )}
 
       {showModal && <NewPersonnelModal onClose={() => { setShowModal(false); setEditPerson(null); }} onSave={handleSave} editData={editPerson} onUpdate={async (data) => {
         try {

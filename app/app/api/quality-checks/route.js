@@ -65,6 +65,23 @@ export async function POST(request) {
             .single();
 
         if (error) throw error;
+
+        // --- İŞLETME ZEKASI: TAMİR/REWORK MALİYET CEZASI ---
+        // Eğer ürün hatalı (red) ise ve bir personnel_id varsa, 1.5 TL (veya hesaplanan) tamir cezasını Fire/Zayiat olarak kişinin hanesine yaz.
+        if (result === 'red' && personnel_id) {
+            const penaltyAmount = 1.50; // Varsayılan Sökme/Dikme Rework Maliyeti
+            await supabaseAdmin.from('fire_kayitlari').insert({
+                model_id: model_id || null,
+                kumas_tipi: 'Tamir/Rework Kaybı',
+                fire_metre: 0,
+                kullanilan_metre: 0,
+                fire_safhasi: 'kalite_kontrol',
+                operator_id: personnel_id,
+                estimated_loss_amount: penaltyAmount,
+                fire_nedeni: `Kalite Reddi & Tamir (Hata: ${defect_type || 'Bilinmiyor'})`
+            });
+        }
+
         return NextResponse.json(data, { status: 201 });
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });

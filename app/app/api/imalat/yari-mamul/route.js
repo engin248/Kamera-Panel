@@ -29,7 +29,7 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { model_id, siparis_id, faz_kaynak, faz_hedef, adet, kaydeden_id, notlar } = body;
+        const { model_id, siparis_id, faz_kaynak, faz_hedef, adet, bozulan_adet, kaydeden_id, notlar } = body;
 
         if (!model_id || !faz_kaynak || !faz_hedef || !adet) {
             return NextResponse.json(
@@ -46,6 +46,7 @@ export async function POST(request) {
                 faz_kaynak,
                 faz_hedef,
                 adet: parseInt(adet),
+                bozulan_adet: bozulan_adet ? parseInt(bozulan_adet) : 0,
                 kaydeden_id: kaydeden_id ? parseInt(kaydeden_id) : null,
                 notlar: notlar || '',
             })

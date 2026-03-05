@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import BirimAsistanPanel from '../BirimAsistanPanel';
 
 // ========== COSTS PAGE ==========
 
@@ -72,7 +73,16 @@ function CostsPage({ models, personnel, addToast }) {
   }).sort((a, b) => b.skor - a.skor);
 
   const toplamSkor = personelSkor.reduce((t, p) => t + p.skor, 0);
-  const primHavuzu = netKar > 0 ? netKar * (primHavuzOrani / 100) : 0;
+
+  // --- YENİ SİL BAŞTAN VAKIF VE ŞİRKET FONU (%51 / %49) MATEMATİĞİ ---
+  const vakifPayi = netKar > 0 ? netKar * 0.51 : 0;
+  const sirketFonu = netKar > 0 ? netKar * 0.49 : 0;
+
+  // %49'un içindeki dağılımlar: Prim, Ekipman/ArGe, Tazminat ve Zarar Kapatma
+  const primHavuzu = sirketFonu > 0 ? sirketFonu * (primHavuzOrani / 100) : 0;
+  const geriyeKalanSirketFonu = sirketFonu - primHavuzu;
+  const ekipmanArge = geriyeKalanSirketFonu * 0.40; // %40 Ekipman/ArGe
+  const gecmisZararTazminat = geriyeKalanSirketFonu * 0.60; // %60 Geçmiş Zarar Kapatma / Tazminat Akçesi
 
   const expCats = [
     { value: 'kira', label: '🏭 Kira' }, { value: 'elektrik', label: '⚡ Elektrik' },
@@ -104,6 +114,7 @@ function CostsPage({ models, personnel, addToast }) {
     { id: 'karzarar', label: '📊 KAR/ZARAR' },
     { id: 'prim', label: '🏆 PRİM' },
     { id: 'analiz', label: '🔍 ANALİZ' },
+    { id: 'asistan', label: '💬 FİNANS ASİSTANI' }
   ];
 
   return (
@@ -290,6 +301,17 @@ function CostsPage({ models, personnel, addToast }) {
                   <span style={{ fontWeight: '700', color: r.color }}>₺{Math.abs(r.value).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</span>
                 </div>
               ))}
+              {netKar > 0 && (
+                <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(52,152,219,0.08)', borderRadius: '8px', border: '1px solid rgba(52,152,219,0.2)' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '800', color: '#3498db', marginBottom: '8px' }}>🔐 DİJİTAL FON DAĞILIMI (SİL BAŞTAN)</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+                    <span>%51 Vakıf / Hayır İşleri Hesabı</span><b style={{ color: '#2ecc71' }}>₺{vakifPayi.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</b>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                    <span>%49 Şirket Yedek Fonu (ArGe/Prim/Zarar)</span><b style={{ color: '#D4A847' }}>₺{sirketFonu.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</b>
+                  </div>
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {[
@@ -320,18 +342,26 @@ function CostsPage({ models, personnel, addToast }) {
               : <div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                   <div style={{ padding: '16px', background: 'rgba(46,204,113,0.08)', borderRadius: '12px', border: '1px solid rgba(46,204,113,0.2)' }}>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>🏆 Prim Havuzu</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>🏆 Prim Havuzu (Şirket Fonundan)</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '13px' }}>Net Kârın %</span>
+                      <span style={{ fontSize: '13px' }}>%49 Fonun %</span>
                       <input type="number" min={1} max={50} value={primHavuzOrani} onChange={e => setPrimHavuzOrani(+e.target.value)}
                         style={{ width: '60px', padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-input)', color: 'var(--text-primary)', textAlign: 'center' }} />
-                      <span>→ <b style={{ color: '#27ae60' }}>₺{primHavuzu.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</b></span>
+                      <span style={{ fontSize: '13px' }}>'i 👉 <b style={{ color: '#27ae60' }}>₺{primHavuzu.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</b></span>
                     </div>
                   </div>
                   <div style={{ padding: '16px', background: 'rgba(212,168,71,0.08)', borderRadius: '12px', border: '1px solid rgba(212,168,71,0.2)' }}>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>📊 Dağıtım</div>
-                    <div style={{ fontSize: '13px' }}>Havuz: <b style={{ color: '#D4A847' }}>₺{primHavuzu.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</b></div>
-                    <div style={{ fontSize: '13px' }}>Kişi: <b>{aktifPersonel.length}</b> | Ort: <b>₺{aktifPersonel.length > 0 ? (primHavuzu / aktifPersonel.length).toLocaleString('tr-TR', { maximumFractionDigits: 0 }) : 0}</b></div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px' }}>⚒️ %49 Fon Kalan Dağılımı</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
+                      <div style={{ background: 'var(--bg-card)', padding: '6px', borderRadius: '4px' }}>
+                        <span style={{ color: 'var(--text-muted)', display: 'block' }}>Ekipman / ArGe</span>
+                        <b style={{ color: '#D4A847' }}>₺{ekipmanArge.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</b>
+                      </div>
+                      <div style={{ background: 'var(--bg-card)', padding: '6px', borderRadius: '4px' }}>
+                        <span style={{ color: 'var(--text-muted)', display: 'block' }}>Zarar / Tazminat</span>
+                        <b style={{ color: '#e74c3c' }}>₺{gecmisZararTazminat.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</b>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div style={{ padding: '16px', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
@@ -409,6 +439,18 @@ function CostsPage({ models, personnel, addToast }) {
             </div>
           </div>
         )}
+        {/* S6: ASİSTAN */}
+        {costTab === 'asistan' && (
+          <div style={{ padding: '20px', display: 'flex', justifyContent: 'center' }}>
+            <BirimAsistanPanel
+              birimAdi="Finans & Maliyet Müşaviri"
+              aciklama="Kar/zarar takibi, başabaş noktası analizleri ve maliyet projeksiyonlarında uzmanım."
+              renkHex="#e67e22"
+              apiEndpoint="/api/agent/finans-asistan"
+            />
+          </div>
+        )}
+
       </div>
     </>
   );

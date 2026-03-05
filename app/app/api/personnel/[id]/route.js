@@ -37,7 +37,7 @@ const UPDATEABLE_FIELDS = [
     'daily_wage',
 ];
 
-const JSON_FIELDS = ['operation_skill_scores', 'machine_adjustments', 'fabric_experience'];
+const JSON_FIELDS = ['operation_skill_scores', 'machine_adjustments', 'fabric_experience', 'capable_operations'];
 
 // ========================================================
 // PUT — Personel güncelle
@@ -98,6 +98,12 @@ export async function PUT(request, { params }) {
                     }
                     if (!val || typeof val !== 'object') val = {};
                 }
+
+                // PostgreSQL DATE kolonları boş text (empty string) kabul etmez, null yapılmalı
+                if (['start_date', 'sgk_entry_date', 'birth_date', 'isg_training_date', 'last_health_check'].includes(field)) {
+                    if (val === '') val = null;
+                }
+
                 updateData[field] = val;
             }
         }
@@ -165,25 +171,22 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ error: 'Personel bulunamadı' }, { status: 404 });
         }
 
-        // Soft-delete
+        // Hard-delete (Kalıcı Silme) İstendi (Soft-delete iptal)
         const { error } = await supabaseAdmin
             .from('personnel')
-            .update({
-                deleted_at: new Date().toISOString(),
-                deleted_by: 'Koordinatör',
-            })
+            .delete()
             .eq('id', id);
 
         if (error) throw error;
 
-        // Audit trail
+        // Audit trail (Log bırak)
         supabaseAdmin.from('audit_trail').insert({
             table_name: 'personnel',
             record_id: parseInt(id),
-            field_name: 'SOFT-DELETE',
+            field_name: 'HARD-DELETE',
             old_value: `${person.name} (${person.role})`,
-            new_value: 'SİLİNDİ (geri alınabilir)',
-            changed_by: 'Koordinatör',
+            new_value: 'KALICI OLARAK SİLİNDİ',
+            changed_by: 'Koordinatör / Yönetici',
         }).then(() => { });
 
         return NextResponse.json({ success: true, message: 'Personel silindi (geri alınabilir)' });

@@ -1,14 +1,18 @@
 // scripts/supabase-create-imalat-tables.mjs
 // Supabase Management API ile İmalat tablolarını oluşturur
-// Çalıştır: $env:SUPABASE_ACCESS_TOKEN="token"; node scripts/supabase-create-imalat-tables.mjs
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Supabase betiği genelde 'app' dizininden çalıştırıldığı için .env.local 'app' içindedir.
+dotenv.config({ path: path.join(process.cwd(), '.env.local') });
 
 const PROJECT_ID = 'cauptlsnqieegdrgotob';
 const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
 
-if (!ACCESS_TOKEN) {
+if (!ACCESS_TOKEN || ACCESS_TOKEN === 'BURAYA_YAPISTIRIN') {
     console.log('❌ SUPABASE_ACCESS_TOKEN eksik!');
-    console.log('👉 https://supabase.com/dashboard/account/tokens → Generate new token');
-    console.log('👉 $env:SUPABASE_ACCESS_TOKEN="your_token"; node scripts/supabase-create-imalat-tables.mjs');
+    console.log('👉 Lütfen app klasörü içindeki .env.local dosyasına gidip tokenı yapıştırın.');
+    console.log('👉 Veya token almak için: https://supabase.com/dashboard/account/tokens');
     process.exit(1);
 }
 

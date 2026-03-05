@@ -1,75 +1,15 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-/**
- * POST /api/imalat/fire-kayit
- * Fire kaydı oluşturur ve cost_entries'e maliyet olarak yazar
- */
-export async function POST(request) {
-    try {
-        const body = await request.json();
-        const {
-            model_id, plan_id, fire_metre, kumas_birim_fiyat,
-            fire_nedeni, kaydeden_id
-        } = body;
-
-        if (!model_id || fire_metre === undefined) {
-            return NextResponse.json({ error: 'model_id ve fire_metre zorunlu' }, { status: 400 });
-        }
-
-        const fireMaliyet = (fire_metre || 0) * (kumas_birim_fiyat || 0);
-
-        // Eğer maliyet var → cost_entries'e fire kategorisinde kaydet
-        if (fireMaliyet > 0) {
-            await supabaseAdmin.from('cost_entries').insert({
-                model_id: parseInt(model_id),
-                category: 'fire',
-                description: `Kumaş fire — ${fire_nedeni || 'belirtilmedi'}`,
-                amount: kumas_birim_fiyat || 0,
-                unit: 'metre',
-                quantity: fire_metre,
-                total: Math.round(fireMaliyet * 100) / 100,
-            });
-        }
-
-        // Kesim kaydını da güncelle (eğer plan_id varsa)
-        if (plan_id) {
-            const { data: planData } = await supabaseAdmin
-                .from('kesim_kayitlari')
-                .select('fire_metre, fire_yuzde')
-                .eq('plan_id', parseInt(plan_id))
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
-
-            if (planData) {
-                // Bilgilendirme amaçlı log
-                console.log(`Fire güncellendi: Plan ${plan_id} — ${fire_metre}m fire`);
-            }
-        }
-
-        return NextResponse.json({
-            success: true,
-            fire_metre,
-            fire_maliyet: Math.round(fireMaliyet * 100) / 100,
-            uyari: fire_metre > 5 ? `⚠️ Yüksek fire: ${fire_metre}m — Maliyet: ${fireMaliyet.toFixed(2)}₺` : null,
-        }, { status: 201 });
-    } catch (e) {
-        return NextResponse.json({ error: e.message }, { status: 500 });
-    }
-}
-
-// GET — Model bazında toplam fire raporu
+// GET — Fire Kayıtları Listesi
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const model_id = searchParams.get('model_id');
 
         let query = supabaseAdmin
-            .from('cost_entries')
-            .select(`*, models(name, code)`)
-            .eq('category', 'fire')
-            .is('deleted_at', null)
+            .from('fire_kayitlari')
+            .select('*, models(name, code)')
             .order('created_at', { ascending: false });
 
         if (model_id) query = query.eq('model_id', parseInt(model_id));
@@ -77,12 +17,63 @@ export async function GET(request) {
         const { data, error } = await query;
         if (error) throw error;
 
-        const toplam_fire_maliyet = (data || []).reduce((s, r) => s + (r.total || 0), 0);
+        return NextResponse.json(data || []);
+    } catch (e) {
+        return NextResponse.json({ error: e.message }, { status: 500 });
+    }
+}
 
-        return NextResponse.json({
-            kayitlar: data || [],
-            toplam_fire_maliyet: Math.round(toplam_fire_maliyet * 100) / 100,
-        });
+// POST — Fire kaydı oluşturur, safha maliyeti hesaplar ve cost_entries'e yazar
+export async function POST(request) {
+    try {
+        const body = await request.json();
+        const {
+            model_id, kumas_tipi, fire_metre, kullanilan_metre,
+            fire_yuzde, fire_nedeni, fire_safhasi, estimated_loss_amount, operator_id, tarih
+        } = body;
+
+        if (!model_id || fire_metre === undefined || estimated_loss_amount === undefined || estimated_loss_amount <= 0) {
+            return NextResponse.json({ error: 'model_id, fire_metre ve ZARAR (₺) tutarı girilmesi zorunludur!' }, { status: 400 });
+        }
+
+        // ÖRNEK MALİYET ÇARPAN UYGULAMASI (Kaba Tahmin)
+        // Eğer clientten kesinTL değeri geldiyse onu kullan.
+        const finalLossAmount = parseFloat(estimated_loss_amount || 0);
+
+        // 1. Fire Tablosuna Kayıt
+        const { data: fireData, error: fireError } = await supabaseAdmin
+            .from('fire_kayitlari')
+            .insert({
+                model_id: parseInt(model_id),
+                kumas_tipi: kumas_tipi || '',
+                fire_metre: parseFloat(fire_metre),
+                kullanilan_metre: parseFloat(kullanilan_metre || 0),
+                fire_yuzde: parseFloat(fire_yuzde || 0),
+                fire_nedeni: fire_nedeni || '',
+                wasted_at_phase: fire_safhasi || 'kesim',
+                estimated_loss_amount: finalLossAmount,
+                operator_id: operator_id ? parseInt(operator_id) : null,
+                tarih: tarih || new Date().toISOString()
+            })
+            .select()
+            .single();
+
+        if (fireError) throw fireError;
+
+        // 2. Maliyet Tablosuna Zarar (Zayiat) Olarak Yansıtma
+        if (finalLossAmount > 0) {
+            await supabaseAdmin.from('cost_entries').insert({
+                model_id: parseInt(model_id),
+                category: 'fire',
+                description: `${fire_safhasi.toUpperCase()} Safhasında Çıkan Fire — Neden: ${fire_nedeni} (TL ZARAR)`,
+                amount: finalLossAmount,
+                unit: 'piece',
+                quantity: 1,
+                total: finalLossAmount,
+            });
+        }
+
+        return NextResponse.json(fireData, { status: 201 });
     } catch (e) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }

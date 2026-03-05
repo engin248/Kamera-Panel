@@ -1,0 +1,130 @@
+﻿
+> app@0.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+- Experiments (use with caution):
+  ┬À serverActions
+
+node.exe : ÔÜá The "mid
+dleware" file conventio
+n is deprecated. Please
+ use "proxy" instead. L
+earn more: https://next
+js.org/docs/messages/mi
+ddleware-to-proxy
+At line:1 char:1
++ & "C:\Program Files\n
+odejs/node.exe" "C:\Pro
+gram Files\nodejs/node_
+mo ...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecified
+: (ÔÜá     The "middle.
+..leware-    to-proxy:S
+tring) [], R    emoteEx
+ception
+    + FullyQualifiedErr
+orI    d : NativeComman
+dError
+ 
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 2.7s
+  Running TypeScript ...
+  Collecting page data using 19 workers ...
+  Generating static pages using 19 workers (0/66) ...
+  Generating static pages using 19 workers (16/66) 
+  Generating static pages using 19 workers (32/66) 
+  Generating static pages using 19 workers (49/66) 
+Ô£ô Generating static pages using 19 workers (66/66) in 178.9ms
+  Finalizing page optimization ...
+
+Route (app)
+Ôöî Ôùï /
+Ôö£ Ôùï /_not-found
+Ôö£ ãÆ /api/admin/supabase-migrate
+Ôö£ ãÆ /api/agent/bas-asistan
+Ôö£ ãÆ /api/agent/kamera
+Ôö£ ãÆ /api/agent/kasif
+Ôö£ ãÆ /api/agent/muhasip
+Ôö£ ãÆ /api/ai-kurul/saglik
+Ôö£ ãÆ /api/approvals
+Ôö£ ãÆ /api/audit-trail
+Ôö£ ãÆ /api/auth/change-password
+Ôö£ ãÆ /api/auth/login
+Ôö£ ãÆ /api/chatbot
+Ôö£ ãÆ /api/costs
+Ôö£ ãÆ /api/costs/[id]
+Ôö£ ãÆ /api/cron/aylik-siralama
+Ôö£ ãÆ /api/customers
+Ôö£ ãÆ /api/customers/[id]
+Ôö£ ãÆ /api/expenses
+Ôö£ ãÆ /api/fason
+Ôö£ ãÆ /api/fason-fiyat-hesapla
+Ôö£ ãÆ /api/fason/orders
+Ôö£ ãÆ /api/fason/orders/[id]
+Ôö£ ãÆ /api/imalat/agent
+Ôö£ ãÆ /api/imalat/faz-takip
+Ôö£ ãÆ /api/imalat/fire-kayit
+Ôö£ ãÆ /api/imalat/hat-planlama
+Ôö£ ãÆ /api/imalat/kalite
+Ôö£ ãÆ /api/imalat/kesim-kayit
+Ôö£ ãÆ /api/imalat/kesim-plani
+Ôö£ ãÆ /api/imalat/ozet-dashboard
+Ôö£ ãÆ /api/imalat/yari-mamul
+Ôö£ ãÆ /api/isletme-gider
+Ôö£ ãÆ /api/kar-zarar
+Ôö£ ãÆ /api/karar-arsivi
+Ôö£ ãÆ /api/karar-arsivi/[id]
+Ôö£ ãÆ /api/machines
+Ôö£ ãÆ /api/machines/[id]
+Ôö£ ãÆ /api/model-operasyonlar
+Ôö£ ãÆ /api/model-vision
+Ôö£ ãÆ /api/models
+Ôö£ ãÆ /api/models/[id]
+Ôö£ ãÆ /api/models/[id]/operations
+Ôö£ ãÆ /api/orders
+Ôö£ ãÆ /api/orders/[id]
+Ôö£ ãÆ /api/personel-haftalik
+Ôö£ ãÆ /api/personel-maliyet
+Ôö£ ãÆ /api/personel-saat
+Ôö£ ãÆ /api/personel/sgk
+Ôö£ ãÆ /api/personnel
+Ôö£ ãÆ /api/personnel/[id]
+Ôö£ ãÆ /api/prim
+Ôö£ ãÆ /api/production
+Ôö£ ãÆ /api/production/[id]
+Ôö£ ãÆ /api/quality-checks
+Ôö£ ãÆ /api/quality-checks/[id]
+Ôö£ ãÆ /api/rapor/ay-muhasebe
+Ôö£ ãÆ /api/rapor/ay-ozet
+Ôö£ ãÆ /api/rapor/fire-maliyet
+Ôö£ ãÆ /api/rapor/kapasite-tahmini
+Ôö£ ãÆ /api/rapor/karar-arsivi
+Ôö£ ãÆ /api/rapor/model-karlilik
+Ôö£ ãÆ /api/rapor/personel-verimlilik
+Ôö£ ãÆ /api/rapor/prim-onay
+Ôö£ ãÆ /api/rapor/sirala-kaydet
+Ôö£ ãÆ /api/rapor/teslimat-sapma
+Ôö£ ãÆ /api/shipments
+Ôö£ ãÆ /api/shipments/[id]
+Ôö£ ãÆ /api/upload
+Ôö£ ãÆ /api/uretim-giris
+Ôö£ ãÆ /api/uretim-ozet
+Ôö£ ãÆ /api/voice-command
+Ôö£ ãÆ /api/work-schedule
+Ôö£ Ôùï /asistan
+Ôö£ Ôùï /login
+Ôöö Ôùï /operator
+
+
+ãÆ Proxy (Middleware)
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+

@@ -38,7 +38,9 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { provider_id, model_id, quantity, unit_price, sent_date, expected_date, notes, status } = body;
+        const { provider_id, model_id, quantity, unit_price, sent_date, expected_date, notes, technical_notes, operation_type, status, contract_type, tolerance_rate, fabric_usage } = body;
+
+        const combined_notes = technical_notes || notes || '';
 
         if (!provider_id || !model_id || !quantity) {
             return NextResponse.json({ error: 'Fasoncu, model ve adet zorunlu' }, { status: 400 });
@@ -56,8 +58,12 @@ export async function POST(request) {
                 total_price,
                 sent_date: sent_date || null,
                 expected_date: expected_date || null,
-                notes: notes || '',
+                notes: combined_notes,
+                operation_type: operation_type || 'Belirtilmedi',
                 status: status || 'beklemede',
+                contract_type: contract_type || 'CMT',
+                tolerance_rate: parseFloat(tolerance_rate) || 3.0,
+                fabric_usage: fabric_usage || null,
             })
             .select()
             .single();

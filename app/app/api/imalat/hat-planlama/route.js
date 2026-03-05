@@ -36,7 +36,10 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { model_id, hat_adi, personel_listesi, gun_hedefi, baslangic_tarihi, bitis_tarihi, notlar } = body;
+        const {
+            model_id, hat_adi, personel_listesi, gun_hedefi, baslangic_tarihi, bitis_tarihi, notlar,
+            fason_mu, fason_birim_fiyat, bant_zorluk_derecesi, gunluk_hat_maliyeti
+        } = body;
 
         if (!model_id || !hat_adi) {
             return NextResponse.json({ error: 'model_id ve hat_adi zorunlu' }, { status: 400 });
@@ -52,6 +55,10 @@ export async function POST(request) {
                 baslangic_tarihi: baslangic_tarihi || null,
                 bitis_tarihi: bitis_tarihi || null,
                 notlar: notlar || '',
+                fason_mu: fason_mu || false,
+                fason_birim_fiyat: fason_birim_fiyat ? parseFloat(fason_birim_fiyat) : 0,
+                bant_zorluk_derecesi: bant_zorluk_derecesi ? parseInt(bant_zorluk_derecesi) : 1,
+                gunluk_hat_maliyeti: gunluk_hat_maliyeti ? parseFloat(gunluk_hat_maliyeti) : 0,
                 aktif: true,
             })
             .select()

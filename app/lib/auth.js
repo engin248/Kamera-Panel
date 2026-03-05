@@ -41,10 +41,10 @@ export async function checkAuth(request, method = 'GET') {
         return null;
     }
 
-    // Supabase'den kullanıcıyı doğrula
+    // Supabase'den kullanıcıyı doğrula — users tablosu (JWT'deki user_id buradan geliyor)
     const { data: user } = await supabaseAdmin
-        .from('personnel')
-        .select('id, name, role, status')
+        .from('users')
+        .select('id, username, display_name, role, status')
         .eq('id', userId)
         .eq('status', 'active')
         .maybeSingle();
@@ -55,10 +55,10 @@ export async function checkAuth(request, method = 'GET') {
     const role = userRole || user.role || 'operator';
     const perms = PERMISSIONS[role] || PERMISSIONS.operator;
     if (!perms[method]) {
-        return { ...user, display_name: user.name, role, _forbidden: true };
+        return { ...user, display_name: user.display_name || user.username, role, _forbidden: true };
     }
 
-    return { ...user, display_name: user.name, role };
+    return { ...user, display_name: user.display_name || user.username, role };
 }
 
 /** Senkron versiyon — Header kontrolü ile yetki doğrulama */

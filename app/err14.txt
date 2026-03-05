@@ -1,0 +1,30 @@
+﻿
+  teException
+      + FullyQualifiedE
+r 
+     rorId : NativeComm
+  
+>   andError
+   
+    Creating an optimiz
+ed production build ...
+  
+> > Build error occurre
+d
+> Error: Turbopack buil
+d 
+> failed with 1 errors:
+  ./app/page.js:15:1
+> Module not found: Can
+'t
+   resolve '@/component
+s/
+  pages/MagazaPage'
+  [0m [90m 13 |[39m 
+[
+  36mimport[39m [33mA
+si
+  stanPage[39m [36mfr
+om
+
+

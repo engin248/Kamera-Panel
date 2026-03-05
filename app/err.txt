@@ -1,0 +1,30 @@
+﻿
+  failed with 3 errors:
+  ./components/pages/Maga
+  zaPage.jsx:4:1
+> Module not found: Can't
+   resolve '../../../lib/
+  supabaseClient'
+  [0m [90m 2 |[39m
+   [90m 3 |[39m [36mim
+  port[39m [33mReact[3
+  
+  ./lib/agents/satis-sefi
+  .js:2:1
+> Module not found: Can't
+   resolve '../supabaseCl
+  ient'
+  [0m [90m 1 |[39m [3
+  6mimport[39m { [33mCh
+  atOpenAI[39m } [36mfr
+  
+  ./lib/agents/veri-anali
+  sti.js:2:1
+> Module not found: Can't
+   resolve '../supabaseCl
+  ient'
+  [0m [90m 1 |[39m [3
+  6mimport[39m { [33mCh
+  atOpenAI[39m } [36mfr
+
+

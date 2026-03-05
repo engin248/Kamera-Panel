@@ -12,16 +12,20 @@ import { supabaseAdmin } from '@/lib/supabase';
  */
 export async function GET(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const ay = parseInt(searchParams.get('ay') || new Date().getMonth() + 1);
+    const ayParam = searchParams.get('ay');
+    const isAllTime = ayParam === 'all';
+    const ay = parseInt(ayParam || new Date().getMonth() + 1);
     const yil = parseInt(searchParams.get('yil') || new Date().getFullYear());
     const prim_orani = parseFloat(searchParams.get('prim_orani') || '20');
 
-    const ayStr = String(ay).padStart(2, '0');
-    const baslangic = `${yil}-${ayStr}-01T00:00:00`;
-    const sonrakiAy = ay === 12 ? 1 : ay + 1;
-    const sonrakiYil = ay === 12 ? yil + 1 : yil;
-    const bitis = `${sonrakiYil}-${String(sonrakiAy).padStart(2, '0')}-01T00:00:00`;
+    let baslangic, bitis;
+    if (!isAllTime) {
+      const ayStr = String(ay).padStart(2, '0');
+      baslangic = `${yil}-${ayStr}-01T00:00:00`;
+      const sonrakiAy = ay === 12 ? 1 : ay + 1;
+      const sonrakiYil = ay === 12 ? yil + 1 : yil;
+      bitis = `${sonrakiYil}-${String(sonrakiAy).padStart(2, '0')}-01T00:00:00`;
+    }
 
     // ── 1. Aktif personel listesi ────────────────────────────
     const { data: personeller, error: pErr } = await supabaseAdmin
@@ -33,13 +37,17 @@ export async function GET(request) {
 
     if (pErr) throw pErr;
 
-    // ── 2. Bu ay üretim logları (personnel_id bazında grouped) ─
-    const { data: uretimLogs } = await supabaseAdmin
+    // ── 2. Bu ay / Tüm zamanlar üretim logları (personnel_id bazında grouped) ─
+    let uretimQuery = supabaseAdmin
       .from('production_logs')
       .select('personnel_id, total_produced, defective_count, first_pass_yield, unit_value, start_time')
-      .is('deleted_at', null)
-      .gte('start_time', baslangic)
-      .lt('start_time', bitis);
+      .is('deleted_at', null);
+
+    if (!isAllTime) {
+      uretimQuery = uretimQuery.gte('start_time', baslangic).lt('start_time', bitis);
+    }
+
+    const { data: uretimLogs } = await uretimQuery;
 
     // GroupBy personnel_id
     const uretimMap = {};

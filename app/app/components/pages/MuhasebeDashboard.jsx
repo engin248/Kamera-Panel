@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useVoiceInput } from '../../../hooks/useVoiceInput';
 
 // ========== FASON PAGE ==========
 
@@ -54,7 +55,7 @@ function FasonPage({ models, addToast }) {
 
   const [pForm, setPForm] = useState({ name: '', company: '', phone: '', address: '', speciality: '' });
 
-  const [oForm, setOForm] = useState({ provider_id: '', model_id: '', quantity: '', unit_price: '', expected_date: '' });
+  const [oForm, setOForm] = useState({ provider_id: '', model_id: '', quantity: '', unit_price: '', expected_date: '', operation_type: '', technical_notes: '' });
 
   const loadAll = useCallback(async () => { const [r1, r2] = await Promise.all([fetch('/api/fason'), fetch('/api/fason/orders')]); const [d1, d2] = await Promise.all([r1.json(), r2.json()]); setProviders(Array.isArray(d1) ? d1 : []); setOrders(Array.isArray(d2) ? d2 : []); }, []);
 
@@ -62,7 +63,7 @@ function FasonPage({ models, addToast }) {
 
   const saveProvider = async (e) => { e.preventDefault(); try { await fetch('/api/fason', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pForm) }); await loadAll(); setShowProviderModal(false); setPForm({ name: '', company: '', phone: '', address: '', speciality: '' }); addToast('success', 'Fasoncu eklendi!'); } catch (err) { addToast('error', 'Hata'); } };
 
-  const saveOrder = async (e) => { e.preventDefault(); try { await fetch('/api/fason/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(oForm) }); await loadAll(); setShowOrderModal(false); setOForm({ provider_id: '', model_id: '', quantity: '', unit_price: '', expected_date: '' }); addToast('success', 'Fason sipariş oluşturuldu!'); } catch (err) { addToast('error', 'Hata'); } };
+  const saveOrder = async (e) => { e.preventDefault(); try { await fetch('/api/fason/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(oForm) }); await loadAll(); setShowOrderModal(false); setOForm({ provider_id: '', model_id: '', quantity: '', unit_price: '', expected_date: '', operation_type: '', technical_notes: '' }); addToast('success', 'Fason sipariş oluşturuldu!'); } catch (err) { addToast('error', 'Hata'); } };
 
   const statusLabels = { beklemede: '⏳ Beklemede', gonderildi: '📦 Gönderildi', uretimde: '🏭 Üretimde', teslim: '✅ Teslim', iptal: '❌ İptal' };
 
@@ -98,9 +99,9 @@ function FasonPage({ models, addToast }) {
 
         ) : (
 
-          <div className="table-wrapper"><table className="table"><thead><tr><th>Fasoncu</th><th>Model</th><th>Adet</th><th>Birim ₺</th><th>Toplam ₺</th><th>Beklenen Tarih</th><th>Durum</th></tr></thead><tbody>
+          <div className="table-wrapper"><table className="table"><thead><tr><th>Fasoncu</th><th>Model</th><th>Operasyon</th><th>Adet</th><th>Birim ₺</th><th>Toplam ₺</th><th>Beklenen Tarih</th><th>Durum</th></tr></thead><tbody>
 
-            {orders.map(o => (<tr key={o.id}><td style={{ fontWeight: '600' }}>{o.provider_name}</td><td>{o.model_name} <code style={{ fontSize: '11px', background: 'var(--bg-input)', padding: '1px 5px', borderRadius: '3px' }}>{o.model_code}</code></td><td style={{ fontWeight: '700' }}>{o.quantity?.toLocaleString('tr-TR')}</td><td>{o.unit_price?.toFixed(2)} ₺</td><td style={{ fontWeight: '600', color: 'var(--accent)' }}>{o.total_price?.toFixed(0)} ₺</td><td>{o.expected_date || '—'}</td><td><span className="badge badge-info">{statusLabels[o.status] || o.status}</span></td></tr>))}
+            {orders.map(o => (<tr key={o.id}><td style={{ fontWeight: '600' }}>{o.provider_name}</td><td>{o.model_name} <code style={{ fontSize: '11px', background: 'var(--bg-input)', padding: '1px 5px', borderRadius: '3px' }}>{o.model_code}</code></td><td><span style={{ fontSize: '12px', background: 'var(--bg-input)', padding: '2px 6px', borderRadius: '4px', fontWeight: '500' }}>{o.operation_type || 'Sadece Dikim'}</span></td><td style={{ fontWeight: '700' }}>{o.quantity?.toLocaleString('tr-TR')}</td><td>{o.unit_price?.toFixed(2)} ₺</td><td style={{ fontWeight: '600', color: 'var(--accent)' }}>{o.total_price?.toFixed(0)} ₺</td><td>{o.expected_date || '—'}</td><td><span className="badge badge-info">{statusLabels[o.status] || o.status}</span></td></tr>))}
 
           </tbody></table></div>
 
@@ -150,17 +151,49 @@ function FasonPage({ models, addToast }) {
 
             <div className="form-row"><div className="form-group"><label className="form-label">Fasoncu *</label><select className="form-select" value={oForm.provider_id} onChange={e => setOForm({ ...oForm, provider_id: e.target.value })} required><option value="">Seçiniz...</option>{providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div><div className="form-group"><label className="form-label">Model *</label><select className="form-select" value={oForm.model_id} onChange={e => setOForm({ ...oForm, model_id: e.target.value })} required><option value="">Seçiniz...</option>{models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}</select></div></div>
 
+            {oForm.model_id && (() => {
+              const secilenModel = models.find(m => String(m.id) === String(oForm.model_id));
+              if (!secilenModel) return null;
+              return (
+                <div style={{ padding: '10px 14px', background: 'rgba(52,152,219,0.08)', borderRadius: '8px', border: '1px solid rgba(52,152,219,0.2)', marginBottom: '14px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#3498db', marginBottom: '4px' }}>ℹ️ Model Teknik Detayı (Fasoncuya İletilecek)</div>
+                  <div style={{ fontSize: '13px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                    <span><b>Kumaş:</b> {secilenModel.fabric_type || 'Belirtilmedi'}</span>
+                    <span><b>Maliyet:</b> {secilenModel.target_cost ? `₺${secilenModel.target_cost}` : 'Belirtilmedi'}</span>
+                    <span><b>Bedenler:</b> S-M-L-XL</span>
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="form-row">
-
               <div className="form-group"><label className="form-label">Adet *</label><div style={{ position: 'relative' }}><input className="form-input" type="number" style={{ paddingRight: '62px' }} value={oForm.quantity} onChange={e => setOForm({ ...oForm, quantity: e.target.value })} required /><VoiceBtn fieldKey="quantity" {...oVoice} /></div></div>
-
               <div className="form-group"><label className="form-label">Birim Fiyat (₺)</label><div style={{ position: 'relative' }}><input className="form-input" type="number" step="0.01" style={{ paddingRight: '62px' }} value={oForm.unit_price} onChange={e => setOForm({ ...oForm, unit_price: e.target.value })} /><VoiceBtn fieldKey="unit_price" {...oVoice} /></div></div>
-
               <div className="form-group"><label className="form-label">Beklenen Tarih</label><input className="form-input" type="date" value={oForm.expected_date} onChange={e => setOForm({ ...oForm, expected_date: e.target.value })} /></div>
-
             </div>
 
-            <div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setShowOrderModal(false)}>İptal</button><button type="submit" className="btn btn-primary">💾 Kaydet</button></div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Operasyon Türü *</label>
+                <select className="form-select" value={oForm.operation_type} onChange={e => setOForm({ ...oForm, operation_type: e.target.value })} required>
+                  <option value="">Seçiniz...</option>
+                  <option value="Sadece Dikim">✂️ Sadece Dikim</option>
+                  <option value="Sadece Kesim">📐 Sadece Kesim</option>
+                  <option value="Tam Paket">📦 Tam Paket (Kesim+Dikim+Paket)</option>
+                  <option value="Baskı">🎨 Baskı</option>
+                  <option value="Nakış">🪡 Nakış</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Teknik Talimatlar / Kalite Notları</label>
+                <div style={{ position: 'relative' }}>
+                  <input className="form-input" style={{ paddingRight: '62px' }} placeholder="Örn: 3 iplik overlok, etiketler gizli..." value={oForm.technical_notes} onChange={e => setOForm({ ...oForm, technical_notes: e.target.value })} />
+                  <VoiceBtn fieldKey="technical_notes" {...oVoice} />
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setShowOrderModal(false)}>İptal</button><button type="submit" className="btn btn-primary">💾 Fason Talimatı Oluştur</button></div>
 
           </form>
 

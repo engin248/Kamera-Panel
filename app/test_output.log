@@ -1,0 +1,14 @@
+E2E Test Başlatılıyor... MOCKED_JWT Hazır.
+--- 1. KESİM PLANI TESTİ ---
+❌ KESİM PLANI HATASI: { error: 'Yetkisiz erisim. Lutfen giris yapin.' }
+--- 2. HAT PLANLAMA TESTİ ---
+❌ HAT PLANLAMA HATASI: { error: 'Yetkisiz erisim. Lutfen giris yapin.' }
+--- 3. YARI MAMUL (Fason Fire) TESTİ ---
+❌ YARI MAMUL HATASI: { error: 'Yetkisiz erisim. Lutfen giris yapin.' }
+--- 4. FİRE KAYIT (Zimmet ve Zarar) TESTİ ---
+❌ FİRE KAYIT HATASI: { error: 'Yetkisiz erisim. Lutfen giris yapin.' }
+--- 5. ÖZET DASHBOARD TESTİ ---
+❌ ÖZET DASHBOARD HATASI: { error: 'Yetkisiz erisim. Lutfen giris yapin.' }
+--- 6. PRİM MOTORU (Zayiat Cezasından Düşme) TESTİ ---
+❌ PRİM MOTORU HATASI: { error: 'Yetkisiz erisim. Lutfen giris yapin.' }
+\n🎉 TÜM PENCERE TESTLERİ TAMAMLANDI.

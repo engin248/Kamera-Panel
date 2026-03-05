@@ -28,6 +28,7 @@ export async function GET(request) {
             model_kodu: r.models?.code,
             siparis_no: r.orders?.order_no,
             kesimci_adi: r.personnel?.name,
+            parti_lot_no: r.parti_lot_no,
             models: undefined, orders: undefined, personnel: undefined,
         }));
 
@@ -43,13 +44,14 @@ export async function POST(request) {
         const body = await request.json();
         const {
             model_id, siparis_id, plan_tarihi, toplam_adet,
-            beden_dagitimi, kat_sayisi, tahmini_sarj_metre,
-            tahmini_fire_yuzde, kesimci_id, notlar
+            beden_dagitimi, kat_sayisi, tahmini_sarj_metre, kumas_tipi,
+            harcanan_kumas, pastal_fire_yuzde, kesimci_id, notlar,
+            used_fabric_qty, actual_fabric_qty, fabric_waste_qty, parti_lot_no
         } = body;
 
-        if (!model_id || !plan_tarihi || !toplam_adet) {
+        if (!model_id || !plan_tarihi || !toplam_adet || !actual_fabric_qty || !parti_lot_no) {
             return NextResponse.json(
-                { error: 'model_id, plan_tarihi ve toplam_adet zorunlu' },
+                { error: 'model_id, plan_tarihi, toplam_adet, actual_fabric_qty (Kumaş Kilosu) ve parti_lot_no zorunlu!' },
                 { status: 400 }
             );
         }
@@ -63,9 +65,15 @@ export async function POST(request) {
                 toplam_adet: parseInt(toplam_adet),
                 beden_dagitimi: beden_dagitimi || {},
                 kat_sayisi: kat_sayisi || 1,
+                kumas_tipi: kumas_tipi || '',
                 tahmini_sarj_metre: tahmini_sarj_metre || 0,
-                tahmini_fire_yuzde: tahmini_fire_yuzde || 5,
+                harcanan_kumas: harcanan_kumas || 0,
+                pastal_fire_yuzde: pastal_fire_yuzde || 0,
                 kesimci_id: kesimci_id ? parseInt(kesimci_id) : null,
+                used_fabric_qty: used_fabric_qty ? parseFloat(used_fabric_qty) : null,
+                actual_fabric_qty: actual_fabric_qty ? parseFloat(actual_fabric_qty) : null,
+                fabric_waste_qty: fabric_waste_qty ? parseFloat(fabric_waste_qty) : null,
+                parti_lot_no: parti_lot_no || '',
                 notlar: notlar || '',
                 durum: 'planlandı',
             })

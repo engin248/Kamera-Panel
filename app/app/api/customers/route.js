@@ -19,7 +19,40 @@ export async function GET(request) {
 
         const { data, error } = await query;
         if (error) throw error;
-        return NextResponse.json(data || []);
+
+        // --- İŞLETME ZEKASI: MÜŞTERİ ROI/KÂRLILIK HESAPLAMASI ---
+        const { data: orders } = await supabaseAdmin.from('orders').select('customer_id, quantity, unit_price, status').is('deleted_at', null);
+        const customerStats = {};
+        orders?.forEach(o => {
+            if (!customerStats[o.customer_id]) customerStats[o.customer_id] = { totalVolume: 0, orderCount: 0, cancelledCount: 0 };
+            customerStats[o.customer_id].orderCount++;
+            if (o.status === 'iptal') customerStats[o.customer_id].cancelledCount++;
+            else customerStats[o.customer_id].totalVolume += (o.quantity || 0) * (parseFloat(o.unit_price) || 250);
+        });
+
+        const enrichedCustomers = (data || []).map(c => {
+            const stat = customerStats[c.id] || { totalVolume: 0, orderCount: 0, cancelledCount: 0 };
+            let rating = 'C';
+            let margin = 'Düşük Margin';
+            let color = '#e74c3c';
+
+            if (stat.totalVolume > 50000 && stat.cancelledCount === 0) { rating = 'A+'; margin = 'Yüksek Kâr'; color = '#27ae60'; }
+            else if (stat.totalVolume > 15000) { rating = 'A'; margin = 'İyi Kâr'; color = '#2ecc71'; }
+            else if (stat.totalVolume > 0 || stat.orderCount > 0) {
+                if (stat.cancelledCount > stat.orderCount / 2) { rating = 'RİSK'; margin = 'Zarar Eden İş'; color = '#c0392b'; }
+                else { rating = 'B'; margin = 'Standart'; color = '#f39c12'; }
+            } else { rating = '—'; margin = 'Yeni/İş Yok'; color = 'var(--text-muted)'; }
+
+            return {
+                ...c,
+                total_volume: stat.totalVolume,
+                roi_rating: rating,
+                margin_desc: margin,
+                rating_color: color
+            };
+        });
+
+        return NextResponse.json(enrichedCustomers);
     } catch (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

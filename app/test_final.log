@@ -1,0 +1,14 @@
+E2E Test Başlatılıyor... MOCKED_JWT Hazır.
+--- 1. KESİM PLANI TESTİ ---
+TEST SÜRECİNDE BEKLENMEYEN HATA: TypeError: fetch failed
+    at node:internal/deps/undici/undici:16416:13
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async testKesimPlani (c:\Users\Admin\Desktop\Kamera-Panel\app\test_suite.js:44:17)
+    at async runAll (c:\Users\Admin\Desktop\Kamera-Panel\app\test_suite.js:144:9) {
+  [cause]: AggregateError [ECONNREFUSED]: 
+      at internalConnectMultiple (node:net:1134:18)
+      at afterConnectMultiple (node:net:1715:7) {
+    code: 'ECONNREFUSED',
+    [errors]: [ [Error], [Error] ]
+  }
+}

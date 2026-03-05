@@ -43,33 +43,35 @@ function PersonelDevamBar({ personnel, addToast }) {
 
   return (
     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <div style={{ fontWeight: '700', fontSize: '14px' }}>⏱️ Personel Devam</div>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <button onClick={() => setAktifSekme('gunluk')} style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '12px', background: aktifSekme === 'gunluk' ? 'var(--accent)' : 'var(--bg-input)', color: aktifSekme === 'gunluk' ? '#fff' : 'var(--text-muted)' }}>📅 Günlük</button>
-          <button onClick={() => setAktifSekme('haftalik')} style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '12px', background: aktifSekme === 'haftalik' ? 'var(--accent)' : 'var(--bg-input)', color: aktifSekme === 'haftalik' ? '#fff' : 'var(--text-muted)' }}>📊 Haftalık Özet</button>
-          <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center' }}>{gelenler}/{aktifler.length} geldi</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ fontWeight: '800', fontSize: '16px', color: 'var(--accent)' }}>⏱️ Personel Devam (Tablet Modu)</div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button onClick={() => setAktifSekme('gunluk')} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '14px', background: aktifSekme === 'gunluk' ? 'var(--accent)' : 'var(--bg-input)', color: aktifSekme === 'gunluk' ? '#fff' : 'var(--text-muted)' }}>📅 Günlük</button>
+          <button onClick={() => setAktifSekme('haftalik')} style={{ padding: '10px 18px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '14px', background: aktifSekme === 'haftalik' ? 'var(--accent)' : 'var(--bg-input)', color: aktifSekme === 'haftalik' ? '#fff' : 'var(--text-muted)' }}>📊 Haftalık Özet</button>
+          <div style={{ fontSize: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', fontWeight: '700', padding: '0 8px' }}>{gelenler}/{aktifler.length} Geldi</div>
         </div>
       </div>
 
       {aktifSekme === 'gunluk' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
           {aktifler.map(p => {
             const k = kayitBul(p.id);
             return (
-              <div key={p.id} style={{ padding: '10px', background: 'var(--bg-input)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '6px' }}>{p.name}</div>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <div key={p.id} style={{ padding: '16px', background: 'var(--bg-input)', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '12px', transition: 'transform 0.2s', cursor: 'pointer' }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'} onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}>
+                <div style={{ fontWeight: '800', fontSize: '16px', color: 'var(--text-primary)' }}>👤 {p.name}</div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                   {!k?.giris_saat ? (
-                    <button onClick={() => tiklama(p.id, 'giris')} style={{ padding: '4px 10px', background: 'rgba(46,204,113,0.15)', color: '#27ae60', border: '1px solid rgba(46,204,113,0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }}>✅ Giriş</button>
+                    <button onClick={() => tiklama(p.id, 'giris')} style={{ flex: 1, padding: '14px 20px', background: 'rgba(46,204,113,0.15)', color: '#27ae60', border: '2px solid rgba(46,204,113,0.4)', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: '800', minHeight: '52px', transition: 'all 0.1s' }}>✅ GİRİŞ YAP</button>
                   ) : (
-                    <span style={{ fontSize: '12px', color: '#27ae60', fontWeight: '600' }}>✅ {k.giris_saat}</span>
+                    <div style={{ flex: 1, padding: '14px 20px', background: 'rgba(46,204,113,0.05)', borderRadius: '10px', border: '2px dashed rgba(46,204,113,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', color: '#27ae60', fontWeight: '800' }}>✅ {k.giris_saat}</div>
                   )}
                   {k?.giris_saat && !k?.cikis_saat && (
-                    <button onClick={() => tiklama(p.id, 'cikis')} style={{ padding: '4px 10px', background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: '1px solid rgba(231,76,60,0.2)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>🚪 Çıkış</button>
+                    <button onClick={() => tiklama(p.id, 'cikis')} style={{ flex: 1, padding: '14px 20px', background: 'rgba(231,76,60,0.1)', color: '#e74c3c', border: '2px solid rgba(231,76,60,0.3)', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: '800', minHeight: '52px' }}>🚪 ÇIKIŞ</button>
                   )}
                   {k?.cikis_saat && (
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Çıkış: {k.cikis_saat} | Net: {Math.floor((k.net_calisma_dakika || 0) / 60)}s {((k.net_calisma_dakika || 0) % 60)}dk</span>
+                    <div style={{ flex: 1, fontSize: '13px', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '12px', borderRadius: '8px', textAlign: 'center', fontWeight: '600' }}>
+                      Çıkış: <span style={{ color: 'var(--text-primary)' }}>{k.cikis_saat}</span> | Net: <span style={{ color: 'var(--accent)' }}>{Math.floor((k.net_calisma_dakika || 0) / 60)}s {((k.net_calisma_dakika || 0) % 60)}dk</span>
+                    </div>
                   )}
                 </div>
               </div>

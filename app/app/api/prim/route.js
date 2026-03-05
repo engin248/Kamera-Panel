@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { evaluatePersonnelPerformance } from '@/lib/agents/ik-adalet';
 
 // ============================================================
 // PRİM MOTORU — Supabase versiyonu
@@ -68,6 +69,14 @@ export async function POST(request) {
             .gte('start_time', startDate)
             .lt('start_time', nextMonth);
 
+        // Zayiat (Fire) Cezalarını Getir: Fire_kayitlari'ndan
+        const { data: cezalar } = await supabaseAdmin
+            .from('fire_kayitlari')
+            .select('operator_id, estimated_loss_amount')
+            .gte('tarih', startDate)
+            .lt('tarih', nextMonth)
+            .not('operator_id', 'is', null);
+
         if (!logs || logs.length === 0) {
             return NextResponse.json({ success: true, mesaj: 'Bu ay için üretim verisi yok', dagitim: [] });
         }
@@ -96,17 +105,61 @@ export async function POST(request) {
             personelMap[pid].katki_degeri += tp * birim * (1 - hata_orani);
         }
 
+        // Cezaları Map'e işle
+        for (const ceza of (cezalar || [])) {
+            const op_id = ceza.operator_id;
+            const miktar = parseFloat(ceza.estimated_loss_amount || 0);
+            if (personelMap[op_id]) {
+                personelMap[op_id].zayiat_cezasi = (personelMap[op_id].zayiat_cezasi || 0) + miktar;
+            } else {
+                // Sadece zarar etmiş ama üretim girmemiş personel (Nadir durum ama ekleyelim)
+                personelMap[op_id] = {
+                    personnel_id: op_id,
+                    personnel: {}, // Missing DB join for this edge case but handled safely
+                    toplam_uretilen: 0, toplam_hatali: 0, katki_degeri: 0,
+                    zayiat_cezasi: miktar
+                };
+            }
+        }
+
         const sonuclar = [];
         for (const [pid, veri] of Object.entries(personelMap)) {
             const p = veri.personnel || {};
             const sgk_prim = (p.base_salary || 0) * 0.205;
             const maas_maliyeti = (p.base_salary || 0) + (p.transport_allowance || 0) + (p.food_allowance || 0) + sgk_prim;
+            const zayiat = veri.zayiat_cezasi || 0;
             const katki = Math.round(veri.katki_degeri * 100) / 100;
-            const fark = katki - maas_maliyeti;
+
+            // Gerçek "Fazla Değer". Katkıdan hem maaş hem de fire zararı çıkartılıyor.
+            const fark = katki - maas_maliyeti - zayiat;
             const prim = fark > 0 ? Math.round(fark * (prim_orani / 100) * 100) / 100 : 0;
             const fpy = veri.toplam_uretilen > 0
                 ? Math.round(((veri.toplam_uretilen - veri.toplam_hatali) / veri.toplam_uretilen) * 1000) / 10
                 : 100;
+
+            // AI Adalet Terazisini Çağır (Geçmiş performanslarla kıyasla)
+            let ajanCevabi = 'Ajan değerlendirmesi yapılamadı.';
+            try {
+                // Not: Hangi operasyonu ve kumaşı diktiğini logdan alıyoruz. Birden fazla operasyon yapmış olabilir, ilkini seçelim veya genel.
+                const kumasCinsi = "Karışık/Bilinmiyor"; // Gelecekte order_id den kumaş tipi çekilebilir.
+                const operasyonAdi = "Genel Üretim Bant İşlemi"; // Şimdilik genel isim gönderiyoruz.
+                const hedeflenen = 500; // Şimdilik varsayılan bant hedefi
+
+                const agentResponse = await evaluatePersonnelPerformance(
+                    p.name || 'Bilinmeyen Personel',
+                    operasyonAdi,
+                    hedeflenen,
+                    veri.toplam_uretilen,
+                    veri.toplam_hatali,
+                    kumasCinsi
+                );
+                if (agentResponse.success) {
+                    ajanCevabi = agentResponse.ajan_cevabi;
+                    // Eğer agent prim tutarını sıfırlamak veya tam tersini tavsiye ediyorsa, gelecekte burada "prim" değişkenine müdahale edilebilir.
+                }
+            } catch (err) {
+                console.error("AI Değerlendirme Hatası:", err);
+            }
 
             const upsertData = {
                 personel_id: parseInt(pid),
@@ -118,9 +171,12 @@ export async function POST(request) {
                 katki_degeri: katki,
                 maas_maliyeti: Math.round(maas_maliyeti * 100) / 100,
                 katki_maas_farki: Math.round(fark * 100) / 100,
+                zayiat_cezasi: Math.round(zayiat * 100) / 100,  // CEZA
                 prim_orani: prim_orani,
                 prim_tutari: prim,
+                onaylanan_prim: prim,  // rapor/ay-ozet için senkron tutulur
                 onay_durumu: 'hesaplandi',
+                notlar: zayiat > 0 ? `🔥 [Cezali: -${zayiat}₺ Zayiat]` + ajanCevabi : ajanCevabi, // Rapor
             };
 
             const { error: upsertErr } = await supabaseAdmin
@@ -153,7 +209,12 @@ export async function PUT(request) {
         const updateData = { updated_at: new Date().toISOString() };
         if (onay_durumu) updateData.onay_durumu = onay_durumu;
         if (onaylayan_id) updateData.onaylayan_id = onaylayan_id;
-        if (onay_durumu === 'onaylandi') updateData.onay_tarihi = new Date().toISOString();
+        if (onay_durumu === 'onaylandi') {
+            updateData.onay_tarihi = new Date().toISOString();
+            // Onaylandığında onaylanan_prim = prim_tutari olarak güncelle
+            const { data: mevcut } = await supabaseAdmin.from('prim_kayitlari').select('prim_tutari').eq('id', id).single();
+            if (mevcut) updateData.onaylanan_prim = mevcut.prim_tutari;
+        }
         if (odeme_tarihi) updateData.odeme_tarihi = odeme_tarihi;
         if (notlar) updateData.notlar = notlar;
 

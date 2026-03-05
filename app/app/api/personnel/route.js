@@ -33,7 +33,7 @@ const VALID_COLUMNS = new Set([
     'status', 'deleted_at', 'deleted_by', 'created_at', 'updated_at',
 ]);
 
-const JSON_FIELDS = new Set(['operation_skill_scores', 'machine_adjustments', 'fabric_experience']);
+const JSON_FIELDS = new Set(['operation_skill_scores', 'machine_adjustments', 'fabric_experience', 'capable_operations']);
 
 // Gelen objeden sadece geçerli kolonları al, bilinmeyenleri at
 function filterValidColumns(data) {
@@ -70,10 +70,30 @@ export async function GET() {
             .from('personnel')
             .select('*')
             .is('deleted_at', null)
-            .order('name', { ascending: true });
+            .order('created_at', { ascending: true }); // Önce giren daha kıdemlidir (id sırası)
 
         if (error) throw error;
-        return NextResponse.json(data);
+
+        // Supabase tarafında özel CASE WHEN sıralaması yerine bellek üzerinde rollerin sıralamasını yapalım.
+        const roleOrder = {
+            'koordinator': 1,
+            'ustabasi': 2,
+            'bant_sefi': 3,
+            'kaliteci': 4,
+            'ik_uzmani': 5,
+            'operator': 10
+        };
+
+        const sortedData = data.sort((a, b) => {
+            const roleA = roleOrder[a.role] || 99;
+            const roleB = roleOrder[b.role] || 99;
+            if (roleA !== roleB) return roleA - roleB;
+
+            // Eğer rol sıralaması eşitse tarihi eski olan (created_at) üstte kalır
+            return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+        });
+
+        return NextResponse.json(sortedData);
     } catch (error) {
         console.error('Personnel GET error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
@@ -137,7 +157,11 @@ export async function POST(request) {
         delete insertData.deleted_by;
 
         // Boş string tarihleri null yap (PostgreSQL DATE tipi boş string kabul etmez)
-        if (insertData.start_date === '') insertData.start_date = null;
+        ['start_date', 'sgk_entry_date', 'birth_date', 'isg_training_date', 'last_health_check'].forEach(dateField => {
+            if (insertData[dateField] === '') {
+                insertData[dateField] = null;
+            }
+        });
 
         const { data, error } = await supabaseAdmin
             .from('personnel')
