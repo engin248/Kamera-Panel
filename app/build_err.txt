@@ -1,9 +1,9 @@
 ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
- We detected multiple lockfiles and selected the directory of c:\Users\Admin\Desktop\Kamera-Panel\package-lock.json as the root directory.
+ We detected multiple lockfiles and selected the directory of C:\Users\Admin\Desktop\Kamera-Panel\package-lock.json as the root directory.
  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
    See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
  Detected additional lockfiles: 
-   * c:\Users\Admin\Desktop\Kamera-Panel\app\package-lock.json
+   * C:\Users\Admin\Desktop\Kamera-Panel\app\package-lock.json
 
 ▲ Next.js 16.1.6 (Turbopack)
 - Environments: .env.local
@@ -15,17 +15,18 @@
 
 > Build error occurred
 Error: Turbopack build failed with 1 errors:
-./app/app/page.js:6259:10
-Ecmascript file had an error
-[0m [90m 6257 |[39m [90m// ========== PRİM SAYFASI ==========[39m
- [90m 6258 |[39m
-[31m[1m>[22m[39m[90m 6259 |[39m [36mfunction[39m [33mPrimPage[39m({ personnel[33m,[39m addToast[33m,[39m currentUser }) {
- [90m      |[39m          [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
- [90m 6260 |[39m   [36mconst[39m userRole [33m=[39m currentUser[33m?[39m[33m.[39mrole [33m||[39m [32m'operator'[39m[33m;[39m
- [90m 6261 |[39m   [36mconst[39m yetkiliMi [33m=[39m userRole [33m===[39m [32m'koordinator'[39m[33m;[39m
- [90m 6262 |[39m   [36mconst[39m now [33m=[39m [36mnew[39m [33mDate[39m()[33m;[39m[0m
+./app/app/page.js:16:1
+Module not found: Can't resolve '@/components/pages/PrimPage'
+[0m [90m 14 |[39m [36mimport[39m [33mArgeTasarimPage[39m [36mfrom[39m [32m'@/components/pages/ArgeTasarimPage'[39m[33m;[39m
+ [90m 15 |[39m [36mimport[39m [33mMagazaPage[39m [36mfrom[39m [32m'@/components/pages/MagazaPage'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 16 |[39m [36mimport[39m [33mPrimPage[39m [36mfrom[39m [32m'@/components/pages/PrimPage'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 17 |[39m [36mimport[39m [33mImalatPage[39m [36mfrom[39m [32m'./imalat-page'[39m[33m;[39m
+ [90m 18 |[39m [36mimport[39m { [33mShoppingCart[39m[33m,[39m [33mShirt[39m[33m,[39m [33mUsers[39m[33m,[39m [33mFactory[39m[33m,[39m [33mCalculator[39m[33m,[39m [33mLineChart[39m[33m,[39m [33mShieldCheck[39m[33m,[39m [33mWrench[39m[33m,[39m [33mPackage[39m[33m,[39m [33mAward[39m[33m,[39m [33mSettings[39m[33m,[39m [33mCog[39m[33m,[39m [33mBriefcase[39m[33m,[39m [33mBarChart3[39m[33m,[39m [33mMessageSquare[39m[33m,[39m [33mMic[39m[33m,[39m [33mBot[39m[33m,[39m [33mPhoneCall[39m[33m,[39m [33mZap[39m[33m,[39m [33mPlay[39m[33m,[39m [33mLayoutDashboard[39m[33m,[39m [33mCpu[39m[33m,[39m [33mHelpCircle[39m[33m,[39m [33mActivity[39m[33m,[39m [33mGlobe[39m[33m,[39m [33mDatabase[39m[33m,[39m [33mTarget[39m[33m,[39m [33mDiamond[39m[33m,[39m [33mTrendingUp[39m[33m,[39m [33mTrendingDown[39m[33m,[39m [33mArrowUpRight[39m[33m,[39m [33mCrosshair[39m[33m,[39m [33mStore[39m } [36mfrom[39m [32m'lucide-react'[39m[33m;[39m
+ [90m 19 |[39m[0m
 
-the name `PrimPage` is defined multiple times
+Import map: aliased to relative './app/components/pages/PrimPage' inside of [project]/app
+
 
 Import traces:
   Client Component Browser:
@@ -36,5 +37,8 @@ Import traces:
     ./app/app/page.js [Client Component SSR]
     ./app/app/page.js [Server Component]
 
+https://nextjs.org/docs/messages/module-not-found
 
-    at <unknown> (./app/app/page.js:6259:10)
+
+    at <unknown> (./app/app/page.js:16:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
