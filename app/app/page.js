@@ -6477,7 +6477,7 @@ function ReportsPage({ models, personnel, addToast }) {
                 </div>
 
                 <div style={{ marginTop: '16px', fontSize: '12px', color: '#e74c3c', display: 'flex', gap: '6px', alignItems: 'center', fontWeight: '600', background: 'rgba(231,76,60,0.1)', padding: '10px 16px', borderRadius: '8px' }}>
-                  <ShieldCheck size={16} /> DİKKAT: Üretim, Mağaza, İmalat ve Yapay Zeka ofislerinin kurucu finansman özverisi ve parasal grafikler, "Gizlilik Anayasası" gereğince sistemde yalnızca Koordinatör'e (Tanrı Moduna) açıktır.
+                  <ShieldCheck size={16} /> DİKKAT: Üretim, Mağaza, İmalat ve Yapay Zeka ofislerinin kurucu finansman özverisi ve parasal grafikler, "Gizlilik Anayasası" gereğince yalnızca Genel Koordinasyon'a açıktır.
                 </div>
               </div>
             )}
