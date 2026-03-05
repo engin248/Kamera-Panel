@@ -6416,6 +6416,33 @@ function ReportsPage({ models, personnel, addToast }) {
                 ))}
               </div>
             </div>
+            {/* NET KÂR DAĞILIM ÇARKI (%51 Vakıf, %49 Ar-Ge) */}
+            {ozet && ozet.net_kar > 0 && (
+              <div style={{ padding: '16px', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', marginTop: '16px' }}>
+                <b style={{ fontSize: '14px', marginBottom: '12px', color: '#8e44ad', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Award size={18} /> Net Kâr Dağılım Çarkı (Gizlilik Anayasası & Sürdürülebilirlik)
+                </b>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                  <div style={{ flex: 1, height: '24px', borderRadius: '12px', display: 'flex', overflow: 'hidden' }}>
+                    <div title="%51 Vakıf Payı" style={{ width: '51%', background: 'linear-gradient(90deg, #9b59b6, #8e44ad)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '11px', fontWeight: 'bold' }}>%51 VAKIF</div>
+                    <div title="%49 Ar-Ge ve Yedek Akçe" style={{ width: '49%', background: 'linear-gradient(90deg, #3498db, #2980b9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '11px', fontWeight: 'bold' }}>%49 AR-GE</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '12px', fontSize: '13px' }}>
+                  <div style={{ background: 'rgba(155, 89, 182, 0.1)', padding: '12px', borderRadius: '8px', flex: 1, marginRight: '8px' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Vakıf Payı (Dijital Zarf)</div>
+                    <b style={{ color: '#8e44ad', fontSize: '16px' }}>₺{((ozet.net_kar * 0.51).toFixed(0) * 1).toLocaleString('tr-TR')}</b>
+                  </div>
+                  <div style={{ background: 'rgba(52, 152, 219, 0.1)', padding: '12px', borderRadius: '8px', flex: 1, marginLeft: '8px' }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '10px' }}>Ar-Ge & Yedek Akçe Fonu</div>
+                    <b style={{ color: '#2980b9', fontSize: '16px' }}>₺{((ozet.net_kar * 0.49).toFixed(0) * 1).toLocaleString('tr-TR')}</b>
+                  </div>
+                </div>
+                <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--text-muted)', display: 'flex', gap: '4px', alignItems: 'center' }}>
+                  <ShieldCheck size={14} color="#e74c3c" /> Bu finansal veriler "Gizlilik Anayasası" gereği yalnızca Koordinatör (God Mode) ekranında görünür.
+                </div>
+              </div>
+            )}
           </div>
         )}
         {raporTab === 'personel' && !loading && (
